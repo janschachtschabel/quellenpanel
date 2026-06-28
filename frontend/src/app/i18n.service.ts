@@ -32,7 +32,9 @@ const DICT: Record<string, { de: string; en: string }> = {
   'filter.minCount':      { de: 'Min. Inhalte', en: 'Min. content' },
   'filter.oer':           { de: 'nur OER', en: 'OER only' },
   'filter.crawler':       { de: 'nur Crawler', en: 'Crawlers only' },
+  'filter.fieldProfile':  { de: 'nur mit Feld-Profil', en: 'Only with field profile' },
   'filter.problem':       { de: 'Datenprüfung (Team)', en: 'Data check (team)' },
+  'filter.clear':         { de: 'Filter löschen', en: 'Clear filters' },
 
   // results / units
   'results.count':        { de: 'Quellen', en: 'sources' },
@@ -61,6 +63,7 @@ const DICT: Record<string, { de: string; en: string }> = {
   // tile / list
   'tile.oer':             { de: 'Offene Bildungsressource', en: 'Open Educational Resource' },
   'tile.family':          { de: 'verwandte Quellen (gleiche Bezugsquelle)', en: 'related sources (same publisher)' },
+  'tile.fieldProfile':    { de: 'aktive Metadatenfelder (Crawler-Provenienz)', en: 'active metadata fields (crawler provenance)' },
   'col.source':           { de: 'Quelle', en: 'Source' },
   'col.content':          { de: 'Inhalte', en: 'Content' },
   'col.subject':          { de: 'Fach', en: 'Subject' },

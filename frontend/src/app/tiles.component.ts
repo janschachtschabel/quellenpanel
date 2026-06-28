@@ -61,13 +61,18 @@ import { I18n } from './i18n.service';
             </div>
             <div class="tile-foot">
               <wlo-quality-row [quality]="s.quality"></wlo-quality-row>
-              @if (s.bind) {
-                <div class="bind">
-                  <span class="bdot" [class.on]="s.bind.node" [matTooltip]="i18n.t('bind.node') + ': ' + (s.bind.node || i18n.t('bind.none'))"><mat-icon>description</mat-icon></span>
-                  <span class="bdot" [class.on]="s.bind.bezugsquelle" [matTooltip]="i18n.t('bind.bezugsquelle') + ': ' + (s.bind.bezugsquelle || i18n.t('bind.none'))"><mat-icon>search</mat-icon></span>
-                  <span class="bdot" [class.on]="s.bind.spider" [matTooltip]="i18n.t('bind.spider') + ': ' + (s.bind.spider || i18n.t('bind.none'))"><mat-icon>settings</mat-icon></span>
-                </div>
-              }
+              <div class="badges">
+                @if (s.fieldActiveCount) {
+                  <span class="fp-badge" [matTooltip]="s.fieldActiveCount + ' ' + i18n.t('tile.fieldProfile')">{{ s.fieldActiveCount }} F</span>
+                }
+                @if (s.bind) {
+                  <div class="bind">
+                    <span class="bdot" [class.on]="s.bind.node" [matTooltip]="i18n.t('bind.node') + ': ' + (s.bind.node || i18n.t('bind.none'))"><mat-icon>description</mat-icon></span>
+                    <span class="bdot" [class.on]="s.bind.bezugsquelle" [matTooltip]="i18n.t('bind.bezugsquelle') + ': ' + (s.bind.bezugsquelle || i18n.t('bind.none'))"><mat-icon>search</mat-icon></span>
+                    <span class="bdot" [class.on]="s.bind.spider" [matTooltip]="i18n.t('bind.spider') + ': ' + (s.bind.spider || i18n.t('bind.none'))"><mat-icon>settings</mat-icon></span>
+                  </div>
+                }
+              </div>
             </div>
           </div>
         </article>
@@ -75,17 +80,12 @@ import { I18n } from './i18n.service';
     </div>
   `,
   styles: [`
-    /* Mobile-first column counts (2 → 3 → 4 → 5). Flexbox (not grid) so the LAST, incomplete row's
-       tiles STRETCH to fill the width — like the stats swimlanes — instead of leaving an empty slot.
-       The per-breakpoint flex-basis sets the column count: a full row has no leftover space so its
-       tiles keep that width, while an incomplete row's tiles grow to share the leftover.
-       basis = (100% / cols) − one gap (14px): a touch under the exact share, so N tiles fit
-       comfortably (no sub-pixel wrap to N−1) and flex-grow then fills the row. */
-    .grid { display: flex; flex-wrap: wrap; gap: 14px; }
-    .grid .tile { flex: 1 1 calc(50% - 14px); }
-    @media (min-width: 621px)  { .grid .tile { flex-basis: calc(33.333% - 14px); } }
-    @media (min-width: 921px)  { .grid .tile { flex-basis: calc(25% - 14px); } }
-    @media (min-width: 1240px) { .grid .tile { flex-basis: calc(20% - 14px); } }
+    /* Mobile-first column counts (2 → 3 → 4 → 5). CSS grid keeps every tile the same width and leaves
+       empty slots on the last, incomplete row instead of stretching the remaining tiles. */
+    .grid { display: grid; gap: 14px; grid-template-columns: repeat(2, 1fr); }
+    @media (min-width: 621px)  { .grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 921px)  { .grid { grid-template-columns: repeat(4, 1fr); } }
+    @media (min-width: 1240px) { .grid { grid-template-columns: repeat(5, 1fr); } }
     .tile {
       position: relative;
       display: flex; flex-direction: column; cursor: pointer; text-align: left;
@@ -130,7 +130,10 @@ import { I18n } from './i18n.service';
     /* Bottom row: quality pills (left) + Audit source-binding badges (right).
        margin-top:auto pins it to the bottom of the (flex:1) body — uniform across all tiles. */
     .tile-foot { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 2px; }
-    .bind { margin-left: auto; display: flex; gap: 4px; flex-shrink: 0; }
+    .badges { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .bind { display: flex; gap: 4px; }
+    /* Field-profile badge: active metadata fields from the crawler profile. */
+    .fp-badge { display: inline-flex; align-items: center; gap: 3px; background: #e6f4ea; color: #1a8a4d; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; cursor: help; }
     /* Binding badge — same optic as the quality dots: green when present, grey when absent. */
     .bdot { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; cursor: help; background: var(--q-unknown-bg); color: var(--q-unknown-fg); }
     .bdot mat-icon { font-size: 13px; width: 13px; height: 13px; }

@@ -119,11 +119,11 @@ import { I18n } from './i18n.service';
           }
           @if (detail.targetGroup.length) {
             <div class="k">{{ i18n.t('detail.kv.targetGroup') }}<ng-container [ngTemplateOutlet]="pp" [ngTemplateOutletContext]="{ $implicit: 'targetGroup' }"></ng-container></div>
-            <div class="v">{{ detail.targetGroup.join(', ') }}</div>
+            <div class="v"><mat-chip-set>@for (g of detail.targetGroup; track g) { <mat-chip>{{ g }}</mat-chip> }</mat-chip-set></div>
           }
           @if (detail.curriculum.length) {
             <div class="k">{{ i18n.t('detail.kv.curriculum') }}<ng-container [ngTemplateOutlet]="pp" [ngTemplateOutletContext]="{ $implicit: 'curriculum' }"></ng-container></div>
-            <div class="v">{{ detail.curriculum.join(', ') }}</div>
+            <div class="v"><mat-chip-set>@for (c of detail.curriculum; track c) { <mat-chip>{{ c }}</mat-chip> }</mat-chip-set></div>
           }
           @if (detail.ageRange) {
             <div class="k">{{ i18n.t('detail.kv.age') }}<ng-container [ngTemplateOutlet]="pp" [ngTemplateOutletContext]="{ $implicit: 'ageRange' }"></ng-container></div>

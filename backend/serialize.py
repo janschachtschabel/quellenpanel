@@ -67,6 +67,11 @@ def source(r: dict, tier: int, detail: bool = False,
             "spider": idn.get("spider", ""),
         }
 
+    if tier >= 1 and not detail:
+        # Steckbrief list rows: the active crawler field count is public and useful for spotting
+        # crawlers with rich metadata profiles directly in the tile/list view.
+        out["fieldActiveCount"] = r.get("fieldActiveCount", 0)
+
     if detail and tier >= 1:
         # Steckbrief: the AI-usage / legal fields (robots.txt, TDM §44b, AGB, licence check) and the
         # crawler field-generation provenance (per metadata field: whether/how the crawler fills it).

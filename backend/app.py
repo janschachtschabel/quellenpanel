@@ -128,14 +128,15 @@ def filter_options():
 
 
 def _query_records(tier, q="", subject="", level="", erschliessung="", oer=None, crawler=None,
-                   min_count=1, flag=None, show_blacklist=False, sort="contentCount", order="desc"):
+                   min_count=1, flag=None, show_blacklist=False, sort="contentCount", order="desc",
+                   only_field_profile=False):
     """Shared filter + sort for the list AND the exports, so an export always matches the list the
     user sees. Team-only filters (flag / show_blacklist) are honored ONLY at tier 2 — below that
     they are ignored so end users can never reveal hidden/blacklisted records."""
     team = tier >= 2
     recs = filtering.filter_records(
         _DATA["records"], q or None, None, oer, subject or None, level or None, min_count,
-        None, False, None, None, None,
+        None, only_field_profile, None, None, None,
         flag if team else None,                # data-problem filter (team)
         None, False, False, False,
         show_blacklist if team else False,     # reveal hidden (team)
@@ -176,9 +177,10 @@ def sources(
     page_size: int = Query(24, ge=1, le=200),
     flag: str | None = Query(None),
     show_blacklist: bool = Query(False),
+    only_field_profile: bool = Query(False),
 ):
     recs = _query_records(tier, q, subject, level, erschliessung, oer, crawler, min_count,
-                          flag, show_blacklist, sort, order)
+                          flag, show_blacklist, sort, order, only_field_profile)
     total = len(recs)
     start = (page - 1) * page_size
     items = [serialize.source(r, tier, family=family_count(r)) for r in recs[start:start + page_size]]
@@ -324,12 +326,14 @@ def export_json(
     show_blacklist: bool = Query(False),
     sort: str = Query("contentCount", pattern="^(contentCount|name)$"),
     order: str = Query("desc", pattern="^(asc|desc)$"),
+    only_field_profile: bool = Query(False),
 ):
     if tier < 1:
         raise HTTPException(403, "Export ab Detailmodus.")
     team = tier >= 2
     rows = [views.flat(r, team=team) for r in _query_records(tier, q, subject, level, erschliessung,
-                                                            oer, crawler, min_count, flag, show_blacklist, sort, order)]
+                                                            oer, crawler, min_count, flag, show_blacklist, sort, order,
+                                                            only_field_profile)]
     return JSONResponse(rows, headers={"Content-Disposition": "attachment; filename=quellen_export.json"})
 
 
@@ -342,6 +346,7 @@ def export_csv(
     show_blacklist: bool = Query(False),
     sort: str = Query("contentCount", pattern="^(contentCount|name)$"),
     order: str = Query("desc", pattern="^(asc|desc)$"),
+    only_field_profile: bool = Query(False),
 ):
     if tier < 1:
         raise HTTPException(403, "Export ab Detailmodus.")
@@ -350,7 +355,7 @@ def export_csv(
     w = csv.DictWriter(buf, fieldnames=views.EXPORT_COLS, delimiter=";", extrasaction="ignore")
     w.writeheader()
     for r in _query_records(tier, q, subject, level, erschliessung, oer, crawler, min_count,
-                            flag, show_blacklist, sort, order):
+                            flag, show_blacklist, sort, order, only_field_profile):
         w.writerow(views.flat(r, team=team))
     return StreamingResponse(iter(["﻿" + buf.getvalue()]), media_type="text/csv; charset=utf-8",
                              headers={"Content-Disposition": "attachment; filename=quellen_export.csv"})

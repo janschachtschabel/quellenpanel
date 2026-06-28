@@ -6,6 +6,7 @@ import sys
 import types
 
 import config
+import filtering
 import serialize
 import session
 import tiers
@@ -59,6 +60,21 @@ def test_family_link_is_public_card_count_detail_list():
 def test_tier1_list_stays_light():
     t1 = serialize.source(_rec(), 1)  # list (detail=False)
     assert "provenance" not in t1 and "internal" not in t1 and "bind" not in t1
+
+
+def test_tier1_list_has_field_active_count():
+    t1 = serialize.source(_rec(), 1)
+    assert "fieldActiveCount" in t1 and t1["fieldActiveCount"] == 0
+
+
+def test_only_field_profile_filter():
+    with_profile = {**_rec(), "fieldGeneration": [{"field": "x", "aktiv": True}], "fieldActiveCount": 1}
+    without_profile = {**_rec(), "fieldGeneration": [], "fieldActiveCount": 0}
+    all_recs = [with_profile, without_profile]
+    assert filtering.filter_records(all_recs, None, None, None, None, None, 0, None, True,
+                                    show_blacklist=True) == [with_profile]
+    assert filtering.filter_records(all_recs, None, None, None, None, None, 0, None, False,
+                                    show_blacklist=True) == all_recs
 
 
 def test_tier2_detail_exposes_internal_and_all_flags():

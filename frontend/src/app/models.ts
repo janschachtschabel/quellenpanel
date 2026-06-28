@@ -16,6 +16,7 @@ export interface SourceCard {
   erschliessungsstatus: string;
   quality: Record<string, string>;
   familyCount?: number;        // sibling sources under the same Bezugsquelle family (publisher + sub-channels)
+  fieldActiveCount?: number;   // tier 1+ (Steckbrief): active crawler field-generation fields
   flags?: string[];            // tier 2 (team) list rows: data-problem flags
   bind?: SourceBinding;        // tier 2 (team) list rows: source-binding badges (node/Bezugsquelle/spider)
 }

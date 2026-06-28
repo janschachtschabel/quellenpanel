@@ -128,6 +128,7 @@ type View = 'tile' | 'list' | 'stats';
           </mat-form-field>
           <mat-checkbox [(ngModel)]="onlyOer" (change)="applyFilters()">{{ i18n.t('filter.oer') }}</mat-checkbox>
           <mat-checkbox [(ngModel)]="onlyCrawler" (change)="applyFilters()">{{ i18n.t('filter.crawler') }}</mat-checkbox>
+          <mat-checkbox [(ngModel)]="onlyFieldProfile" (change)="applyFilters()">{{ i18n.t('filter.fieldProfile') }}</mat-checkbox>
           @if (tiers.tier() === 2) {
             <mat-form-field appearance="outline" class="wide">
               <mat-label>{{ i18n.t('filter.problem') }}</mat-label>
@@ -143,6 +144,9 @@ type View = 'tile' | 'list' | 'stats';
               </mat-select>
             </mat-form-field>
           }
+          <button mat-stroked-button class="clear-btn" (click)="clearFilters()">
+            <mat-icon>filter_alt_off</mat-icon> {{ i18n.t('filter.clear') }}
+          </button>
         </div>
       </div>
     }
@@ -235,6 +239,7 @@ type View = 'tile' | 'list' | 'stats';
     .filters { display: flex; flex-direction: column; gap: 2px; padding: 16px; }
     .filter-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
     .filter-row.top .search { flex: 1 1 auto; }
+    .clear-btn { margin-left: auto; }
     .filter-row.top .sort { width: 180px; }
     .filters .narrow { width: 130px; }
     .filters .wide { width: 240px; }
@@ -305,6 +310,7 @@ export class AppComponent implements OnInit {
   sort: 'contentCount' | 'name' = 'contentCount';
   onlyOer = false;
   onlyCrawler = false;
+  onlyFieldProfile = false;
   readonly minCountOptions = [1, 5, 10, 50, 100];
 
   page = 1;
@@ -331,6 +337,21 @@ export class AppComponent implements OnInit {
   applyFilters(): void {
     this.page = 1;
     this.load();
+  }
+
+  /** Reset every filter control to its default and reload the list. */
+  clearFilters(): void {
+    this.q = '';
+    this.subject = '';
+    this.level = '';
+    this.erschliessung = '';
+    this.minCount = 5;
+    this.sort = 'contentCount';
+    this.onlyOer = false;
+    this.onlyCrawler = false;
+    this.onlyFieldProfile = false;
+    this.flag = '';
+    this.applyFilters();
   }
 
   onPage(e: PageEvent): void {
@@ -423,6 +444,7 @@ export class AppComponent implements OnInit {
     };
     if (this.onlyOer) { query['oer'] = true; }
     if (this.onlyCrawler) { query['crawler'] = true; }
+    if (this.onlyFieldProfile) { query['only_field_profile'] = true; }
     if (this.tiers.tier() === 2 && this.flag) { query['flag'] = this.flag; }
     return query;
   }
