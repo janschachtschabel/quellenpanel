@@ -1,0 +1,147 @@
+{
+  "_provenance": "Curated source-level description (+ preview image) for node-less sources whose own metadata is empty in truth.json. Auto-extracted from the old Quellenliste (quellen_merged.json, isPrimary=True row per name; HTML entities unescaped). Plus MANUAL entries (see code) for migration-umbrella sources with no single representative content — currently 'wirlernenonline_spider' (text authored from WLO's own portal descriptions, image = a real WirLernenOnline edu-sharing preview). Keyed by lowercased source name; enduser/views fill ONLY empty fields.",
+  "youtube": {
+    "description": "Auf YouTube findest du die angesagtesten Videos und Tracks. Außerdem kannst du eigene Inhalte hochladen und mit Freunden oder gleich der ganzen Welt teilen.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=b490865f-e0d5-4252-9086-5fe0d5c2528b&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "bayerischer rundfunk": {
+    "description": "Der Bayerische Rundfunk (BR) ist eine öffentlich-rechtliche Rundfunkanstalt in Deutschland und gehört zur ARD. Neben Nachrichten und Unterhaltung spielt der BR eine wichtige Rolle im Bereich Bildung. Er bietet zahlreiche Bildungsinhalte für unterschiedliche Zielgruppen – von Kindern über Schülerinnen und Schüler bis hin zu Erwachsenen.\n\nBesonders hervorzuheben sind Formate wie Lernsendungen, Dokumentationen und Wissensmagazine, die komplexe Themen verständlich aufbereiten. Auch digitale Angebote, etwa Mediatheken, Podcasts und spezielle Lernplattformen, ermöglichen zeit- und ortsunabhängiges Lernen. Damit trägt der BR zur allgemeinen Bildung, Meinungsvielfalt und lebenslangen Weiterbildung in der Gesellschaft bei.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=e047d240-944b-4e25-87d2-40944b2e2513&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "oer commons": {
+    "description": "OER Commons is a public digital library of open educational resources. Explore, create, and collaborate with educators around the world to improve curriculum.\n\nOER Commons is free for everyone, forever.\n\nWe offer tailored and context-specific services for individual institutions, consortia, and organizations looking to have a more intentional impact. As a nonprofit, we're first and foremost committed to our mission of participatory, equitable, and open education for all. These at-cost services help us further our mission in a sustainable way.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=c148cd83-98c2-4b00-88cd-8398c2fb00ff&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "duden learnattack": {
+    "description": "Lernhelfer ist ein Multimedia-Lexikon (Duden) für Schüler:innen mit über 7.500 zitierfähigen Artikeln unterstützt durch Bilder, Audio, Formeln und Begleitmaterial.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=10d88917-73be-4470-97e5-a4258e48a928&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "verbraucherzentrale": {
+    "description": "Der Materialkompass sorgt für eine unabhängige Qualitätsprüfung von Unterrichtsmaterialien zu Themen wie Nachhaltigkeit und Ernährung. Viele der geprüften Materialien sind kostenlos. Benutze die Filterfunktionen und finde qualitative Materialien.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=22cdb0e8-f68d-4c74-a701-670d77402f44&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "ard alpha": {
+    "description": "Die ARD und der BR stellen hochwertige Lernvideos mit didaktischem Anspruch für eine Vielzahl von Fachgebieten und ergänzend, Unterrichtsmaterialien zum Download bereit.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=56439103-1c0d-473b-9473-f3744d28cb30&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "deutsches museum": {
+    "description": "Der YouTube-Kanal des Deutschen Museums zeigt Videos über Museumsführungen, Veranstaltungen und Experimente im Bereich Chemie, Physik und vieles mehr.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=103fe5ef-daff-4668-ba7e-53f1adb26513&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "digibits – digitale bildung trifft schule": {
+    "description": "DigiBits bündelt Fachinhalte, Unterrichtsmaterialien und ganze Lehrkonzepte, die fachbereichsspezifisch auf die Medienkompetenzförderung abzielen.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=6c19e636-3bc3-4115-8220-2f7f2ae47d97&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "materialguru": {
+    "description": "Die Plattform bietet kostenlose Arbeitsblätter, Übungen, Vorlagen, Checklisten und Ausmalbilder für den Unterricht an der Grundschule.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=5227527f-1e1d-4673-a5a0-86eaf171276f&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "media smart": {
+    "description": "Media Smart e. V. setzt sich für die Werbe- und Medienkompetenzförderung von Kindern und Jugendlichen ein. \nDie multimedialen Unterrichtsmaterialien für die Vorschule, Grundschule und weiterführende Schule stehen kostenlos zum Download zur Verfügung. Mit den Unterrichtsmaterialien von Media Smart können Medien und Werbung einfach und altersgerecht erklärt werden. Dadurch werden Heranwachsende zu einem reflektierten und sicheren Umgang mit Medien und Werbung geschult.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=205674f8-69f2-4c88-8214-60970359a775&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "123chemie": {
+    "description": "123chemie.de ist ein informatives Portal für alle, die sich für Chemie interessieren. Es bietet detaillierte Informationen, praktische Experimente und Neuigkeiten aus der Forschung. Die Webseite richtet sich an Schüler, Studenten und Hobbychemiker und stellt komplexe chemische Konzepte auf eine verständliche Weise dar. Mit regelmäßigen Updates bleibt 123chemie.de stets aktuell und ist eine zuverlässige Quelle für Lernende und Interessierte im Bereich Chemie.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=5c79144f-2dd2-42c1-ba1c-a1b0ee3953e5&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "ak kappenberg": {
+    "description": "Der lockere Zusammenschluss von Chemielehrer:innen stellt auf ihrer Online-Präsenz Materialien und Tipps, wie etwa zu Chemie-Experimenten, mit Anleitungen im PDF-Format zur Verfügung. Zu einigen Versuchen werden zudem Erklärvideos angeboten.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=5100ca54-f528-4f1b-8f32-0ca88b2c567a&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "calliope": {
+    "description": "Unsere Mission ist es, jeder Schülerin und jedem Schüler in Deutschland ab der 3. Klasse einen spielerischen Zugang zur digitalen Welt mit Hilfe des Calliope mini zu ermöglichen.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=2112336b-6ab1-44b9-b3f9-0f338725d798&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "deutsche kinder- und jugendstiftung": {
+    "description": "Anwendungen generativer künstlicher Intelligenz halten zunehmend Einzug in deutschen Schulen. Ihr Einsatz ist rechtlich jedoch kaum ausdifferenziert.\nDie Deutsche Kinder- und Jugendstiftung (DKJS) veröffentlicht in Kooperation mit der Kanzlei Spirit Legal ein Papier, das Bildungsakteur:innen erstmals eine juristische Einordnung im Bereich schulischer Leistungsbewertung mit KI\nKI-Systeme können die Arbeit qualifizierter Lehrer:innen bei der Benotung nicht ersetzen – in den Bundesländern fehlt es an den rechtlichen Rahmen, die einen KI-Einsatz zur Leistungsbewertung ermöglichen",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=2e68aa58-fbe0-47ac-a8aa-58fbe057ac4a&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "lehrerfreund": {
+    "description": "Der Lehrerfreund bietet eine Sammlung von Materialien für den Unterricht in Deutsch und Geschichte sowie allgemeine Informationen und Nützliches für Lehrende.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=769e53cd-8bca-413b-94e0-95c3682aa4ad&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "pen paper peace e. v.": {
+    "description": "Mit dem Angebot zum Globalen Lernen möchte PEN PAPER PEACE e. V. die Achtung vor anderen Kulturen, Lebensweisen und Weltsichten fördern, unsere eigene Position sowie individuelle und gesellschaftliche Handlungsoptionen beleuchten.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=3bb2bd4c-aff4-4bb4-84a5-5543e6f1766b&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "bundesministerium für bildung, wissenschaft und forschung": {
+    "description": "Hier findest du eine Auswahl an Methoden für kooperatives Lernen. Das Portal gehört zum QMS, dem Qualitätsmanagementsystem für österreichische Schulen vom Bundesministerium für Bildung, Wissenschaft und Forschung.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=eee4e238-5699-470d-9ada-c1f9127b126b&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "funk": {
+    "description": "Funk.net ist eine Online-Plattform, die eine Vielzahl von Inhalten für junge Menschen zwischen 14 und 29 Jahren anbietet. Die Webseite umfasst ein breites Spektrum an Themen, darunter Nachrichten, Kultur, Wissenschaft, Gesellschaft und vieles mehr. Die Inhalte werden in Form von Videos, Artikeln und interaktiven Formaten präsentiert, die speziell darauf ausgerichtet sind, die Interessen und Bedürfnisse junger Erwachsener anzusprechen. Funk.net ist ein Gemeinschaftsprojekt von ARD und ZDF und bietet qualitativ hochwertige, informative und unterhaltsame Inhalte, die auf die digitale Mediennutzung der jungen Generation zugeschnitten sind. Für Schüler*innen sind die Angebote \"musstewissen\" besonders relevant.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=dfce8e22-d064-4e4f-ab39-24bf25ba44c0&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "google": {
+    "description": "Der Lernpfad „Anfänger: Einführung in generative KI“ auf Google Cloud Skills Boost führt Einsteigerinnen und Einsteiger behutsam und praxisnah in die Welt der generativen künstlichen Intelligenz ein. In leicht verständlichen Videolektionen lernen die Teilnehmenden, wie Maschinen lernen und wie sich erste einfache KI-Experimente ganz ohne Programmierkenntnisse durchführen lassen.\n\nBereits nach kurzer Zeit können eigene kurze Texte oder einfache Bilder mithilfe generativer KI erstellt werden. Praktische Schritt-für-Schritt-Anleitungen erleichtern den Einstieg und ermöglichen schnelle Erfolgserlebnisse. Die interaktiven Lerninhalte vermitteln spielerisch grundlegende Konzepte und schaffen so ein intuitives Verständnis für die Technik – ideal für alle, die neugierig auf KI sind, aber noch keine Vorerfahrung haben.\n\nFür die Teilnahme ist eine kostenlose Registrierung bei Google Cloud Skills Boost erforderlich.\n\nNach Abschluss erhalten die Lernenden ein digitales Abzeichen („badge“), das ihre neu erworbenen Kompetenzen im Umgang mit generativer KI bestätigt.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=509aea90-13be-4355-9aea-9013bed3551a&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "kinofenster.de": {
+    "description": "Das filmpädagogische Online-Portal bietet bildungsrelevante Kinofilme mit Filmbesprechungen, Hintergrundtexten, Interviews und Unterrichtsmaterialien zum Download.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=f8ef5af4-34f7-4f6d-939e-c5d28d724d2d&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "oecd": {
+    "description": "Zu den im OECD Lernkompass 2030 beschriebenen zentralen Kompetenzen gehört die Fähigkeit, Lebenspläne und persönliche Projekte zu gestalten und zu realisieren. Diese Kompetenz wendet das Konzept des Projektmanagements auf Personen an. Sie erfordert von den Menschen, das Leben als strukturiertes Geschehen zu deuten und ihm in einer veränderlichen Umgebung, wo es oft unzusammenhängend abläuft, Sinn und Zweck zu geben.\nDiese Kompetenz setzt Zukunftsorientierung voraus, wozu sowohl Optimismus und Potenzial, aber auch eine feste Verankerung im Bereich des Machbaren gehören. Somit sollten die Menschen beispielsweise in der Lage sein:\n● ein Projekt zu definieren und Ziele zu setzen\n● die verfügbaren wie auch die benötigten Ressourcen (z.B. Zeit und Geld) festzulegen und\nzu evaluieren\n● Ziele zu präzisieren und Prioritäten zu setzen\n● erforderliche Ressourcen zur Erreichung mehrerer Ziele einzusetzen\n● aus vergangenen Handlungen zu lernen und zukünftige Ergebnisse zu planen\n● Fortschritte zu überwachen und im Verlauf des Projekts nötige Korrekturen vorzunehmen.\nHier findest du die im Rahmen des DeSeCo-Projekts 61 beschriebenen „OECD-Schlüsselkompetenzen“ und den OECD Lernkompass 2030.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=e48528a9-2626-4fa9-8528-a92626afa9ab&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "opentextbooklibrary": {
+    "description": "Die Stöberplattform Open Textbook Library beinhaltet momentan 708 frei lizenzierte Sachbücher für die höhere Bildung in vielen Themenbereichen.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=f3b7e302-7e5a-4321-970b-6c7cfaff4055&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "planet n": {
+    "description": "Die Bildungsplattform Planet-N bietet die Möglichkeit, die Analyse-, Urteils- und Medienkompetenz der Lernenden zu stärken und unkompliziert neue Formen des (nachhaltigen) Lernens auszuprobieren. Dazu können die Kompetenzen der BNE als fachübergreifende Lernziele unkompliziert in den Fachunterricht für die  Klasse 7 – 13 integriert werden.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=621496f8-af8b-4fab-b8cb-d42a4745cc12&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "swr": {
+    "description": "In unseren Filmen wird jeweils ein Handwerk vorgestellt - vom ersten Arbeitsschritt bis zur Vollendung. Mit langen Einstellungen, genauen Beobachtungen, ruhigen Schnittfolgen und ohne störende Hintergrundmusik kann jeder nachvollziehen, wie die Dinge entstehen und begreifen, warum gutes Handwerk auch große Kunst ist.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=dcdd1be5-9225-42ac-9d1b-e5922542ac28&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "schulportal": {
+    "description": "Das noch junge Portal ist die zentrale Anlaufstelle für Online-Lehre in Hessen. Es bietet Möglichkeiten der Schul- und Klassenverwaltung, Austauschmöglichkeiten zwischen Lehrenden und Lernenden, Unterrichtsmaterial und auch Selbstlernbereiche.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=b320016c-6ecd-4bf4-8658-741a016ddac2&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "sprouts deutschland": {
+    "description": "Lernen Lernen und Alternative Bildungsanssätze",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=23f32df6-0e41-419f-a948-be857acbdc38&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "stiftung deutsches technikmuseum berlin": {
+    "description": "Das Materialangebot von kids.digilab.berlin zeigt eine Vielzahl an frei verfügbaren Unterrichtsideen zur digitalen Bildung in Kita und Grundschule. Es umfasst praxisnahe Anleitungen zu Themen wie Robotik, Programmieren, Stop-Motion-Film, Pixelbildern und dem kreativen Einsatz von digitalen Werkzeugen. Kinder lernen beispielsweise, wie sie mit Blue-Bots Tierwelten erkunden, Mini-Städte mit Ozobots gestalten oder mit Endoskopkameras auf Entdeckungsreise gehen. Ziel ist es, digitale Kompetenzen spielerisch zu fördern und algorithmisches Denken sowie kreative Problemlösefähigkeiten zu stärken.\n\nDie Materialsammlung eignet sich besonders für den handlungsorientierten Einsatz im pädagogischen Alltag und kann flexibel an verschiedene Lernsituationen angepasst werden. Es richtet sich an Erzieherinnen und Erzieher, Grundschullehrkräfte sowie Fachkräfte in der Medienpädagogik, die Kindern frühzeitig einen kreativen und reflektierten Zugang zu digitalen Technologien ermöglichen möchten.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=111fd317-ff8e-4136-9fd3-17ff8ee1360f&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "thüringer schulportal": {
+    "description": "Das Schulportal sammelt Online-Angebote zu Fachinhalten, die ergänzend zu Lehrbüchern und Arbeitsheften zum Lernen daheim geeignet sind. Außerdem werden Materialbeispiele der eigenen Mediathek für das häusliche Lernen über die schulcloud aufgezeigt.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=e88119a5-3a87-4cfe-8b47-f7855513469b&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "vision kino": {
+    "description": "Geboten wird eine von Medienpädagog*innen gepflegte Liste an Unterrichtsideen, Filmen, frei verfügbaren Bezugsquellen sowie passenden Begleitmaterialien - auch Arbeitsblättern - für das Lehren und Lernen daheim.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=d18d2e31-4452-4f98-8d7f-7682b3fff838&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "wikibooks": {
+    "description": "Wikibooks bietet einen umfangreichen Katalog an freien Lehr-, Sach- und Fachbüchern innerhalb der verschiedensten Themenbereiche.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=110b49aa-baac-4367-bb97-cb41f128d211&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "wort.schule": {
+    "description": "Wort.Schule stellt eine alphabetische Zusammenstellung von Substantiven, Verben und Adjektiven zur Verfügung. Jedes Wort wird unter semantischen, grammatischen und morphologischen Aspekten analysiert und mit einem Kontextsatz belegt. Teilweise werden die Einträge von CC0-Illustrationen unterstützt.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=822d9986-232c-4050-810f-54d8878db636&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "mathe-seite.de": {
+    "description": "Mathe-Seite.de ist eine E-Learning Plattform für Mathematik mit Video-Tutorials, Rechenbeispielen, Skripten und Lernbüchern als Download. Sie richtet sich an Lernende der Mittel- und Oberstufe sowie an Studierende.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=2ba64802-592a-426e-b165-6e5a9acd0672&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "planet-beruf.de": {
+    "description": "Hier kannst du dir alle Arbeitsblätter und Checklisten als barrierefreie PDF-Dateien herunterladen.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=89f47121-4a07-4df4-90da-db1c32ed7908&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "tuduu.org": {
+    "description": "tuduu.org sammelt Projekte und Initiativen für Do it Yourself und \"Selbermacher:innen\" in Deutschland. Das sind vor allem Coding-, Tüftel- und Tinker-Veranstaltungen.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=1432d16e-5f4e-4ca9-816e-2c0e812ce248&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "zum.de": {
+    "description": "Die Unterrichtsdatenbank von Norbert Böing enthält kostenloses Lernmaterial aus den Bereichen Betriebswirtschaftslehre, Rechnungswesen, Wirtschaftsrecht und Religion im PDF-Format.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=0c7964a8-7df4-45a4-bd91-983691615da7&storeProtocol=workspace&storeId=SpacesStore"
+  },
+  "wirlernenonline_spider": {
+    "description": "Wir lernen online (WLO) ist eine offene Suche und Plattform für freie Bildungsinhalte (OER). Das Community-Projekt bündelt qualitätsgeprüfte offene Bildungsmaterialien vieler Anbieter und hilft Lehrenden und Lernenden, passende OER für den Unterricht zu finden.",
+    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=0087836b-52a1-4730-8422-ce634be2263a&storeProtocol=workspace&storeId=SpacesStore"
+  }
+}

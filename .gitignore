@@ -1,0 +1,22 @@
+# Python
+**/__pycache__/
+*.pyc
+**/.pytest_cache/
+**/.ruff_cache/
+
+# Secrets / local env (never commit — holds QE_TEAM_PASSWORD / QE_TIER1_PASSWORD)
+**/.env
+deploy/.env
+
+# Node / Angular (frontend/ also has its own .gitignore)
+frontend/node_modules/
+frontend/dist/
+frontend/dist-element/
+frontend/.angular/
+
+# Vercel
+.vercel/
+
+# OS
+.DS_Store
+Thumbs.db

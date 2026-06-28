@@ -1,0 +1,43 @@
+# WLO Quellenpanel — deployment WITH automatic HTTPS (Caddy + nip.io/sslip.io).
+# Self-contained compose file. Start:
+#   docker compose -f docker-compose.tls.yml up -d
+# Config in .env (see .env.example): IMAGE, SITE_ADDRESS, plus the access-tier vars.
+# (PORT is NOT used here — only Caddy listens on 80/443.)
+services:
+  quellenpanel:
+    image: ${IMAGE:?please set IMAGE in .env (e.g. youruser/quellenpanel:latest)}
+    container_name: quellenpanel
+    restart: unless-stopped
+    expose:
+      - "8080"            # internal to the compose network only; Caddy proxies to it
+    environment:
+      # Access tiers (all optional; unset = end-user-only, fail-closed — see docker-compose.yml).
+      - QE_TEAM_PASSWORD=${QE_TEAM_PASSWORD:-}
+      - QE_TIER1_PASSWORD=${QE_TIER1_PASSWORD:-}
+      - QE_PUBLIC_ONLY=${QE_PUBLIC_ONLY:-}
+      # Cross-origin team login (this HTTPS variant satisfies the required Secure cookie). Comma-
+      # separated origins allowed the credentialed session cookie; empty = same-origin only.
+      - QE_ALLOWED_ORIGINS=${QE_ALLOWED_ORIGINS:-}
+      - QE_AUTO_REFRESH_HOUR=${QE_AUTO_REFRESH_HOUR:-}
+      - QE_REPO_URL=${QE_REPO_URL:-https://redaktion.openeduhub.net}
+      - QE_SEARCH_URL=${QE_SEARCH_URL:-https://suche.wirlernenonline.de}
+
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - SITE_ADDRESS=${SITE_ADDRESS:?please set SITE_ADDRESS in .env (e.g. quellenpanel.31.70.69.94.nip.io)}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data        # keep certificates across restarts (else re-issued every restart)
+      - caddy_config:/config
+    depends_on:
+      - quellenpanel
+
+volumes:
+  caddy_data:
+  caddy_config:

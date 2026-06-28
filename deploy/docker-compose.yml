@@ -1,0 +1,30 @@
+# WLO Quellenpanel — deployment (3-tier API + built SPA in one container).
+# Config comes from .env (see below).  Start:  docker compose up -d
+services:
+  quellenpanel:
+    image: ${IMAGE:?please set IMAGE in .env (e.g. youruser/quellenpanel:latest)}
+    container_name: quellenpanel
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      # --- Access tiers (all optional; unset = end-user-only, fail-closed) ---
+      # Tier 2 (Audit / team): a password enables team login. Unset ⇒ no team access.
+      - QE_TEAM_PASSWORD=${QE_TEAM_PASSWORD:-}
+      # Tier 1 (Details): optional password gate. Unset ⇒ tier 1 open to everyone.
+      - QE_TIER1_PASSWORD=${QE_TIER1_PASSWORD:-}
+      # Hard public cap: "1" forces every request to tier 0 (public / embedded deployment).
+      - QE_PUBLIC_ONLY=${QE_PUBLIC_ONLY:-}
+      # Cross-origin team login: comma-separated origins allowed to use the credentialed session
+      # cookie (embedded widget on another origin). Empty = same-origin only. Requires HTTPS.
+      - QE_ALLOWED_ORIGINS=${QE_ALLOWED_ORIGINS:-}
+      # --- Operations ---
+      # Optional nightly auto-refresh (hour 0–23; empty = off). Needs a writable filesystem and
+      # the live-API raw cache, so leave it empty unless that is provided.
+      - QE_AUTO_REFRESH_HOUR=${QE_AUTO_REFRESH_HOUR:-}
+      # --- Repository neutrality (live queries + "view in search" link) ---
+      # Defaults = production. NOTE: the bundled data + curated blacklists/overlays still reflect
+      # production and must be regenerated/adjusted when pointing at another repo.
+      - QE_REPO_URL=${QE_REPO_URL:-https://redaktion.openeduhub.net}
+      - QE_SEARCH_URL=${QE_SEARCH_URL:-https://suche.wirlernenonline.de}
+    # Healthcheck is already defined in the image (Dockerfile) and is inherited.

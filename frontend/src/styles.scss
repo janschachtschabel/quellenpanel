@@ -1,0 +1,42 @@
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+// Material 3 theme — azure primary (close to WLO blue) + orange tertiary (accent).
+$wlo-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: mat.$azure-palette,
+    tertiary: mat.$orange-palette,
+  ),
+  density: (scale: 0),
+));
+
+:root {
+  @include mat.all-component-themes($wlo-theme);
+
+  // WLO brand colours — aligned to the old Quellenliste palette so the framed
+  // component blends into the same host pages (lighter, blue-grey, not a heavy bar).
+  --wlo-primary: #003b7c;
+  --wlo-primary-light: #d0e2f4;
+  --wlo-secondary: #002d5f;
+  --wlo-accent: #f97316;
+  --wlo-bg: #f4f7fc;
+  --wlo-card: #ffffff;
+  --wlo-text: #12213a;
+  --wlo-text-muted: #5e7291;
+  --wlo-border: #dae2ee;
+  // Quality traffic-light colours (shared by tile/list dots + detail cards).
+  --q-good-bg: #e6f4ea;    --q-good-fg: #1a8a4d;
+  --q-neutral-bg: #fef3c7; --q-neutral-fg: #92400e;
+  --q-bad-bg: #fde8e8;     --q-bad-fg: #b3261e;
+  --q-unknown-bg: #eef1f6; --q-unknown-fg: #7c8aa3;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, system-ui, sans-serif;
+  background: #fcfcfc;   // page background (surrounds the framed component)
+  color: var(--wlo-text);
+}

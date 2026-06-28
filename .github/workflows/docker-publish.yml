@@ -1,0 +1,97 @@
+name: Build & Push Docker image
+
+# Runs the backend + frontend test suites, then builds the serving image and publishes it to
+# Docker Hub. Requires repository secrets DOCKERHUB_USERNAME and DOCKERHUB_TOKEN (Docker Hub user +
+# access token). The image name is <DOCKERHUB_USERNAME>/quellenpanel (adjust below if needed).
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Backend deps + tests
+        # conftest.py sets QE_TEAM_PASSWORD before import, so no team secret is needed in CI.
+        run: |
+          pip install -r backend/requirements-dev.txt
+          python -m pytest backend/tests
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Frontend deps + tests
+        run: |
+          npm --prefix frontend ci
+          npm --prefix frontend test -- --watch=false
+
+  # Gate the publish on the Docker Hub secrets actually being present, so the workflow stays green
+  # (with a warning) on forks / repos without credentials instead of failing at the login step.
+  check-secrets:
+    needs: test
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
+    outputs:
+      present: ${{ steps.check.outputs.present }}
+    steps:
+      - name: Check Docker Hub credentials
+        id: check
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -n "$DOCKERHUB_USERNAME" ] && [ -n "$DOCKERHUB_TOKEN" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::DOCKERHUB_USERNAME / DOCKERHUB_TOKEN not set — skipping image build & push."
+          fi
+
+  docker:
+    needs: [test, check-secrets]
+    runs-on: ubuntu-latest
+    # Publish only when the credentials are present (skips cleanly otherwise).
+    if: ${{ needs.check-secrets.outputs.present == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Derive image tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/quellenpanel
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

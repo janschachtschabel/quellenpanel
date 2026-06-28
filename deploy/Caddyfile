@@ -1,0 +1,5 @@
+# Caddy fetches a Let's Encrypt certificate for $SITE_ADDRESS and redirects HTTP -> HTTPS.
+# The hostname comes from .env (SITE_ADDRESS), e.g. quellenpanel.31.70.69.94.nip.io
+{$SITE_ADDRESS} {
+	reverse_proxy quellenpanel:8080
+}

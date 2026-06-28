@@ -1,0 +1,6 @@
+# Test-/Entwicklungs-Abhängigkeiten (zusätzlich zu requirements.txt).
+#   pip install -r requirements-dev.txt
+#   python -m pytest
+-r requirements.txt
+pytest>=8.0          # Testrunner
+httpx>=0.27          # wird von fastapi.testclient (Starlette TestClient) benötigt
