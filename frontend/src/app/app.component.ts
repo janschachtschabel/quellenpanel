@@ -127,7 +127,16 @@ type View = 'tile' | 'list' | 'stats';
             </mat-select>
           </mat-form-field>
           <mat-checkbox [(ngModel)]="onlyOer" (change)="applyFilters()">{{ i18n.t('filter.oer') }}</mat-checkbox>
-          <mat-checkbox [(ngModel)]="onlyCrawler" (change)="applyFilters()">{{ i18n.t('filter.crawler') }}</mat-checkbox>
+          <mat-form-field appearance="outline" class="narrow">
+            <mat-label>{{ i18n.t('filter.art') }}</mat-label>
+            <mat-select [(ngModel)]="quellenart" (selectionChange)="applyFilters()">
+              <mat-option value="">{{ i18n.t('filter.all') }}</mat-option>
+              <mat-option value="crawler">{{ i18n.t('filter.art.crawler') }}</mat-option>
+              <mat-option value="node">{{ i18n.t('filter.art.node') }}</mat-option>
+              <mat-option value="bq">{{ i18n.t('filter.art.bq') }}</mat-option>
+              <mat-option value="both">{{ i18n.t('filter.art.both') }}</mat-option>
+            </mat-select>
+          </mat-form-field>
           <mat-checkbox [(ngModel)]="onlyFieldProfile" (change)="applyFilters()">{{ i18n.t('filter.fieldProfile') }}</mat-checkbox>
           @if (tiers.tier() === 2) {
             <mat-form-field appearance="outline" class="wide">
@@ -309,7 +318,7 @@ export class AppComponent implements OnInit {
   minCount = 5;
   sort: 'contentCount' | 'name' = 'contentCount';
   onlyOer = false;
-  onlyCrawler = false;
+  quellenart: '' | 'crawler' | 'node' | 'bq' | 'both' = '';
   onlyFieldProfile = false;
   readonly minCountOptions = [1, 5, 10, 50, 100];
 
@@ -348,7 +357,7 @@ export class AppComponent implements OnInit {
     this.minCount = 5;
     this.sort = 'contentCount';
     this.onlyOer = false;
-    this.onlyCrawler = false;
+    this.quellenart = '';
     this.onlyFieldProfile = false;
     this.flag = '';
     this.applyFilters();
@@ -443,7 +452,10 @@ export class AppComponent implements OnInit {
       order: this.sort === 'name' ? 'asc' : 'desc',
     };
     if (this.onlyOer) { query['oer'] = true; }
-    if (this.onlyCrawler) { query['crawler'] = true; }
+    if (this.quellenart === 'crawler') { query['has_spider'] = true; }
+    else if (this.quellenart === 'node') { query['has_node'] = true; }
+    else if (this.quellenart === 'bq') { query['has_bezugsquelle'] = true; }
+    else if (this.quellenart === 'both') { query['has_node'] = true; query['has_bezugsquelle'] = true; }
     if (this.onlyFieldProfile) { query['only_field_profile'] = true; }
     if (this.tiers.tier() === 2 && this.flag) { query['flag'] = this.flag; }
     return query;
