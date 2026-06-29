@@ -98,9 +98,11 @@ type View = 'tile' | 'list' | 'stats';
           <mat-form-field appearance="outline" class="sort">
             <mat-icon matPrefix>sort</mat-icon>
             <mat-label>{{ i18n.t('filter.sort') }}</mat-label>
-            <mat-select [(ngModel)]="sort" (selectionChange)="applyFilters()">
-              <mat-option value="contentCount">{{ i18n.t('filter.sort.content') }}</mat-option>
-              <mat-option value="name">{{ i18n.t('filter.sort.name') }}</mat-option>
+            <mat-select [(ngModel)]="sortKey" (selectionChange)="applyFilters()">
+              <mat-option value="contentCount:desc">{{ i18n.t('filter.sort.content') }} <mat-icon class="sort-arrow">arrow_downward</mat-icon></mat-option>
+              <mat-option value="contentCount:asc">{{ i18n.t('filter.sort.content') }} <mat-icon class="sort-arrow">arrow_upward</mat-icon></mat-option>
+              <mat-option value="name:asc">{{ i18n.t('filter.sort.name') }} <mat-icon class="sort-arrow">arrow_upward</mat-icon></mat-option>
+              <mat-option value="name:desc">{{ i18n.t('filter.sort.name') }} <mat-icon class="sort-arrow">arrow_downward</mat-icon></mat-option>
             </mat-select>
           </mat-form-field>
         </div>
@@ -269,6 +271,7 @@ type View = 'tile' | 'list' | 'stats';
     .filters mat-form-field mat-icon[matPrefix] { font-size: 18px; width: 18px; height: 18px; color: var(--wlo-text-muted); }
     .filters mat-checkbox { font-size: 13px; }
     .clear-btn { flex-shrink: 0; font-size: 13px; }
+    .sort-arrow { font-size: 14px; width: 14px; height: 14px; vertical-align: -2px; }
     .results { padding: 0 16px 24px; }
     .results-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 4px 0 12px; }
     .results-head .count { color: var(--wlo-text-muted); font-size: 14px; margin: 0; }
@@ -333,7 +336,7 @@ export class AppComponent implements OnInit {
   flag = '';                 // tier 2 (team) data-problem filter
   readonly pruefGroups = PRUEF_GROUPS;
   minCount = 0;
-  sort: 'contentCount' | 'name' = 'contentCount';
+  sortKey = 'contentCount:desc';
   onlyOer = false;
   quellenart: '' | 'crawler' | 'node' | 'bq' | 'both' = '';
   onlyFieldProfile = false;
@@ -423,7 +426,7 @@ export class AppComponent implements OnInit {
     this.level = '';
     this.erschliessung = '';
     this.minCount = 0;
-    this.sort = 'contentCount';
+    this.sortKey = 'contentCount:desc';
     this.onlyOer = false;
     this.quellenart = '';
     this.onlyFieldProfile = false;
@@ -519,8 +522,8 @@ export class AppComponent implements OnInit {
       level: this.level,
       erschliessung: this.erschliessung,
       min_count: this.minCount,
-      sort: this.sort,
-      order: this.sort === 'name' ? 'asc' : 'desc',
+      sort: this.sortKey.split(':')[0],
+      order: this.sortKey.split(':')[1],
     };
     if (this.onlyOer) { query['oer'] = true; }
     if (this.quellenart === 'crawler') { query['has_spider'] = true; }

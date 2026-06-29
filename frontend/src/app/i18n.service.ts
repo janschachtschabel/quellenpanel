@@ -23,6 +23,8 @@ const DICT: Record<string, { de: string; en: string }> = {
   'filter.sort':          { de: 'Sortierung', en: 'Sort' },
   'filter.sort.content':  { de: 'Inhalte', en: 'Content' },
   'filter.sort.name':     { de: 'Name', en: 'Name' },
+  'filter.sort.asc':      { de: 'aufsteigend', en: 'ascending' },
+  'filter.sort.desc':     { de: 'absteigend', en: 'descending' },
   'filter.subject':       { de: 'Fach', en: 'Subject' },
   'filter.subject.all':   { de: 'Alle Fächer', en: 'All subjects' },
   'filter.level':         { de: 'Bildungsstufe', en: 'Educational level' },
