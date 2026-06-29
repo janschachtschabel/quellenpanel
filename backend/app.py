@@ -153,15 +153,6 @@ def _query_records(tier, q="", subject="", level="", erschliessung="", oer=None,
     return sorted(recs, key=keyfn, reverse=rev)
 
 
-def _hidden_breakdown():
-    """Counts of the records hidden from the default view (team status line): aussortierte
-    (Blacklist) + Mehrfach-Datensätze (Zweit-Datensätze). Global (not filter-scoped)."""
-    recs = _DATA["records"]
-    bl = sum(1 for r in recs if "BLACKLIST" in (r.get("flags") or []))
-    zw = sum(1 for r in recs if "ZWEITDATENSATZ" in (r.get("flags") or []))
-    return {"blacklist": bl, "mehrfach": zw, "total": bl + zw}
-
-
 @app.get("/api/sources")
 def sources(
     tier: int = Depends(tiers.effective_tier),
@@ -200,13 +191,15 @@ def sources(
         # ZWEITDATENSATZ are only hidden when has_node is not True (they are visible in the
         # Quelldatensatz view). Mirrors the quellenerschliessung-app behaviour.
         if not flag and not show_blacklist:
+            # Re-run with the SAME filters (incl. lrt) but show_blacklist=True, then count what the
+            # default view hides via the shared helper — so the breakdown is always scoped to the
+            # exact filter the user sees (a content-type filter changes the hidden count too).
             full = _query_records(tier, q, subject, level, erschliessung, oer, crawler, min_count,
                                   flag, True, sort, order, only_field_profile,
-                                  has_node, has_bezugsquelle, has_spider)
-            bl = sum(1 for r in full if "BLACKLIST" in (r.get("flags") or []))
-            zw = 0 if has_node is True else sum(1 for r in full if "ZWEITDATENSATZ" in (r.get("flags") or [])
-                                               and "BLACKLIST" not in (r.get("flags") or []))
-            resp["hidden"] = {"blacklist": bl, "mehrfach": zw, "total": bl + zw}
+                                  has_node, has_bezugsquelle, has_spider, lrt or None)
+            hb = filtering.hidden_breakdown(full, has_node)
+            resp["hidden"] = {"blacklist": hb["blacklist"], "mehrfach": hb["zweitDatensatz"],
+                              "total": hb["total"]}
         else:
             resp["hidden"] = {"blacklist": 0, "mehrfach": 0, "total": 0}
     return resp

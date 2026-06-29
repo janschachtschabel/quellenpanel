@@ -8,28 +8,12 @@ provenance evaluations of the public view. Pure functions over
   compute_stats_full      extended overview — aggregate counts only, no raw internal fields
                           (/api/stats, tier >= 1)
   compute_filter_options  filter vocabulary (/api/filter-options)
-  compute_stats           compact variant retained from the shared Quellensteckbriefe engine; unused here.
 
 Shared helpers -> stats_common.py.
 """
 from collections import Counter
 
 from stats_common import _BESCHREIBENDE_FELDER, _bracket, _ctype_bucket, _how_bucket
-
-
-def compute_stats(recs, meta):
-    crawler = [r for r in recs if r["kind"] == "crawler"]
-    subj = Counter()
-    for r in recs:
-        for s in r["public"].get("Faecher", []):
-            subj[s] += 1
-    return {
-        "meta": meta,
-        "crawlerWithFieldProfile": sum(1 for r in crawler if r.get("fieldGeneration")),
-        "oerCount": sum(1 for r in recs if "OER" in r.get("flags", [])),
-        "facetsOnly": sum(1 for r in recs if r["kind"] == "bezugsquelle"),
-        "topSubjects": [{"value": k, "count": v} for k, v in subj.most_common(15)],
-    }
 
 
 def compute_enduser_stats(recs, meta):

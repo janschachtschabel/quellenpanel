@@ -49,6 +49,28 @@ def test_sources_tier2_has_hidden_breakdown(client, team_pw):
     assert "hidden" not in client.get("/api/sources?page_size=3").json()   # tier 0 must not get it
 
 
+def test_sources_lrt_filter_narrows_list(client):
+    # The content-type (lrt) filter scopes the list: a non-matching value yields nothing, a real
+    # one (from the filter vocabulary) yields a non-empty subset of the unfiltered total.
+    base = client.get("/api/sources", params={"tier": 1, "page_size": 1}).json()["total"]
+    assert base > 0
+    assert client.get("/api/sources", params={"tier": 1, "lrt": "__no_such_type__"}).json()["total"] == 0
+    lrts = client.get("/api/meta/filters").json().get("lrts") or []
+    if lrts:
+        sub = client.get("/api/sources", params={"tier": 1, "lrt": lrts[0], "page_size": 1}).json()["total"]
+        assert 0 < sub <= base
+
+
+def test_hidden_breakdown_respects_lrt_filter(client, team_pw):
+    # Regression: the team hidden breakdown must be scoped to the SAME filter as the list. With a
+    # content-type filter that matches nothing the list is empty, so nothing can be hidden in that
+    # scope either — previously the re-run ignored lrt and reported the global hidden count.
+    d = client.get("/api/sources", params={"tier": 2, "lrt": "__no_such_type__", "page_size": 3},
+                   headers={"X-Team-Password": team_pw}).json()
+    assert d["total"] == 0
+    assert d["hidden"]["total"] == 0
+
+
 def test_protokoll_team_only(client, team_pw):
     assert client.get("/api/protokoll.md").status_code == 403
     r = client.get("/api/protokoll.md", headers={"X-Team-Password": team_pw})
