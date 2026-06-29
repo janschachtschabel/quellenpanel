@@ -23,6 +23,5 @@ deploy/
 .github/
 .gitignore
 .dockerignore
-Dockerfile
 vercel.json
 *.md
