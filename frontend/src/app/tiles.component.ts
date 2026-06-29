@@ -145,10 +145,8 @@ export class TilesComponent {
   readonly i18n = inject(I18n);
   readonly sel = inject(SelectionService);
 
-  /** When true (tier 1+), render the per-tile multi-select checkbox for Sammel-PDF. */
   @Input() selectable = false;
 
-  /** Lazily resolved preview images for node-less cards (see backfillPreviews), keyed by id. */
   readonly resolvedPreview = new Map<string, string>();
   private _items: SourceCard[] = [];
 

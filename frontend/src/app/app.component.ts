@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, inject, signal, computed, Signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -216,9 +216,9 @@ type View = 'tile' | 'list' | 'stats';
 
         <mat-paginator
           [length]="data?.total ?? 0"
-          [pageSize]="pageSize"
+          [pageSize]="effectivePageSize()"
           [pageIndex]="page - 1"
-          [pageSizeOptions]="[12, 24, 48, 96]"
+          [pageSizeOptions]="pageSizeOptions()"
           (page)="onPage($event)">
         </mat-paginator>
       </div>
@@ -277,6 +277,7 @@ type View = 'tile' | 'list' | 'stats';
     .results-head button { --mat-standard-button-toggle-height: 32px; font-size: 13px; }
     .results-head button mat-icon { font-size: 17px; width: 17px; height: 17px; vertical-align: -3px; }
     .empty { text-align: center; color: var(--wlo-text-muted); padding: 40px; }
+    mat-paginator { margin-top: 20px; background: var(--wlo-card); border-top: 1px solid var(--wlo-border); border-radius: 0 0 8px 8px; }
 
     /* Sammel-PDF selection bar (tier 1+, shown once ≥1 source is ticked). */
     .selbar { display: flex; align-items: center; gap: 10px; padding: 8px 14px; margin-bottom: 14px; background: var(--wlo-primary-light); border: 1px solid var(--wlo-primary); border-radius: 10px; }
@@ -341,6 +342,26 @@ export class AppComponent implements OnInit {
 
   page = 1;
   pageSize = 24;
+
+  private readonly _columns = signal(5);
+  private static readonly COL_BREAKPOINTS = [
+    { min: 1240, cols: 5 },
+    { min: 921,  cols: 4 },
+    { min: 621,  cols: 3 },
+    { min: 0,    cols: 2 },
+  ];
+  private readonly _mqls: MediaQueryList[] = [];
+  private readonly _mqlHandlers: ((e: MediaQueryListEvent) => void)[] = [];
+
+  readonly effectivePageSize: Signal<number> = computed(() => {
+    const cols = this._columns();
+    return Math.ceil(this.pageSize / cols) * cols;
+  });
+
+  readonly pageSizeOptions: Signal<number[]> = computed(() => {
+    const cols = this._columns();
+    return [...new Set([12, 24, 48, 96].map(n => Math.ceil(n / cols) * cols))];
+  });
   data: SourcesPage | null = null;
   options: FilterOptions | null = null;
   stats: Stats | null = null;            // tier 0 overview
@@ -349,6 +370,36 @@ export class AppComponent implements OnInit {
   loading = false;
   pdfBusy = false;           // Sammel-PDF in progress (disables the export button)
   tableBusy = false;         // table-PDF ("Tabelle drucken") in progress
+
+  constructor() {
+    for (const bp of AppComponent.COL_BREAKPOINTS) {
+      const mql = window.matchMedia(`(min-width: ${bp.min}px)`);
+      const handler = (e: MediaQueryListEvent) => {
+        if (e.matches) {
+          this._columns.set(bp.cols);
+          this.page = 1;
+          this.load();
+        }
+      };
+      mql.addEventListener('change', handler);
+      this._mqls.push(mql);
+      this._mqlHandlers.push(handler);
+    }
+    this.syncColumns();
+  }
+
+  private syncColumns(): void {
+    for (const bp of AppComponent.COL_BREAKPOINTS) {
+      if (window.matchMedia(`(min-width: ${bp.min}px)`).matches) {
+        this._columns.set(bp.cols);
+        return;
+      }
+    }
+  }
+
+  ngOnDestroy(): void {
+    this._mqls.forEach((mql, i) => mql.removeEventListener('change', this._mqlHandlers[i]));
+  }
 
   ngOnInit(): void {
     this.tiers.loadCapabilities();   // decides which tier controls the header shows
@@ -383,7 +434,9 @@ export class AppComponent implements OnInit {
 
   onPage(e: PageEvent): void {
     this.page = e.pageIndex + 1;
-    this.pageSize = e.pageSize;
+    const opts = this.pageSizeOptions();
+    const idx = opts.indexOf(e.pageSize);
+    this.pageSize = idx >= 0 ? [12, 24, 48, 96][idx] : e.pageSize;
     this.load();
   }
 
@@ -482,7 +535,7 @@ export class AppComponent implements OnInit {
 
   private load(): void {
     this.loading = true;
-    const query = { ...this.buildQuery(), page: this.page, page_size: this.pageSize };
+    const query = { ...this.buildQuery(), page: this.page, page_size: this.effectivePageSize() };
     this.api.sources(query).subscribe({
       next: (d) => { this.data = d; this.loading = false; },
       error: () => { this.loading = false; this.notifyError(); },
