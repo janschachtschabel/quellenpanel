@@ -129,14 +129,14 @@ def filter_options():
 
 def _query_records(tier, q="", subject="", level="", erschliessung="", oer=None, crawler=None,
                    min_count=1, flag=None, show_blacklist=False, sort="contentCount", order="desc",
-                   only_field_profile=False, has_node=None, has_bezugsquelle=None, has_spider=None):
+                   only_field_profile=False, has_node=None, has_bezugsquelle=None, has_spider=None, lrt=None):
     """Shared filter + sort for the list AND the exports, so an export always matches the list the
     user sees. Team-only filters (flag / show_blacklist) are honored ONLY at tier 2 — below that
     they are ignored so end users can never reveal hidden/blacklisted records."""
     team = tier >= 2
     recs = filtering.filter_records(
         _DATA["records"], q or None, None, oer, subject or None, level or None, min_count,
-        has_node, only_field_profile, None, None, None,
+        has_node, only_field_profile, None, None, lrt,
         flag if team else None,                # data-problem filter (team)
         has_bezugsquelle, False, False, False,
         show_blacklist if team else False,     # reveal hidden (team)
@@ -182,10 +182,11 @@ def sources(
     has_node: bool | None = Query(None),
     has_bezugsquelle: bool | None = Query(None),
     has_spider: bool | None = Query(None),
+    lrt: str = "",
 ):
     recs = _query_records(tier, q, subject, level, erschliessung, oer, crawler, min_count,
                           flag, show_blacklist, sort, order, only_field_profile,
-                          has_node, has_bezugsquelle, has_spider)
+                          has_node, has_bezugsquelle, has_spider, lrt or None)
     total = len(recs)
     start = (page - 1) * page_size
     items = [serialize.source(r, tier, family=family_count(r)) for r in recs[start:start + page_size]]
@@ -194,7 +195,20 @@ def sources(
         "pages": (total + page_size - 1) // page_size if total else 0, "items": items,
     }
     if tier >= 2:
-        resp["hidden"] = _hidden_breakdown()   # team status line: why/how many are hidden
+        # Filter-scoped hidden breakdown: re-run the same query with show_blacklist=True to
+        # count how many records the default view hides IN THE CURRENT FILTER — not globally.
+        # ZWEITDATENSATZ are only hidden when has_node is not True (they are visible in the
+        # Quelldatensatz view). Mirrors the quellenerschliessung-app behaviour.
+        if not flag and not show_blacklist:
+            full = _query_records(tier, q, subject, level, erschliessung, oer, crawler, min_count,
+                                  flag, True, sort, order, only_field_profile,
+                                  has_node, has_bezugsquelle, has_spider)
+            bl = sum(1 for r in full if "BLACKLIST" in (r.get("flags") or []))
+            zw = 0 if has_node is True else sum(1 for r in full if "ZWEITDATENSATZ" in (r.get("flags") or [])
+                                               and "BLACKLIST" not in (r.get("flags") or []))
+            resp["hidden"] = {"blacklist": bl, "mehrfach": zw, "total": bl + zw}
+        else:
+            resp["hidden"] = {"blacklist": 0, "mehrfach": 0, "total": 0}
     return resp
 
 
@@ -335,13 +349,14 @@ def export_json(
     has_node: bool | None = Query(None),
     has_bezugsquelle: bool | None = Query(None),
     has_spider: bool | None = Query(None),
+    lrt: str = "",
 ):
     if tier < 1:
         raise HTTPException(403, "Export ab Detailmodus.")
     team = tier >= 2
     rows = [views.flat(r, team=team) for r in _query_records(tier, q, subject, level, erschliessung,
                                                             oer, crawler, min_count, flag, show_blacklist, sort, order,
-                                                            only_field_profile, has_node, has_bezugsquelle, has_spider)]
+                                                            only_field_profile, has_node, has_bezugsquelle, has_spider, lrt or None)]
     return JSONResponse(rows, headers={"Content-Disposition": "attachment; filename=quellen_export.json"})
 
 
@@ -358,6 +373,7 @@ def export_csv(
     has_node: bool | None = Query(None),
     has_bezugsquelle: bool | None = Query(None),
     has_spider: bool | None = Query(None),
+    lrt: str = "",
 ):
     if tier < 1:
         raise HTTPException(403, "Export ab Detailmodus.")
@@ -367,7 +383,7 @@ def export_csv(
     w.writeheader()
     for r in _query_records(tier, q, subject, level, erschliessung, oer, crawler, min_count,
                             flag, show_blacklist, sort, order, only_field_profile,
-                            has_node, has_bezugsquelle, has_spider):
+                            has_node, has_bezugsquelle, has_spider, lrt or None):
         w.writerow(views.flat(r, team=team))
     return StreamingResponse(iter(["﻿" + buf.getvalue()]), media_type="text/csv; charset=utf-8",
                              headers={"Content-Disposition": "attachment; filename=quellen_export.csv"})

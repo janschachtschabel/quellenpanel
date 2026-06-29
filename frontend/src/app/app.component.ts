@@ -62,18 +62,12 @@ type View = 'tile' | 'list' | 'stats';
           <mat-button-toggle value="list"><mat-icon>view_list</mat-icon> {{ i18n.t('view.list') }}</mat-button-toggle>
           <mat-button-toggle value="stats"><mat-icon>bar_chart</mat-icon> {{ i18n.t('view.stats') }}</mat-button-toggle>
         </mat-button-toggle-group>
-        @if (tiers.maxTier() >= 1 || tiers.teamAvailable()) {
-          <mat-button-toggle-group class="tiers" [value]="tiers.tier()" (change)="onTierToggle($event.value)"
-            hideSingleSelectionIndicator [attr.aria-label]="i18n.t('tier.aria')">
-            <mat-button-toggle [value]="0"><mat-icon>visibility</mat-icon> {{ i18n.t('tier.base') }}</mat-button-toggle>
-            @if (tiers.maxTier() >= 1) {
-              <mat-button-toggle [value]="1"><mat-icon>list_alt</mat-icon> {{ i18n.t('tier.details') }}</mat-button-toggle>
-            }
-            @if (tiers.teamAvailable() || tiers.tier() === 2) {
-              <mat-button-toggle [value]="2"><mat-icon>lock</mat-icon> {{ i18n.t('tier.audit') }}</mat-button-toggle>
-            }
-          </mat-button-toggle-group>
-        }
+        <mat-button-toggle-group class="tiers" [value]="tiers.tier()" (change)="onTierToggle($event.value)"
+          hideSingleSelectionIndicator [attr.aria-label]="i18n.t('tier.aria')">
+          <mat-button-toggle [value]="0"><mat-icon>visibility</mat-icon> {{ i18n.t('tier.base') }}</mat-button-toggle>
+          <mat-button-toggle [value]="1"><mat-icon>list_alt</mat-icon> {{ i18n.t('tier.details') }}</mat-button-toggle>
+          <mat-button-toggle [value]="2"><mat-icon>lock</mat-icon> {{ i18n.t('tier.audit') }}</mat-button-toggle>
+        </mat-button-toggle-group>
         <mat-button-toggle-group class="lang" [value]="i18n.lang()" (change)="i18n.set($event.value)"
           hideSingleSelectionIndicator [attr.aria-label]="i18n.t('aria.lang')">
           <mat-button-toggle value="de">DE</mat-button-toggle>
@@ -86,48 +80,12 @@ type View = 'tile' | 'list' | 'stats';
       <div class="filters">
         <div class="filter-row top">
           <mat-form-field appearance="outline" class="search">
+            <mat-icon matPrefix>search</mat-icon>
             <mat-label>{{ i18n.t('filter.search') }}</mat-label>
             <input matInput [(ngModel)]="q" (keyup.enter)="applyFilters()" [placeholder]="i18n.t('filter.search.ph')">
-            <mat-icon matSuffix>search</mat-icon>
           </mat-form-field>
-          <mat-form-field appearance="outline" class="sort">
-            <mat-label>{{ i18n.t('filter.sort') }}</mat-label>
-            <mat-select [(ngModel)]="sort" (selectionChange)="applyFilters()">
-              <mat-option value="contentCount">{{ i18n.t('filter.sort.content') }}</mat-option>
-              <mat-option value="name">{{ i18n.t('filter.sort.name') }}</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-        <div class="filter-row">
-          <mat-form-field appearance="outline">
-            <mat-label>{{ i18n.t('filter.subject') }}</mat-label>
-            <mat-select [(ngModel)]="subject" (selectionChange)="applyFilters()">
-              <mat-option value="">{{ i18n.t('filter.subject.all') }}</mat-option>
-              @for (s of options?.subjects ?? []; track s) { <mat-option [value]="s">{{ s }}</mat-option> }
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>{{ i18n.t('filter.level') }}</mat-label>
-            <mat-select [(ngModel)]="level" (selectionChange)="applyFilters()">
-              <mat-option value="">{{ i18n.t('filter.level.all') }}</mat-option>
-              @for (l of options?.levels ?? []; track l) { <mat-option [value]="l">{{ l }}</mat-option> }
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="wide">
-            <mat-label>{{ i18n.t('filter.status') }}</mat-label>
-            <mat-select [(ngModel)]="erschliessung" (selectionChange)="applyFilters()">
-              <mat-option value="">{{ i18n.t('filter.all') }}</mat-option>
-              @for (e of options?.erschliessung ?? []; track e) { <mat-option [value]="e">{{ e }}</mat-option> }
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="narrow">
-            <mat-label>{{ i18n.t('filter.minCount') }}</mat-label>
-            <mat-select [(ngModel)]="minCount" (selectionChange)="applyFilters()">
-              @for (n of minCountOptions; track n) { <mat-option [value]="n">{{ n }}+</mat-option> }
-            </mat-select>
-          </mat-form-field>
-          <mat-checkbox [(ngModel)]="onlyOer" (change)="applyFilters()">{{ i18n.t('filter.oer') }}</mat-checkbox>
-          <mat-form-field appearance="outline" class="narrow">
+          <mat-form-field appearance="outline" class="art">
+            <mat-icon matPrefix>category</mat-icon>
             <mat-label>{{ i18n.t('filter.art') }}</mat-label>
             <mat-select [(ngModel)]="quellenart" (selectionChange)="applyFilters()">
               <mat-option value="">{{ i18n.t('filter.all') }}</mat-option>
@@ -137,9 +95,63 @@ type View = 'tile' | 'list' | 'stats';
               <mat-option value="both">{{ i18n.t('filter.art.both') }}</mat-option>
             </mat-select>
           </mat-form-field>
+          <mat-form-field appearance="outline" class="sort">
+            <mat-icon matPrefix>sort</mat-icon>
+            <mat-label>{{ i18n.t('filter.sort') }}</mat-label>
+            <mat-select [(ngModel)]="sort" (selectionChange)="applyFilters()">
+              <mat-option value="contentCount">{{ i18n.t('filter.sort.content') }}</mat-option>
+              <mat-option value="name">{{ i18n.t('filter.sort.name') }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="filter-row">
+          <mat-form-field appearance="outline" class="subject">
+            <mat-icon matPrefix>school</mat-icon>
+            <mat-label>{{ i18n.t('filter.subject') }}</mat-label>
+            <mat-select [(ngModel)]="subject" (selectionChange)="applyFilters()">
+              <mat-option value="">{{ i18n.t('filter.subject.all') }}</mat-option>
+              @for (s of options?.subjects ?? []; track s) { <mat-option [value]="s">{{ s }}</mat-option> }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="level">
+            <mat-icon matPrefix>grade</mat-icon>
+            <mat-label>{{ i18n.t('filter.level') }}</mat-label>
+            <mat-select [(ngModel)]="level" (selectionChange)="applyFilters()">
+              <mat-option value="">{{ i18n.t('filter.level.all') }}</mat-option>
+              @for (l of options?.levels ?? []; track l) { <mat-option [value]="l">{{ l }}</mat-option> }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="lrt">
+            <mat-icon matPrefix>description</mat-icon>
+            <mat-label>{{ i18n.t('filter.lrt') }}</mat-label>
+            <mat-select [(ngModel)]="lrt" (selectionChange)="applyFilters()">
+              <mat-option value="">{{ i18n.t('filter.all') }}</mat-option>
+              @for (l of options?.lrts ?? []; track l) { <mat-option [value]="l">{{ l }}</mat-option> }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="status">
+            <mat-icon matPrefix>task</mat-icon>
+            <mat-label>{{ i18n.t('filter.status') }}</mat-label>
+            <mat-select [(ngModel)]="erschliessung" (selectionChange)="applyFilters()">
+              <mat-option value="">{{ i18n.t('filter.all') }}</mat-option>
+              @for (e of options?.erschliessung ?? []; track e) { <mat-option [value]="e">{{ e }}</mat-option> }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="min">
+            <mat-icon matPrefix>filter_9_plus</mat-icon>
+            <mat-label>{{ i18n.t('filter.minCount') }}</mat-label>
+            <mat-select [(ngModel)]="minCount" (selectionChange)="applyFilters()">
+              @for (n of minCountOptions; track n) { <mat-option [value]="n">{{ n === 0 ? i18n.t('filter.all') : n + '+' }}</mat-option> }
+            </mat-select>
+          </mat-form-field>
+          <mat-checkbox [(ngModel)]="onlyOer" (change)="applyFilters()">{{ i18n.t('filter.oer') }}</mat-checkbox>
           <mat-checkbox [(ngModel)]="onlyFieldProfile" (change)="applyFilters()">{{ i18n.t('filter.fieldProfile') }}</mat-checkbox>
+          <button mat-stroked-button class="clear-btn" (click)="clearFilters()">
+            <mat-icon>filter_alt_off</mat-icon> {{ i18n.t('filter.clear') }}
+          </button>
           @if (tiers.tier() === 2) {
-            <mat-form-field appearance="outline" class="wide">
+            <mat-form-field appearance="outline" class="flag">
+              <mat-icon matPrefix>bug_report</mat-icon>
               <mat-label>{{ i18n.t('filter.problem') }}</mat-label>
               <mat-select [(ngModel)]="flag" (selectionChange)="applyFilters()" [panelWidth]="440">
                 <mat-option value="">{{ i18n.t('filter.all') }}</mat-option>
@@ -153,9 +165,6 @@ type View = 'tile' | 'list' | 'stats';
               </mat-select>
             </mat-form-field>
           }
-          <button mat-stroked-button class="clear-btn" (click)="clearFilters()">
-            <mat-icon>filter_alt_off</mat-icon> {{ i18n.t('filter.clear') }}
-          </button>
         </div>
       </div>
     }
@@ -245,14 +254,21 @@ type View = 'tile' | 'list' | 'stats';
     .tiers { --mat-standard-button-toggle-height: 36px; font-size: 13px; }
     .tiers mat-icon { font-size: 16px; width: 16px; height: 16px; vertical-align: -3px; margin-right: 2px; }
 
-    .filters { display: flex; flex-direction: column; gap: 2px; padding: 16px; }
+    .filters { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
     .filter-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-    .filter-row.top .search { flex: 1 1 auto; }
-    .clear-btn { margin-left: auto; }
-    .filter-row.top .sort { width: 180px; }
-    .filters .narrow { width: 130px; }
-    .filters .wide { width: 240px; }
+    .filter-row.top .search { flex: 1 1 auto; min-width: 240px; }
+    .filter-row.top .art { width: 190px; flex-shrink: 0; }
+    .filter-row.top .sort { width: 180px; flex-shrink: 0; }
+    .filter-row .subject { width: 170px; }
+    .filter-row .level { width: 150px; }
+    .filter-row .lrt { width: 180px; }
+    .filter-row .status { width: 220px; }
+    .filter-row .min { width: 120px; }
+    .filter-row .flag { width: 220px; }
     .filters mat-form-field { font-size: 14px; }
+    .filters mat-form-field mat-icon[matPrefix] { font-size: 18px; width: 18px; height: 18px; color: var(--wlo-text-muted); }
+    .filters mat-checkbox { font-size: 13px; }
+    .clear-btn { flex-shrink: 0; font-size: 13px; }
     .results { padding: 0 16px 24px; }
     .results-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 4px 0 12px; }
     .results-head .count { color: var(--wlo-text-muted); font-size: 14px; margin: 0; }
@@ -272,7 +288,7 @@ type View = 'tile' | 'list' | 'stats';
     .foot-links { display: flex; gap: 14px; align-items: center; }
     .foot-link { background: none; border: none; padding: 0; font: inherit; font-size: 12px; color: var(--wlo-text-muted); cursor: pointer; text-decoration: none; }
     .foot-link:hover { color: var(--wlo-primary); text-decoration: underline; }
-    @media (max-width: 600px) { .filter-row.top .search { flex-basis: 100%; } }
+    @media (max-width: 600px) { .filter-row.top .search { flex-basis: 100%; } .filter-row.top .sort { width: 100%; } }
   `],
 })
 export class AppComponent implements OnInit {
@@ -315,12 +331,13 @@ export class AppComponent implements OnInit {
   erschliessung = '';
   flag = '';                 // tier 2 (team) data-problem filter
   readonly pruefGroups = PRUEF_GROUPS;
-  minCount = 5;
+  minCount = 0;
   sort: 'contentCount' | 'name' = 'contentCount';
   onlyOer = false;
   quellenart: '' | 'crawler' | 'node' | 'bq' | 'both' = '';
   onlyFieldProfile = false;
-  readonly minCountOptions = [1, 5, 10, 50, 100];
+  lrt = '';
+  readonly minCountOptions = [0, 1, 5, 10, 50, 100];
 
   page = 1;
   pageSize = 24;
@@ -354,11 +371,12 @@ export class AppComponent implements OnInit {
     this.subject = '';
     this.level = '';
     this.erschliessung = '';
-    this.minCount = 5;
+    this.minCount = 0;
     this.sort = 'contentCount';
     this.onlyOer = false;
     this.quellenart = '';
     this.onlyFieldProfile = false;
+    this.lrt = '';
     this.flag = '';
     this.applyFilters();
   }
@@ -457,6 +475,7 @@ export class AppComponent implements OnInit {
     else if (this.quellenart === 'bq') { query['has_bezugsquelle'] = true; }
     else if (this.quellenart === 'both') { query['has_node'] = true; query['has_bezugsquelle'] = true; }
     if (this.onlyFieldProfile) { query['only_field_profile'] = true; }
+    if (this.lrt) { query['lrt'] = this.lrt; }
     if (this.tiers.tier() === 2 && this.flag) { query['flag'] = this.flag; }
     return query;
   }
