@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "quellenpanel.fullname" . }}
+  labels: {{ include "quellenpanel.labels" . | nindent 4 }}
+spec:
+  # Single replica: the team session store + login/fetch rate-limit counters are in-process
+  # (see backend/session.py). Multiple replicas would split them → flaky team login. Stateless
+  # otherwise (bundled data/truth.json snapshot), so no PVC is needed.
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels: {{ include "quellenpanel.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{ include "quellenpanel.labels" . | nindent 8 }}
+      annotations:
+        checksum/configmap-env: {{ include (print .Template.BasePath "/configmap-env.yaml") . | sha256sum | trunc 63 }}
+        checksum/secret-env: {{ include (print .Template.BasePath "/secret-env.yaml") . | sha256sum | trunc 63 }}
+        {{- with merge .Values.podAnnotations .Values.global.annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.global.image.pullSecrets }}
+      imagePullSecrets: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with merge .Values.podSecurityContext .Values.global.security }}
+      securityContext: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeAffinity }}
+      affinity:
+        nodeAffinity: {{ toYaml . | nindent 10 }}
+      {{- end }}
+      {{- with .Values.terminationGracePeriod }}
+      terminationGracePeriodSeconds: {{ . }}
+      {{- end }}
+      containers:
+      - name: {{ include "quellenpanel.name" . }}
+        image: {{ include "quellenpanel.image" . }}
+        imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+        envFrom:
+        - configMapRef:
+            name: {{ include "quellenpanel.fullname" . }}-env
+        - secretRef:
+            name: {{ include "quellenpanel.fullname" . }}-env
+        ports:
+        - name: http
+          containerPort: 8080
+        {{- with .Values.startupProbe }}
+        startupProbe:
+          httpGet:
+            path: /api/health
+            port: http
+          failureThreshold: {{ .failureThreshold }}
+          initialDelaySeconds: {{ .initialDelaySeconds }}
+          periodSeconds: {{ .periodSeconds }}
+          successThreshold: {{ .successThreshold }}
+          timeoutSeconds: {{ .timeoutSeconds }}
+        {{- end }}
+        {{- with .Values.livenessProbe }}
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: http
+          failureThreshold: {{ .failureThreshold }}
+          initialDelaySeconds: {{ .initialDelaySeconds }}
+          periodSeconds: {{ .periodSeconds }}
+          timeoutSeconds: {{ .timeoutSeconds }}
+        {{- end }}
+        {{- with .Values.readinessProbe }}
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: http
+          failureThreshold: {{ .failureThreshold }}
+          initialDelaySeconds: {{ .initialDelaySeconds }}
+          periodSeconds: {{ .periodSeconds }}
+          successThreshold: {{ .successThreshold }}
+          timeoutSeconds: {{ .timeoutSeconds }}
+        {{- end }}
+        {{- with .Values.resources }}
+        resources: {{ toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.securityContext }}
+        securityContext: {{ toYaml . | nindent 10 }}
+        {{- end }}

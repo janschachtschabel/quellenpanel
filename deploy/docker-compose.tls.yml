@@ -10,6 +10,12 @@ services:
     restart: unless-stopped
     expose:
       - "8080"            # internal to the compose network only; Caddy proxies to it
+    # The app is reachable ONLY via Caddy here (expose, not published ports), and Caddy overwrites
+    # X-Forwarded-For with the real client IP — so it is safe to let uvicorn trust the proxy headers
+    # and report the real client IP (which the per-client rate limits key on). Do NOT add this where
+    # the app port is published directly (docker-compose.yml / bare `docker run`): a client could
+    # then spoof the forwarded IP and evade the throttle.
+    command: ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080", "--forwarded-allow-ips", "*"]
     environment:
       # Access tiers (all optional; unset = end-user-only, fail-closed — see docker-compose.yml).
       - QE_TEAM_PASSWORD=${QE_TEAM_PASSWORD:-}

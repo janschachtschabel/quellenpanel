@@ -80,6 +80,7 @@ def related_sources(r, limit=12):
         "count": len(group),
         "items": [{"id": s["id"], "name": s["name"],
                    "contentCount": s.get("contentCount") or 0,
-                   "hasNode": bool((s.get("identity") or {}).get("nodeId"))}
+                   "hasNode": bool((s.get("identity") or {}).get("nodeId")),
+                   "nodeId": (s.get("identity") or {}).get("nodeId", "")}
                   for s in group[:limit]],
     }

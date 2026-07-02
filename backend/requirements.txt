@@ -1,3 +1,6 @@
-fastapi>=0.110.0
-uvicorn[standard]>=0.27.0
-requests>=2.31.0
+# Pinned to the tested versions for reproducible builds — bump deliberately and re-run the tests +
+# pip-audit. These pin the DIRECT dependencies; for a fully hash-locked transitive set use
+# `pip-compile` to generate a lockfile (recommended follow-up).
+fastapi==0.135.1
+uvicorn[standard]==0.42.0
+requests==2.34.2

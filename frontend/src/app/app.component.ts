@@ -1,4 +1,6 @@
 import { Component, Input, OnInit, OnDestroy, inject, signal, computed, Signal } from '@angular/core';
+import { Subscription, timer } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -28,6 +30,7 @@ import { TierService } from './tier.service';
 import { SelectionService } from './selection.service';
 import { PdfService } from './pdf.service';
 import { PRUEF_GROUPS } from './data-problem-filters';
+import { COL_BREAKPOINTS, columnsFromMatcher, pageSizeOptionsFor, roundToRows } from './grid-columns';
 import { I18n } from './i18n.service';
 
 type View = 'tile' | 'list' | 'stats';
@@ -189,9 +192,19 @@ type View = 'tile' | 'list' | 'stats';
             <button mat-stroked-button type="button" (click)="exportList('json')" [attr.title]="i18n.t('action.exportJson')"><mat-icon>download</mat-icon> JSON</button>
           }
           @if (tiers.tier() >= 2) {
+            <button mat-stroked-button type="button" [disabled]="refreshBusy" (click)="startRefresh()" [attr.title]="i18n.t('sync.title')">
+              <mat-icon>sync</mat-icon> {{ refreshBusy ? refreshPct + '%' : i18n.t('sync.start') }}
+            </button>
             <button mat-stroked-button type="button" (click)="openAuditReport()"><mat-icon>fact_check</mat-icon> {{ i18n.t('audit.open') }}</button>
           }
         </div>
+
+        @if (refreshBusy) {
+          <div class="sync-bar">
+            <mat-progress-bar mode="determinate" [value]="refreshPct"></mat-progress-bar>
+            <span class="sync-msg">{{ refreshPct }}% · {{ refreshMsg }}</span>
+          </div>
+        }
 
         @if (tiers.tier() >= 1 && sel.count() > 0) {
           <div class="selbar">
@@ -282,6 +295,10 @@ type View = 'tile' | 'list' | 'stats';
     .empty { text-align: center; color: var(--wlo-text-muted); padding: 40px; }
     mat-paginator { margin-top: 20px; background: var(--wlo-card); border-top: 1px solid var(--wlo-border); border-radius: 0 0 8px 8px; }
 
+    /* Manual data-sync progress (Audit tier). */
+    .sync-bar { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+    .sync-msg { font-size: 12px; color: var(--wlo-text-muted); }
+
     /* Sammel-PDF selection bar (tier 1+, shown once ≥1 source is ticked). */
     .selbar { display: flex; align-items: center; gap: 10px; padding: 8px 14px; margin-bottom: 14px; background: var(--wlo-primary-light); border: 1px solid var(--wlo-primary); border-radius: 10px; }
     .selcount { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; color: var(--wlo-primary); }
@@ -347,24 +364,12 @@ export class AppComponent implements OnInit {
   pageSize = 24;
 
   private readonly _columns = signal(5);
-  private static readonly COL_BREAKPOINTS = [
-    { min: 1240, cols: 5 },
-    { min: 921,  cols: 4 },
-    { min: 621,  cols: 3 },
-    { min: 0,    cols: 2 },
-  ];
   private readonly _mqls: MediaQueryList[] = [];
   private readonly _mqlHandlers: ((e: MediaQueryListEvent) => void)[] = [];
 
-  readonly effectivePageSize: Signal<number> = computed(() => {
-    const cols = this._columns();
-    return Math.ceil(this.pageSize / cols) * cols;
-  });
+  readonly effectivePageSize: Signal<number> = computed(() => roundToRows(this.pageSize, this._columns()));
 
-  readonly pageSizeOptions: Signal<number[]> = computed(() => {
-    const cols = this._columns();
-    return [...new Set([12, 24, 48, 96].map(n => Math.ceil(n / cols) * cols))];
-  });
+  readonly pageSizeOptions: Signal<number[]> = computed(() => pageSizeOptionsFor(this._columns()));
   data: SourcesPage | null = null;
   options: FilterOptions | null = null;
   stats: Stats | null = null;            // tier 0 overview
@@ -373,13 +378,23 @@ export class AppComponent implements OnInit {
   loading = false;
   pdfBusy = false;           // Sammel-PDF in progress (disables the export button)
   tableBusy = false;         // table-PDF ("Tabelle drucken") in progress
+  refreshBusy = false;       // manual data sync (Audit) in progress
+  refreshPct = 0;            // sync progress percent (from /jobs/latest)
+  refreshMsg = '';           // sync progress step message
+  private refreshSub?: Subscription;
 
   constructor() {
-    for (const bp of AppComponent.COL_BREAKPOINTS) {
+    for (const bp of COL_BREAKPOINTS) {
       const mql = window.matchMedia(`(min-width: ${bp.min}px)`);
-      const handler = (e: MediaQueryListEvent) => {
-        if (e.matches) {
-          this._columns.set(bp.cols);
+      // Re-evaluate the column count on ANY breakpoint change (up OR down). Reacting only to
+      // matches=true missed downward transitions across an upper breakpoint — the min-width MQL
+      // fired matches=false and was ignored, so the grid stayed too wide. Recomputing from the
+      // first matching breakpoint is correct in both directions; reload only when the count really
+      // changed, to avoid a needless refetch on every resize event.
+      const handler = () => {
+        const before = this._columns();
+        this.syncColumns();
+        if (this._columns() !== before) {
           this.page = 1;
           this.load();
         }
@@ -392,16 +407,12 @@ export class AppComponent implements OnInit {
   }
 
   private syncColumns(): void {
-    for (const bp of AppComponent.COL_BREAKPOINTS) {
-      if (window.matchMedia(`(min-width: ${bp.min}px)`).matches) {
-        this._columns.set(bp.cols);
-        return;
-      }
-    }
+    this._columns.set(columnsFromMatcher((min) => window.matchMedia(`(min-width: ${min}px)`).matches));
   }
 
   ngOnDestroy(): void {
     this._mqls.forEach((mql, i) => mql.removeEventListener('change', this._mqlHandlers[i]));
+    this.refreshSub?.unsubscribe();
   }
 
   ngOnInit(): void {
@@ -569,6 +580,46 @@ export class AppComponent implements OnInit {
     } finally {
       this.tableBusy = false;
     }
+  }
+
+  /** Manually trigger the live data rebuild (Audit tier) — the same job the nightly scheduler runs —
+   *  and poll its progress until it finishes, then reload the list with the fresh data. */
+  startRefresh(): void {
+    if (this.refreshBusy) return;
+    this.refreshBusy = true;
+    this.refreshPct = 0;
+    this.refreshMsg = this.i18n.t('sync.running');
+    this.api.refreshStart().subscribe({
+      next: () => this.pollRefresh(),
+      error: () => this.finishRefresh(true),
+    });
+  }
+
+  private pollRefresh(): void {
+    this.refreshSub?.unsubscribe();
+    // Poll the public status every 2 s; a running job reports percent + a step message.
+    this.refreshSub = timer(0, 2000).pipe(switchMap(() => this.api.refreshStatus())).subscribe({
+      next: (s) => {
+        this.refreshPct = s.percent ?? 0;
+        this.refreshMsg = s.message || this.i18n.t('sync.running');
+        if (s.status === 'done') { this.finishRefresh(false); }
+        else if (s.status === 'error') { this.finishRefresh(true); }
+      },
+      error: () => this.finishRefresh(true),
+    });
+  }
+
+  private finishRefresh(failed: boolean): void {
+    this.refreshSub?.unsubscribe();
+    this.refreshSub = undefined;
+    this.refreshBusy = false;
+    if (failed) {
+      this.snack.open(this.i18n.t('sync.error'), '', { duration: 5000 });
+      return;
+    }
+    this.snack.open(this.i18n.t('sync.done'), '', { duration: 4000 });
+    this.tiers.loadCapabilities();   // record count may have changed
+    this.load();                     // reload the list with the rebuilt data
   }
 
   /** Open the data-problem audit report (team / tier 2) — readable + savable + printable. */

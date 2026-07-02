@@ -61,6 +61,16 @@ def test_sources_lrt_filter_narrows_list(client):
         assert 0 < sub <= base
 
 
+def test_tier2_visible_plus_hidden_equals_full(client, team_pw):
+    # The default tier-2 list splits the full (hidden-revealed) set into visible + hidden with no
+    # double counting: visible total + hidden total == the count with show_blacklist=True. Pins the
+    # split so the single-pass derivation stays behaviour-identical to the previous double filter.
+    h = {"X-Team-Password": team_pw}
+    default = client.get("/api/sources?tier=2&page_size=1", headers=h).json()
+    full = client.get("/api/sources?tier=2&page_size=1&show_blacklist=true", headers=h).json()
+    assert default["total"] + default["hidden"]["total"] == full["total"]
+
+
 def test_hidden_breakdown_respects_lrt_filter(client, team_pw):
     # Regression: the team hidden breakdown must be scoped to the SAME filter as the list. With a
     # content-type filter that matches nothing the list is empty, so nothing can be hidden in that
@@ -88,6 +98,30 @@ def test_batch_is_tiered(client, team_pw):
 
 def test_thumb_rejects_foreign_host(client):
     assert client.get("/api/thumb?url=https://evil.example/x.jpg").status_code == 400
+
+
+def test_thumb_does_not_follow_redirects(client, monkeypatch):
+    # SSRF guard: a 3xx from the ALLOWED host must not be followed — the redirect target is never
+    # re-validated, so it could point at an internal address. The proxy must refuse it instead.
+    import config
+    import thumb
+
+    class _Redirect:
+        status_code = 302
+        headers = {"Location": "http://169.254.169.254/latest/meta-data/"}
+        def raise_for_status(self): pass
+        def iter_content(self, n): return iter(())
+        def close(self): pass
+
+    seen = {}
+    def fake_get(url, **kw):
+        seen["allow_redirects"] = kw.get("allow_redirects")
+        return _Redirect()
+    monkeypatch.setattr(thumb.requests, "get", fake_get)
+    # URL on the configured (allowed) repo host → passes the host check and reaches the fetch.
+    r = client.get(f"/api/thumb?url={config.REPO_URL}/edu-sharing/preview.jpg")
+    assert r.status_code == 502            # redirect refused, not followed
+    assert seen["allow_redirects"] is False
 
 
 def test_refresh_team_only(client):
@@ -119,6 +153,36 @@ def test_cors_credentialed_grant_only_for_trusted_origin(client, monkeypatch):
     assert pre.headers.get("access-control-allow-origin") == "https://trusted.example"
     assert pre.headers.get("access-control-allow-credentials") == "true"
     assert "POST" in pre.headers.get("access-control-allow-methods", "")
+
+
+def test_login_throttle_ignores_forwarded_for(client):
+    # The brute-force throttle keys on the socket peer, NOT the spoofable X-Forwarded-For header:
+    # rotating XFF per attempt must still trip the per-client 429 (otherwise the throttle is a no-op).
+    import app
+    app._LOGIN_FAILS.clear()
+    try:
+        for i in range(8):
+            r = client.post("/api/auth", headers={"X-Team-Password": "wrong", "X-Forwarded-For": f"9.9.9.{i}"})
+            assert r.status_code == 403
+        blocked = client.post("/api/auth", headers={"X-Team-Password": "wrong", "X-Forwarded-For": "9.9.9.250"})
+        assert blocked.status_code == 429
+    finally:
+        app._LOGIN_FAILS.clear()
+
+
+def test_fetch_endpoints_are_rate_limited(client, monkeypatch):
+    # The unauthenticated outbound-fetch endpoints (thumb / contents) are per-client rate limited so
+    # they cannot be used to hammer the upstream repository. The host-rejection (400) still happens
+    # while within budget; once over budget the request is refused with 429 before any upstream call.
+    import ratelimit
+    ratelimit.FETCH_HITS.clear()
+    monkeypatch.setattr(ratelimit, "FETCH_MAX", 2)
+    try:
+        assert client.get("/api/thumb?url=https://evil.example/x.jpg").status_code == 400
+        assert client.get("/api/thumb?url=https://evil.example/x.jpg").status_code == 400
+        assert client.get("/api/thumb?url=https://evil.example/x.jpg").status_code == 429
+    finally:
+        ratelimit.FETCH_HITS.clear()
 
 
 def test_login_cookie_is_cross_site_for_trusted_origin(client, team_pw, monkeypatch):

@@ -95,8 +95,8 @@ def compute_stats_team(recs, meta):
         return {"gruppen": len(groups), "ueberzaehlig": sum(v - 1 for v in groups.values()),
                 "beispiele": [{"wert": k, "anzahl": v} for k, v in sorted(groups.items(), key=lambda x: -x[1])[:8]]}
 
-    feld_ki = [{"feld": l, "anzahl": ki_cnt.get(l, 0),
-                "prozent": round(100 * ki_cnt.get(l, 0) / max(1, ki_base))} for l, _ in _FUELL_KI]
+    feld_ki = [{"feld": lbl, "anzahl": ki_cnt.get(lbl, 0),
+                "prozent": round(100 * ki_cnt.get(lbl, 0) / max(1, ki_base))} for lbl, _ in _FUELL_KI]
     # Example sources per problem flag (top 5 by content) → drill-down cards in the team view.
     problem_beispiele = {
         f: [{"name": nm, "inhalte": cc} for cc, nm in sorted(ex, key=lambda x: -x[0])[:5]]

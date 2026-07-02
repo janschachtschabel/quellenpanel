@@ -11,7 +11,8 @@ import serialize
 import session
 import tiers
 
-LEAK = ("internal", "flags", "provenance", "confidence", "hasInternal", "fieldGeneration", "bind", "ki", "binding")
+LEAK = ("internal", "flags", "provenance", "confidence", "hasInternal", "fieldGeneration", "bind",
+        "ki", "binding", "familyCount", "related")
 
 
 def _rec():
@@ -44,17 +45,29 @@ def test_tier1_detail_has_ki_fields_but_no_internal():
     assert "provenance" not in t1  # per-field data source is team-only (tier 2)
 
 
-def test_family_link_is_public_card_count_detail_list():
-    """The Bezugsquelle family is PUBLIC (only public list data) — the card carries a familyCount,
-    the detail the full related list, at every tier (matches the end-user Quellenliste)."""
+def test_family_link_is_team_only():
+    """The Bezugsquelle family (familyCount badge / related list) is Audit-tier only (tier 2): it is
+    data-work context, stripped below that. count is card-only, related detail-only (even at tier 2)."""
     rel = {"bezugsquelle": "YouTube", "count": 2,
            "items": [{"id": "a", "name": "YouTube - Mathe", "contentCount": 0, "hasNode": False}]}
-    t0 = serialize.source(_rec(), 0, detail=True, related=rel)
-    assert t0["related"]["bezugsquelle"] == "YouTube"            # related is public → already at tier 0
-    card = serialize.source(_rec(), 0, family=3)
-    assert card["familyCount"] == 3
-    assert "related" not in serialize.source(_rec(), 0, family=3)            # related is detail-only
-    assert "familyCount" not in serialize.source(_rec(), 0, detail=True, related=rel)  # count is card-only
+    # tier 0/1: neither the count nor the related list is exposed
+    assert "familyCount" not in serialize.source(_rec(), 0, family=3)
+    assert "familyCount" not in serialize.source(_rec(), 1, family=3)
+    assert "related" not in serialize.source(_rec(), 1, detail=True, related=rel)
+    # tier 2: card carries the count, detail the related list
+    assert serialize.source(_rec(), 2, family=3)["familyCount"] == 3
+    assert serialize.source(_rec(), 2, detail=True, related=rel)["related"]["bezugsquelle"] == "YouTube"
+    assert "related" not in serialize.source(_rec(), 2, family=3)                      # related is detail-only
+    assert "familyCount" not in serialize.source(_rec(), 2, detail=True, related=rel)  # count is card-only
+
+
+def test_tier0_shows_coarse_status_tier2_exact():
+    """Tier 0/1 see only the coarse public cataloguing statement; the exact internal status code is
+    re-attached at tier 2 (team) — the raw editorial code never leaks to end users."""
+    assert serialize.source(_rec(), 0, detail=True)["erschliessungsstatus"] == "im Bestand verfuegbar"
+    t2 = serialize.source(_rec(), 2, detail=True)
+    assert t2["erschliessungsstatus"] == "9."
+    assert t2["internal"]["Erschliessungsstatus (genau)"] == "9."
 
 
 def test_tier1_list_stays_light():

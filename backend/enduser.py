@@ -10,6 +10,7 @@ import urllib.parse
 from pathlib import Path
 
 import config
+import field_policy
 
 log = logging.getLogger("quellenliste-x.enduser")
 _SUPPLEMENTS_PATH = Path(__file__).parent / "data" / "source_supplements.json"
@@ -69,9 +70,11 @@ def card(r: dict) -> dict:
         "oer":                bool(p.get("OER")),
         "language":           p.get("Sprache", ""),
         "previewUrl":         r.get("previewUrl", "") or sup.get("previewUrl", ""),
-        # Editorial cataloguing status — carried for the list-view column (NOT rendered on
-        # tiles). The one internal field deliberately surfaced; rest of `internal` stays hidden.
-        "erschliessungsstatus": (r.get("internal") or {}).get("Erschliessungsstatus (genau)") or "",
+        # Public, COARSE cataloguing statement only (e.g. "im Bestand verfuegbar"). The exact
+        # internal status code is team-only and re-attached at tier 2 by serialize.source — so an
+        # end user never sees the raw editorial code (leak-safe; see field_policy.coarse_erschliessung).
+        "erschliessungsstatus": field_policy.coarse_erschliessung(
+            r.get("contentCount") or 0, bool((r.get("identity") or {}).get("nodeId"))),
         # Quality characteristics (cost, ads, login, data protection, legal cleanliness, …) —
         # informative for end users (not a data problem); already a clean labelled dict.
         "quality": r.get("quality") or {},

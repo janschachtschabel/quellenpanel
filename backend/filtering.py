@@ -8,6 +8,16 @@ from config import WLO_SPIDERS
 from field_policy import HIDDEN_BY_DEFAULT
 
 
+def is_hidden_by_default(r, has_node) -> bool:
+    """The ONE hide rule for the default/end-user view: BLACKLIST is always hidden; ZWEITDATENSATZ
+    additionally, EXCEPT in the Quelldatensatz/object view (has_node is True) where those distinct
+    source-dataset objects are legitimately visible. Used by filter_records (to drop them) and by
+    the tier-2 list (to split a hidden-revealed result set into visible + hidden in a single pass)."""
+    hidden_flags = ("BLACKLIST",) if has_node is True else HIDDEN_BY_DEFAULT
+    flags = r.get("flags", [])
+    return any(h in flags for h in hidden_flags)
+
+
 def filter_records(recs, q, kind, oer, subject, level, min_count, has_node, only_field_profile,
                    license_=None, language=None, lrt=None, flag=None,
                    has_bezugsquelle=None, spider_real=False, wlo_migration=False, exclude_wlo=False,
@@ -21,9 +31,7 @@ def filter_records(recs, q, kind, oer, subject, level, min_count, has_node, only
         # (has_node=True) and are only collapsed in the default + Bezugsquelle (tag)
         # view, where they would over-count distinct Bezugsquellen. Blacklist is always
         # hidden. A team filter (flag=<NAME>) or show_blacklist reveals everything.
-        _hidden = ("BLACKLIST",) if has_node is True else HIDDEN_BY_DEFAULT
-        if not show_blacklist and not flag \
-                and any(h in r.get("flags", []) for h in _hidden):
+        if not show_blacklist and not flag and is_hidden_by_default(r, has_node):
             continue
         if kind and r["kind"] != kind:
             continue

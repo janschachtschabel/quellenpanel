@@ -1,0 +1,197 @@
+# =============================================================================
+# GitLab CI/CD — WLO Quellenpanel (produktives Deployment)
+# =============================================================================
+# Aktive Pipeline-Konfiguration für das firmeninterne GitLab-Repo (Standard-
+# Pfad im Repo-Root). Berührt die GitHub-Workflows (.github/workflows/) nicht
+# — beide Plattformen laufen parallel (GitHub → Docker Hub, GitLab → self-hosted
+# Registry + Helm-Chart-Repo).
+#
+# CREDENTIALS / FIRMEN-SPEZIFISCHES — NICHT hier eintragen, sondern in GitLab
+# unter  Settings → CI/CD → Variables  als (masked + protected) Variablen
+# anlegen:
+#   DOCKER_REGISTRY   z.B. docker.edu-sharing.com   (Registry-Host)
+#   DOCKER_USERNAME   CI-Benutzer / Deploy-Token-User
+#   DOCKER_PASSWORD   CI-Token / Passwort           (masked + protected)
+#   DIND_IMAGE        z.B. docker:27-dind
+#   DIND_HOST         z.B. tcp://docker:2376
+#   DIND_DRIVER       z.B. overlay2
+#   DIND_TLS_CERTDIR  z.B. /certs
+#
+# Image-Pfad: DOCKER_IMAGE_PATH unten. Bei Bedarf als CI/CD-Variable überschreiben.
+#
+# Der Docker-Build (Stage „build") läuft nur, wenn DOCKER_REGISTRY gesetzt ist;
+# der Helm-Push nur, wenn HELM_REGISTRY gesetzt ist — solange die Variablen
+# fehlen, bleibt die Pipeline grün (nur Lint + Tests laufen).
+# =============================================================================
+
+stages:
+  - lint
+  - test
+  - build
+  - deploy
+
+variables:
+  # Image-Pfad in der Registry (ohne Registry-Host). Voller Pull-Pfad ergibt sich
+  # als "$DOCKER_REGISTRY/$DOCKER_IMAGE_PATH" → docker.edu-sharing.com/projects/wlo/quellenpanel
+  # Fester Pfad statt $CI_PROJECT_PATH, damit die GitLab-Gruppenhierarchie nicht
+  # ins Image-Repo durchschlägt. Bei Bedarf als CI/CD-Variable überschreiben.
+  DOCKER_IMAGE_PATH: "projects/wlo/quellenpanel"
+
+  # --- Folgende Variablen NICHT hier setzen, sondern als CI/CD-Variablen ---
+  # DOCKER_REGISTRY / DOCKER_USERNAME / DOCKER_PASSWORD  (Registry + Login)
+  # DIND_IMAGE / DIND_HOST / DIND_DRIVER / DIND_TLS_CERTDIR  (Docker-in-Docker)
+  # --- Helm-Chart-Push (Stage „deploy") ---
+  # HELM_REGISTRY / HELM_USERNAME / HELM_PASSWORD  (Chart-Repo + Login)
+
+# -----------------------------------------------------------------------------
+# Backend-Lint (ruff) — Regelauswahl in backend/ruff.toml (kompakter Stil: E701/E702
+# bewusst aus). Kein `ruff format`-Job: der Code nutzt absichtlich keine ruff-format-
+# Formatierung.
+# -----------------------------------------------------------------------------
+ruff check:
+  stage: lint
+  interruptible: true
+  image:
+    name: ghcr.io/astral-sh/ruff:0.12.9-alpine
+  before_script:
+    - cd "$CI_PROJECT_DIR/backend"
+    - ruff --version
+  script:
+    - ruff check --output-format=gitlab . > "$CI_PROJECT_DIR/code-quality-report.json"
+  artifacts:
+    when: always
+    reports:
+      codequality: code-quality-report.json
+
+# -----------------------------------------------------------------------------
+# Tests + Dependency-Audits (Parität mit den GitHub-Workflows)
+# -----------------------------------------------------------------------------
+backend tests:
+  stage: test
+  interruptible: true
+  image: python:3.12-slim
+  before_script:
+    # conftest.py setzt QE_TEAM_PASSWORD vor dem Import, daher kein Team-Secret nötig.
+    - cd "$CI_PROJECT_DIR/backend"
+    - pip install -r requirements-dev.txt
+  script:
+    - python -m pytest -q
+
+backend audit:
+  stage: test
+  interruptible: true
+  image: python:3.12-slim
+  before_script:
+    - pip install pip-audit
+  script:
+    # Harte Prüfung auf bekannte CVEs in den gepinnten Backend-Deps.
+    - pip-audit -r backend/requirements.txt
+
+frontend tests:
+  stage: test
+  interruptible: true
+  image: node:22-bookworm-slim
+  before_script:
+    - cd "$CI_PROJECT_DIR/frontend"
+    - npm ci
+  script:
+    - npm test -- --watch=false
+
+frontend audit:
+  stage: test
+  interruptible: true
+  image: node:22-bookworm-slim
+  before_script:
+    - cd "$CI_PROJECT_DIR/frontend"
+    - npm ci
+  script:
+    # Nur ausgelieferte (Produktions-)Deps — das Build-Tooling (devDependencies) wird separat
+    # und nicht blockierend geprüft, da dessen CVEs nur die Build-Maschine betreffen.
+    - npm audit --omit=dev --audit-level=high
+    - npm audit --audit-level=high || echo "build-tooling advisories (non-blocking)"
+
+# -----------------------------------------------------------------------------
+# Docker-Image bauen + in (self-hosted) Registry pushen — main + develop
+# Tag = Branch-Slug (z.B. "main", "develop")
+# -----------------------------------------------------------------------------
+build and push (branches):
+  stage: build
+  image: $DIND_IMAGE
+  variables:
+    DOCKER_HOST: "$DIND_HOST"
+    DOCKER_DRIVER: "$DIND_DRIVER"
+    DOCKER_TLS_CERTDIR: "$DIND_TLS_CERTDIR"
+  services:
+    - name: "$DIND_IMAGE"
+      alias: docker
+      entrypoint: [ "env", "-u", "DOCKER_HOST" ]
+      command: [ "dockerd-entrypoint.sh" ]
+  before_script:
+    - docker --version
+  script:
+    - docker login "$DOCKER_REGISTRY" -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+    - docker buildx build --tag "$DOCKER_REGISTRY/$DOCKER_IMAGE_PATH:$CI_COMMIT_REF_SLUG" .
+    - docker image push "$DOCKER_REGISTRY/$DOCKER_IMAGE_PATH:$CI_COMMIT_REF_SLUG"
+  rules:
+    # Läuft nur mit gesetzter Registry-Variable — sonst übersprungen, Pipeline bleibt grün.
+    - if: "$CI_COMMIT_BRANCH == 'main' && $DOCKER_REGISTRY"
+    - if: "$CI_COMMIT_BRANCH == 'develop' && $DOCKER_REGISTRY"
+
+# -----------------------------------------------------------------------------
+# Docker-Image bauen + pushen bei Tag-Erstellung (z.B. v1.2.0)
+# Tag = exakter Git-Tag-Name
+# -----------------------------------------------------------------------------
+build and push (tags):
+  stage: build
+  image: $DIND_IMAGE
+  variables:
+    DOCKER_HOST: "$DIND_HOST"
+    DOCKER_DRIVER: "$DIND_DRIVER"
+    DOCKER_TLS_CERTDIR: "$DIND_TLS_CERTDIR"
+  services:
+    - name: "$DIND_IMAGE"
+      alias: docker
+      entrypoint: [ "env", "-u", "DOCKER_HOST" ]
+      command: [ "dockerd-entrypoint.sh" ]
+  before_script:
+    - docker --version
+  script:
+    - docker login "$DOCKER_REGISTRY" -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+    - docker buildx build --tag "$DOCKER_REGISTRY/$DOCKER_IMAGE_PATH:$CI_COMMIT_REF_NAME" .
+    - docker image push "$DOCKER_REGISTRY/$DOCKER_IMAGE_PATH:$CI_COMMIT_REF_NAME"
+  rules:
+    - if: "$CI_COMMIT_TAG && $DOCKER_REGISTRY"
+
+# -----------------------------------------------------------------------------
+# Helm-Chart paketieren + ins Chart-Repo pushen
+# Chart-/App-Version = Git-Tag (bei Tag) bzw. 0.0.0-<branch-slug> (bei Branch)
+# -----------------------------------------------------------------------------
+.helm_base:
+  stage: deploy
+  image:
+    name: alpine/helm:latest
+    entrypoint: [""]
+  before_script:
+    - helm version
+  script:
+    - helm package deploy/helm/quellenpanel
+        --version "$CHART_VERSION"
+        --app-version "$APP_VERSION"
+    - >
+      curl --fail --silent --show-error
+      -u "$HELM_USERNAME:$HELM_PASSWORD"
+      --upload-file edu_sharing-projects-wlo-quellenpanel-${CHART_VERSION}.tgz
+      $HELM_REGISTRY
+
+build and push helm chart:
+  extends: .helm_base
+  variables:
+    CHART_VERSION: "0.0.0-$CI_COMMIT_REF_SLUG"
+    APP_VERSION: "$CI_COMMIT_REF_SLUG"
+  rules:
+    # Tag → Chart-/App-Version = exakter Tag-Name. Nur mit konfiguriertem Chart-Repo (HELM_REGISTRY).
+    - if: "$CI_COMMIT_TAG && $HELM_REGISTRY"
+      variables:
+        CHART_VERSION: "$CI_COMMIT_REF_NAME"
+        APP_VERSION: "$CI_COMMIT_REF_NAME"
+    - if: "$CI_COMMIT_BRANCH && $HELM_REGISTRY"

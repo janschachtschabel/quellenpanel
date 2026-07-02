@@ -1,0 +1,8 @@
+# Lint configuration for the backend.
+#
+# The small domain modules deliberately use compact one-line guards (`if x: return`) and a few
+# semicolon-joined statements for scannability. E701 (multiple statements after ':') and E702
+# (semicolon-separated statements) are therefore intentional and switched off here; everything else
+# in ruff's default rule set (E4/E7/E9/F) stays enabled, so `ruff check` is meaningful and green.
+[lint]
+ignore = ["E701", "E702"]

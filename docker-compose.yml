@@ -1,0 +1,40 @@
+# Local build-and-run setup (builds the image from this repo's Dockerfile).
+# For running a PUBLISHED image (+ automatic HTTPS via Caddy) use deploy/docker-compose*.yml instead.
+#
+# Quick-Start:
+#   docker compose up -d --build
+#   open http://localhost:8080
+#
+# Enable the team tier (Audit):  QE_TEAM_PASSWORD=… docker compose up -d --build
+# Logs:  docker compose logs -f   ·   Stop:  docker compose down
+
+services:
+  quellenpanel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: quellenpanel:local
+    container_name: quellenpanel
+    restart: unless-stopped
+    ports:
+      # Bind to localhost only — put nginx/caddy in front for public exposure (see deploy/).
+      - "127.0.0.1:8080:8080"
+    environment:
+      # All access tiers are OPTIONAL; unset ⇒ end-user-only (tier 0), fail-closed.
+      QE_TEAM_PASSWORD: ${QE_TEAM_PASSWORD:-}
+      QE_TIER1_PASSWORD: ${QE_TIER1_PASSWORD:-}
+      QE_PUBLIC_ONLY: ${QE_PUBLIC_ONLY:-}
+      QE_ALLOWED_ORIGINS: ${QE_ALLOWED_ORIGINS:-}
+      QE_AUTO_REFRESH_HOUR: ${QE_AUTO_REFRESH_HOUR:-}
+      # Repository neutrality (defaults = production).
+      QE_REPO_URL: ${QE_REPO_URL:-https://redaktion.openeduhub.net}
+      QE_SEARCH_URL: ${QE_SEARCH_URL:-https://suche.wirlernenonline.de}
+    # Stateless: the app serves the bundled data/truth.json snapshot — no volume needed. A manual /
+    # nightly refresh writes to the ephemeral container FS (reverts on restart; see README).
+    # Healthcheck mirrors the image's (python urllib; the slim image has no curl).
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/api/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 25s
+      retries: 3

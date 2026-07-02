@@ -1,0 +1,12 @@
+apiVersion: v2
+
+name: edu_sharing-projects-wlo-quellenpanel
+description: WLO Quellenpanel — 3-tier FastAPI API + embedded Angular SPA over the shared data-truth engine
+
+type: application
+
+# Chart version (SemVer of the packaging itself).
+version: 0.1.0
+# Version of the shipped application — matches the image tag.
+appVersion: "latest"
+kubeVersion: ">=1.23.0-0"

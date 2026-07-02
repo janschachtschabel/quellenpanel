@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map, shareReplay } from 'rxjs/operators';
 
-import { Capabilities, ExportRow, FilterOptions, FullStats, SourceContents, SourceDetail, SourcesPage, Stats, TeamStats } from './models';
+import { Capabilities, ExportRow, FilterOptions, FullStats, RefreshStatus, SourceContents, SourceDetail, SourcesPage, Stats, TeamStats } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class SourcesService {
@@ -154,5 +154,15 @@ export class SourcesService {
   /** The data-problem audit protocol as Markdown text (team only) — fetched for the in-app viewer. */
   protokoll(): Observable<string> {
     return this.http.get(`${this.base}/protokoll.md`, { responseType: 'text' });
+  }
+
+  /** Trigger the live data rebuild (team only) — the same job the nightly scheduler runs. */
+  refreshStart(): Observable<{ status: string }> {
+    return this.http.post<{ status: string }>(`${this.base}/jobs/refresh`, null);
+  }
+
+  /** Current progress of the live rebuild job (public status), polled while a refresh runs. */
+  refreshStatus(): Observable<RefreshStatus> {
+    return this.http.get<RefreshStatus>(`${this.base}/jobs/latest`);
   }
 }

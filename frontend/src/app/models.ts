@@ -15,7 +15,7 @@ export interface SourceCard {
   previewUrl: string;
   erschliessungsstatus: string;
   quality: Record<string, string>;
-  familyCount?: number;        // sibling sources under the same Bezugsquelle family (publisher + sub-channels)
+  familyCount?: number;        // tier 2 (Audit): sibling sources under the same Bezugsquelle family (publisher + sub-channels)
   fieldActiveCount?: number;   // tier 1+ (Steckbrief): active crawler field-generation fields
   flags?: string[];            // tier 2 (team) list rows: data-problem flags
   bind?: SourceBinding;        // tier 2 (team) list rows: source-binding badges (node/Bezugsquelle/spider)
@@ -51,7 +51,7 @@ export interface SourceDetail extends SourceCard {
   // tier 2 (team / "Audit") — present only at tier 2
   internal?: Record<string, string>;
   provenance?: Record<string, string>;  // per-field data source (WLO-API, …), keyed by flat field name + KI key
-  // tier 1+ — other sources under the same Bezugsquelle family (publisher + sub-channels, e.g. YouTube)
+  // tier 2 (Audit) — other sources under the same Bezugsquelle family (publisher + sub-channels, e.g. YouTube)
   related?: RelatedSources;
 }
 
@@ -59,7 +59,7 @@ export interface SourceDetail extends SourceCard {
 export interface RelatedSources {
   bezugsquelle: string;   // the family / parent publisher name
   count: number;          // total siblings (may exceed items.length, which is capped)
-  items: Array<{ id: string; name: string; contentCount: number; hasNode: boolean }>;
+  items: Array<{ id: string; name: string; contentCount: number; hasNode: boolean; nodeId: string }>;
 }
 
 export interface ContentItem {
@@ -83,6 +83,14 @@ export interface SourcesPage {
   pages: number;
   items: SourceCard[];
   hidden?: { blacklist: number; mehrfach: number; total: number };  // tier 2: default-hidden breakdown
+}
+
+/** Live-refresh job status (GET /jobs/latest) — drives the manual-sync progress in the Audit tier. */
+export interface RefreshStatus {
+  status: 'idle' | 'running' | 'done' | 'error';
+  percent: number;
+  message: string;
+  error: string | null;
 }
 
 export interface FilterOptions {

@@ -44,7 +44,15 @@ def start():
             return {"status": "running", "percent": _JOB["percent"], "message": _JOB["message"]}
         _JOB.update(status="running", percent=0, message="Start …", error=None,
                     startedAt=time.strftime("%Y-%m-%d %H:%M:%S"))
-    threading.Thread(target=_run_refresh, daemon=True).start()
+    try:
+        threading.Thread(target=_run_refresh, daemon=True).start()
+    except Exception:
+        # If the worker thread cannot even be started, don't leave the job stuck on "running"
+        # (which would block every future refresh); reset it so it can be retried.
+        logging.getLogger("refresh").exception("could not start refresh thread")
+        _JOB.update(status="error", error="internal", message="Aktualisierung fehlgeschlagen.",
+                    finishedAt=time.strftime("%Y-%m-%d %H:%M:%S"))
+        return {"status": "error"}
     return {"status": "started"}
 
 

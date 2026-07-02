@@ -43,18 +43,26 @@ def search_url(name: str) -> str:
 def source(r: dict, tier: int, detail: bool = False,
            related: dict | None = None, family: int = 0) -> dict:
     """Serialize one record at the granted tier. `detail` selects the richer per-source payload.
-    The Bezugsquelle family (publisher + its sub-channels, e.g. YouTube) is PUBLIC and shown at
-    every tier — `family` is the sibling count for the tile/list badge, `related` the full sibling
-    list for the detail view (both from store; display only, no effect on any aggregation)."""
+    The Bezugsquelle family (publisher + its sub-channels, e.g. YouTube) is Audit-tier only (tier 2)
+    — `family` is the sibling count for the tile/list badge, `related` the full sibling list for the
+    detail view (both from store; display only, no effect on any aggregation)."""
     out = enduser.detail(r) if detail else enduser.card(r)
     out["searchUrl"] = search_url(r.get("name", ""))
 
-    # Bezugsquelle-family link (public): a count badge on the card, the full list on the detail.
-    if detail:
-        if related:
-            out["related"] = related
-    elif family:
-        out["familyCount"] = family
+    if tier >= 2:
+        # Bezugsquelle-family link is Audit-tier only (team): WHICH other source datasets share a
+        # Bezugsquelle is data-work context, not end-user information — a count badge on the card,
+        # the full sibling list on the detail. Public / lower tiers get neither.
+        if detail:
+            if related:
+                out["related"] = related
+        elif family:
+            out["familyCount"] = family
+        # Team sees the EXACT editorial cataloguing status (internal code, e.g. "9."); tier 0/1 keep
+        # the coarse public statement set by enduser.card (leak-safe — see field_policy).
+        exact = (r.get("internal") or {}).get("Erschliessungsstatus (genau)")
+        if exact:
+            out["erschliessungsstatus"] = exact
 
     # Tier 2 list rows carry the data-problem flags (filter / indicators) plus a source-binding
     # summary, so the team tiles can show Quelldatensatz / Bezugsquelle / Spider badges.

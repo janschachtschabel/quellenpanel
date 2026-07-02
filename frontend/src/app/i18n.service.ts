@@ -64,6 +64,12 @@ const DICT: Record<string, { de: string; en: string }> = {
   'audit.hint':           { de: 'Datenprobleme zur Bereinigung — lesbar, speicherbar (.md) und druckbar.', en: 'Data problems for cleanup — readable, savable (.md) and printable.' },
   'audit.print':          { de: 'Drucken', en: 'Print' },
   'audit.save':           { de: 'Speichern (.md)', en: 'Save (.md)' },
+  // manual data sync (team) — triggers the same live rebuild as the nightly job
+  'sync.start':           { de: 'Daten aktualisieren', en: 'Refresh data' },
+  'sync.title':           { de: 'Live-Abruf von WLO starten und die Datenbasis neu aufbauen (wie der nächtliche Lauf).', en: 'Fetch live from WLO and rebuild the data (like the nightly job).' },
+  'sync.running':         { de: 'Aktualisierung läuft …', en: 'Refreshing …' },
+  'sync.done':            { de: 'Datenaktualisierung abgeschlossen.', en: 'Data refresh complete.' },
+  'sync.error':           { de: 'Aktualisierung fehlgeschlagen.', en: 'Refresh failed.' },
   'results.empty':        { de: 'Keine Quellen für diese Filter gefunden.', en: 'No sources found for these filters.' },
   'error.load':           { de: 'Daten konnten nicht geladen werden. Bitte später erneut versuchen.', en: 'Could not load data. Please try again later.' },
   'unit.content':         { de: 'Inhalte', en: 'content' },

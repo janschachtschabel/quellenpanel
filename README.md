@@ -27,7 +27,7 @@ backend/
   serialize.py    one flat record, layered by tier (+ searchUrl)
                     tier 0 → enduser.card/detail   tier 1 → + KI/legal & field-generation
                     tier 2 → + internal, all flags, bind (list badges) & per-field provenance
-                    public Bezugsquelle-family link: familyCount (card badge) / related (detail)
+                    + Bezugsquelle-family link: familyCount (card badge) / related (detail) — Audit-tier only
   config.py       env config (repo/search URLs, team/tier-1 passwords, public-only, refresh hour)
   field_policy.py THE public/internal field + flag policy
   ── shared data-truth engine (from the Quellensteckbriefe app) ──
@@ -74,8 +74,8 @@ curated blacklists baked into it, and the `source_supplements.json` overlay imag
 GET  /api/health                       service + record count
 GET  /api/capabilities                 maxTier for the caller (drives the UI tier controls)
 GET  /api/meta/filters                 filter vocabulary
-GET  /api/sources                      list (0/1/2; + familyCount badge; team filters flag/show_blacklist only at 2)
-GET  /api/sources/{id}                 detail (0/1/2; + related sources of the same Bezugsquelle family)
+GET  /api/sources                      list (0/1/2; familyCount badge + team filters flag/show_blacklist only at 2)
+GET  /api/sources/{id}                 detail (0/1/2; + related sources of the same Bezugsquelle family, tier 2 only)
 GET  /api/sources/{id}/contents        live example content (public)
 GET  /api/stats                        statistics overview — end-user (0) · extended/full (1+)
 GET  /api/stats/team                   data-problem / origin / fill-level addendum (team)
@@ -90,8 +90,10 @@ POST /jobs/refresh (team) · GET /jobs/latest            live data refresh
 ## Tests
 
 ```bash
-cd backend && python -m pytest -q       # tier model, no-leak invariant per tier, route gating
-cd frontend && npm test                 # i18n, services, quality, selection (vitest)
+cd backend && python -m pytest -q       # 41 tests: tier model, no-leak invariant per tier, route gating,
+                                        #   login/fetch rate limits, SSRF guard, hidden-breakdown split
+cd frontend && npm test -- --watch=false  # 41 tests: i18n, services, quality, selection, grid columns,
+                                          #   PDF builders (content-asserted) + URL-safety helpers (vitest)
 ```
 
 ## Deployment
@@ -115,29 +117,53 @@ docker run -p 8080:8080 -e QE_TEAM_PASSWORD=… quellenpanel
 # or: cp deploy/.env.example deploy/.env && docker compose -f deploy/docker-compose.yml up -d
 ```
 
+The repo is kept in **two remotes** and each has its own, self-contained CI:
+
+- **GitHub** — `.github/workflows/docker-publish.yml`: runs the backend + frontend tests and
+  dependency audits, then builds and pushes the image to **Docker Hub** (needs `DOCKERHUB_USERNAME`
+  / `DOCKERHUB_TOKEN` secrets; tags `latest` on `main`, plus branch / short-SHA / SemVer for `v*`
+  tags). Skips the build cleanly (pipeline stays green) when the secrets are absent.
+- **GitLab** — `.gitlab-ci.yml`: ruff lint → tests + audits → build & push the image to a
+  self-hosted registry → package & push the **Helm chart**. All registry/chart credentials come
+  from GitLab CI/CD variables (`DOCKER_REGISTRY`, `HELM_REGISTRY`, …); the build/deploy stages skip
+  (pipeline stays green) until those variables are set. The two platforms are independent — editing
+  one never touches the other.
+
+Deployment targets:
+
 - **Server (Docker Compose)**: ready-made `deploy/docker-compose.yml` + `.env.example`, plus an
   automatic-HTTPS variant (`deploy/docker-compose.tls.yml` + `Caddyfile`, Let's Encrypt via
   nip.io/sslip.io, no own domain needed) — step-by-step in [`deploy/README.md`](deploy/README.md).
-- **CI** (`.github/workflows/docker-publish.yml`): runs the backend + frontend tests, then builds
-  and pushes the image to Docker Hub (needs `DOCKERHUB_USERNAME` / `DOCKERHUB_TOKEN` secrets;
-  tags `latest` on `main`, plus branch / short-SHA / SemVer for `v*` tags).
+  The TLS variant runs uvicorn with `--forwarded-allow-ips` and lets Caddy overwrite
+  `X-Forwarded-For`, so the per-client rate limits key on the real client IP.
+- **Kubernetes (Helm)**: `deploy/helm/quellenpanel` — a single-replica `Deployment` (stateless;
+  bundled snapshot, no PVC), ConfigMap + Secret for the `QE_*` env, Service + Ingress. See
+  [`deploy/helm/quellenpanel/README.md`](deploy/helm/quellenpanel/README.md). `helm lint` clean.
 - **Vercel** (`vercel.json`): the `/api` routes run as a Python function (`backend/api/index.py`),
   the SPA is built as a static site; set the env vars in the Vercel project settings.
+  **Caveat:** the team session store (and the in-process rate limits) are per-process, so on a
+  horizontally scaled / serverless host a follow-up request may hit another instance and be treated
+  as logged-out. For reliable team login use a single-instance container deployment (Compose/Helm);
+  the Vercel path is best suited to the public (tier-0 / `QE_PUBLIC_ONLY`) read-only mode.
 
 ## Status
 
-- ✅ **Backend** — merged 3-tier API; 29 tests green; ruff clean; no-leak invariant + `QE_PUBLIC_ONLY`
-  hard cap verified. A public Bezugsquelle-family index (publisher + sub-channels, e.g. YouTube)
-  drives the card badge + the detail "related sources".
+- ✅ **Backend** — merged 3-tier API; 41 tests green; ruff clean (`backend/ruff.toml`); no-leak
+  invariant + `QE_PUBLIC_ONLY` hard cap verified; login/fetch rate limits (proxy-safe) + thumbnail
+  SSRF guard tested; deps pinned + CVE-clean (`pip-audit`). The Bezugsquelle-family index (publisher
+  + sub-channels, e.g. YouTube) drives the card badge + the detail "related sources" — Audit-tier only.
 - ✅ **Frontend** — Angular 21 web component (Material 3, i18n): tiles/list, search + sort on top, no
   sidebars, detail popup (with per-source PDF), tier toggles (Basisinfos / Details / Audit), tiered
   statistics (base + Details fill-levels + team problem groups/examples + an interactive engine
-  merge-flow diagram), the Bezugsquelle-family badge on tiles/list & "Verwandte Quellen" in the
-  detail, and the client-side PDF exports (jspdf, lazy-loaded): the multi-source Steckbrief PDF
-  (multi-select, Details + Audit) and a "Tabelle" table PDF of the current filtered list (next to
-  CSV/JSON). 30 frontend tests green; build clean.
-- ✅ **Deployment** — Docker (image build + run verified) / CI (test → build → push) / Compose
-  (HTTP + automatic HTTPS) / Vercel.
+  merge-flow diagram), the Bezugsquelle-family badge on tiles/list & "Verwandte Quellen" (with node
+  ids) in the detail (Audit-tier), a manual "Daten aktualisieren" button in the Audit tier (triggers
+  the same live rebuild as the nightly job, with progress), and the client-side PDF exports (jspdf,
+  lazy-loaded): the multi-source Steckbrief PDF (multi-select, Details + Audit) and a "Tabelle" table
+  PDF of the current filtered list (next to CSV/JSON). 41 frontend tests green; build clean; shipped
+  deps CVE-clean (`npm audit --omit=dev`).
+- ✅ **Deployment** — Docker image (build + run verified) · GitHub Actions → Docker Hub ·
+  GitLab CI → self-hosted registry + Helm chart (`helm lint` clean) · Compose (HTTP + automatic
+  HTTPS) · Kubernetes (Helm) · Vercel.
 
 The previous apps (`quellenliste-x`, `quellenerschliessung-app`) keep running unchanged until
 quellenpanel is deployed.

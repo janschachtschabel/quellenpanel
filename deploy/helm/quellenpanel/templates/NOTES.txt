@@ -1,0 +1,28 @@
+{{ .Chart.Name }} {{ .Chart.Version }} (app {{ default .Chart.AppVersion .Values.image.tag }}) deployed.
+
+Image: {{ include "quellenpanel.image" . }}
+
+{{- if .Values.ingress.enabled }}
+
+URL(s):
+{{- range .Values.ingress.hosts }}
+{{- $scheme := "http" }}
+{{- if $.Values.ingress.tls }}{{ $scheme = "https" }}{{ end }}
+  {{ $scheme }}://{{ . }}{{ index $.Values.ingress.paths 0 }}
+{{- end }}
+{{- else }}
+
+No ingress enabled. Reach the app via port-forward:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "quellenpanel.fullname" . }} 8080:{{ .Values.service.port }}
+  open http://localhost:8080
+{{- end }}
+
+Health check: GET /api/health
+
+Access tiers (all optional; unset ⇒ end-user-only, fail-closed):
+{{- if .Values.config.publicOnly }}
+  PUBLIC_ONLY is ON — every request is hard-capped at tier 0.
+{{- else }}
+  tier 2 (Audit/team): {{ if .Values.config.teamPassword }}enabled (team password set){{ else }}DISABLED — set config.teamPassword to enable{{ end }}
+  tier 1 (Details):    {{ if .Values.config.tier1Password }}password-gated{{ else }}open{{ end }}
+{{- end }}

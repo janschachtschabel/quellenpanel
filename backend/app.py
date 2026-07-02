@@ -14,9 +14,7 @@ import io
 import logging
 import time
 from contextlib import asynccontextmanager
-from urllib.parse import urlparse
 
-import requests
 from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, Request, Response
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -24,11 +22,13 @@ from fastapi.staticfiles import StaticFiles
 import config
 import filtering
 import protokoll
+import ratelimit
 import refresh
 import serialize
 import session
 import stats as stats_mod
 import stats_team as stats_team_mod
+import thumb
 import tiers
 import views
 import wlo_content
@@ -51,6 +51,7 @@ async def _lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="Quellenpanel", version="0.1.0", lifespan=_lifespan)
+app.include_router(thumb.router)   # /api/thumb — repository preview-image proxy (see thumb.py)
 
 # CORS: PUBLIC (read-only) data is served to ANY origin WITHOUT credentials (wildcard). The team
 # session cookie is only honoured for origins on the explicit trust list (config.ALLOWED_ORIGINS),
@@ -100,6 +101,8 @@ async def _http_mw(request: Request, call_next):
         resp.headers["Cache-Control"] = "no-store"
     elif p == "/" or p.endswith((".js", ".css", ".html", ".svg")):
         resp.headers["Cache-Control"] = "no-cache, must-revalidate"
+    # Never let a browser MIME-sniff a response into a different content type (defence in depth).
+    resp.headers["X-Content-Type-Options"] = "nosniff"
     return resp
 
 
@@ -125,6 +128,33 @@ def capabilities(request: Request, x_team_password: str | None = Header(None),
 @app.get("/api/meta/filters")
 def filter_options():
     return stats_mod.compute_filter_options(_DATA["records"])
+
+
+def _filters(
+    q: str = "",
+    subject: str = "",
+    level: str = "",
+    erschliessung: str = "",
+    oer: bool | None = Query(None),
+    crawler: bool | None = Query(None),
+    min_count: int = Query(1, ge=0),
+    flag: str | None = Query(None),
+    show_blacklist: bool = Query(False),
+    sort: str = Query("contentCount", pattern="^(contentCount|name)$"),
+    order: str = Query("desc", pattern="^(asc|desc)$"),
+    only_field_profile: bool = Query(False),
+    has_node: bool | None = Query(None),
+    has_bezugsquelle: bool | None = Query(None),
+    has_spider: bool | None = Query(None),
+    lrt: str = "",
+) -> dict:
+    """The list/export filter dimensions declared ONCE (FastAPI dependency), so the list and both
+    exports share one query definition — an export always matches the on-screen list, and a new
+    filter is added in a single place. Returned as a plain dict spread into `_query_records`."""
+    return {"q": q, "subject": subject, "level": level, "erschliessung": erschliessung, "oer": oer,
+            "crawler": crawler, "min_count": min_count, "flag": flag, "show_blacklist": show_blacklist,
+            "sort": sort, "order": order, "only_field_profile": only_field_profile, "has_node": has_node,
+            "has_bezugsquelle": has_bezugsquelle, "has_spider": has_spider, "lrt": lrt}
 
 
 def _query_records(tier, q="", subject="", level="", erschliessung="", oer=None, crawler=None,
@@ -156,59 +186,45 @@ def _query_records(tier, q="", subject="", level="", erschliessung="", oer=None,
 @app.get("/api/sources")
 def sources(
     tier: int = Depends(tiers.effective_tier),
-    q: str = "",
-    subject: str = "",
-    level: str = "",
-    erschliessung: str = "",
-    oer: bool | None = Query(None),
-    crawler: bool | None = Query(None),
-    min_count: int = Query(1, ge=0),
-    sort: str = Query("contentCount", pattern="^(contentCount|name)$"),
-    order: str = Query("desc", pattern="^(asc|desc)$"),
+    f: dict = Depends(_filters),
     page: int = Query(1, ge=1),
     page_size: int = Query(24, ge=1, le=200),
-    flag: str | None = Query(None),
-    show_blacklist: bool = Query(False),
-    only_field_profile: bool = Query(False),
-    has_node: bool | None = Query(None),
-    has_bezugsquelle: bool | None = Query(None),
-    has_spider: bool | None = Query(None),
-    lrt: str = "",
 ):
-    recs = _query_records(tier, q, subject, level, erschliessung, oer, crawler, min_count,
-                          flag, show_blacklist, sort, order, only_field_profile,
-                          has_node, has_bezugsquelle, has_spider, lrt or None)
+    if tier >= 2 and not f["flag"] and not f["show_blacklist"]:
+        # Default Audit view: fetch the hidden-REVEALED set ONCE (same filters, incl. lrt), then
+        # split it into the visible list and the filter-scoped hidden breakdown — so we never run
+        # the full filter twice. The split uses the same central rule (filtering.is_hidden_by_default)
+        # that filter_records applies, so the visible list is byte-for-byte what the default query
+        # would have returned. ZWEITDATENSATZ stay visible in the Quelldatensatz view (has_node=True).
+        full = _query_records(tier, **{**f, "show_blacklist": True})
+        recs = [r for r in full if not filtering.is_hidden_by_default(r, f["has_node"])]
+        hb = filtering.hidden_breakdown(full, f["has_node"])
+        hidden = {"blacklist": hb["blacklist"], "mehrfach": hb["zweitDatensatz"], "total": hb["total"]}
+    else:
+        recs = _query_records(tier, **f)
+        # A team view with an explicit flag / show_blacklist already reveals everything → nothing is
+        # hidden; below tier 2 the breakdown is not exposed at all.
+        hidden = {"blacklist": 0, "mehrfach": 0, "total": 0} if tier >= 2 else None
     total = len(recs)
     start = (page - 1) * page_size
-    items = [serialize.source(r, tier, family=family_count(r)) for r in recs[start:start + page_size]]
+    items = [serialize.source(r, tier, family=family_count(r) if tier >= 2 else 0)
+             for r in recs[start:start + page_size]]
     resp = {
         "tier": tier, "total": total, "page": page, "pageSize": page_size,
         "pages": (total + page_size - 1) // page_size if total else 0, "items": items,
     }
-    if tier >= 2:
-        # Filter-scoped hidden breakdown: re-run the same query with show_blacklist=True to
-        # count how many records the default view hides IN THE CURRENT FILTER — not globally.
-        # ZWEITDATENSATZ are only hidden when has_node is not True (they are visible in the
-        # Quelldatensatz view). Mirrors the quellenerschliessung-app behaviour.
-        if not flag and not show_blacklist:
-            # Re-run with the SAME filters (incl. lrt) but show_blacklist=True, then count what the
-            # default view hides via the shared helper — so the breakdown is always scoped to the
-            # exact filter the user sees (a content-type filter changes the hidden count too).
-            full = _query_records(tier, q, subject, level, erschliessung, oer, crawler, min_count,
-                                  flag, True, sort, order, only_field_profile,
-                                  has_node, has_bezugsquelle, has_spider, lrt or None)
-            hb = filtering.hidden_breakdown(full, has_node)
-            resp["hidden"] = {"blacklist": hb["blacklist"], "mehrfach": hb["zweitDatensatz"],
-                              "total": hb["total"]}
-        else:
-            resp["hidden"] = {"blacklist": 0, "mehrfach": 0, "total": 0}
+    if hidden is not None:
+        resp["hidden"] = hidden
     return resp
 
 
 @app.get("/api/sources/{source_id:path}/contents")
-def source_contents(source_id: str, max_items: int = Query(12, ge=1, le=50), skip: int = Query(0, ge=0)):
+def source_contents(request: Request, source_id: str, max_items: int = Query(12, ge=1, le=50),
+                    skip: int = Query(0, ge=0)):
     """Live example content of a source (NGSearch) — public, all tiers. Crawlers are matched by
     ccm:replicationsource (the spider), other sources by ccm:oeh_publisher_combined."""
+    if not ratelimit.fetch_rate_ok(request):
+        raise HTTPException(429, "Zu viele Anfragen. Bitte kurz warten.")
     r = _DATA["byId"].get(source_id)
     if not r:
         raise HTTPException(404, "Quelle nicht gefunden")
@@ -230,8 +246,9 @@ def source_detail(source_id: str, tier: int = Depends(tiers.effective_tier)):
     r = _DATA["byId"].get(source_id)
     if not r:
         raise HTTPException(404, "Quelle nicht gefunden")
-    # The Bezugsquelle family is public (it only references public list data) → show at every tier.
-    return serialize.source(r, tier, detail=True, related=related_sources(r))
+    # The Bezugsquelle family is Audit-tier only (see serialize.source) — compute it only then.
+    related = related_sources(r) if tier >= 2 else None
+    return serialize.source(r, tier, detail=True, related=related)
 
 
 # --- Team-login brute-force throttle --------------------------------------------------------
@@ -243,20 +260,15 @@ _LOGIN_WINDOW = 300.0     # rolling window (seconds)
 _LOGIN_MAX_FAILS = 8      # wrong attempts allowed per window per client
 
 
-def _client_ip(request: Request) -> str:
-    fwd = request.headers.get("x-forwarded-for", "")
-    return (fwd.split(",")[0].strip() if fwd
-            else (request.client.host if request.client else "?"))
-
-
 @app.post("/api/auth")
 def auth(request: Request, response: Response, x_team_password: str | None = Header(None)):
     """Team login → httpOnly session cookie (so the password is never stored client-side).
     The password is accepted ONLY via the X-Team-Password header, never as a URL query
     parameter, so it cannot leak into proxy/access logs or browser history. Repeated wrong
     attempts from one client are rate-limited (429) to thwart online brute force."""
-    ip = _client_ip(request)
+    ip = ratelimit.client_ip(request)
     now = time.time()
+    ratelimit.sweep(_LOGIN_FAILS, _LOGIN_WINDOW, now)
     fails = [t for t in _LOGIN_FAILS.get(ip, []) if now - t < _LOGIN_WINDOW]
     if len(fails) >= _LOGIN_MAX_FAILS:
         _LOGIN_FAILS[ip] = fails
@@ -330,53 +342,23 @@ def stats_team(team: bool = Depends(tiers.is_team)):
 # Export — leak-safe flat view of the visible set; a data-work feature (tier 1+).
 # ---------------------------------------------------------------------------
 @app.get("/api/export.json")
-def export_json(
-    tier: int = Depends(tiers.effective_tier),
-    q: str = "", subject: str = "", level: str = "", erschliessung: str = "",
-    oer: bool | None = Query(None), crawler: bool | None = Query(None),
-    min_count: int = Query(1, ge=0), flag: str | None = Query(None),
-    show_blacklist: bool = Query(False),
-    sort: str = Query("contentCount", pattern="^(contentCount|name)$"),
-    order: str = Query("desc", pattern="^(asc|desc)$"),
-    only_field_profile: bool = Query(False),
-    has_node: bool | None = Query(None),
-    has_bezugsquelle: bool | None = Query(None),
-    has_spider: bool | None = Query(None),
-    lrt: str = "",
-):
+def export_json(tier: int = Depends(tiers.effective_tier), f: dict = Depends(_filters)):
     if tier < 1:
         raise HTTPException(403, "Export ab Detailmodus.")
     team = tier >= 2
-    rows = [views.flat(r, team=team) for r in _query_records(tier, q, subject, level, erschliessung,
-                                                            oer, crawler, min_count, flag, show_blacklist, sort, order,
-                                                            only_field_profile, has_node, has_bezugsquelle, has_spider, lrt or None)]
+    rows = [views.flat(r, team=team) for r in _query_records(tier, **f)]
     return JSONResponse(rows, headers={"Content-Disposition": "attachment; filename=quellen_export.json"})
 
 
 @app.get("/api/export.csv")
-def export_csv(
-    tier: int = Depends(tiers.effective_tier),
-    q: str = "", subject: str = "", level: str = "", erschliessung: str = "",
-    oer: bool | None = Query(None), crawler: bool | None = Query(None),
-    min_count: int = Query(1, ge=0), flag: str | None = Query(None),
-    show_blacklist: bool = Query(False),
-    sort: str = Query("contentCount", pattern="^(contentCount|name)$"),
-    order: str = Query("desc", pattern="^(asc|desc)$"),
-    only_field_profile: bool = Query(False),
-    has_node: bool | None = Query(None),
-    has_bezugsquelle: bool | None = Query(None),
-    has_spider: bool | None = Query(None),
-    lrt: str = "",
-):
+def export_csv(tier: int = Depends(tiers.effective_tier), f: dict = Depends(_filters)):
     if tier < 1:
         raise HTTPException(403, "Export ab Detailmodus.")
     team = tier >= 2
     buf = io.StringIO()
     w = csv.DictWriter(buf, fieldnames=views.EXPORT_COLS, delimiter=";", extrasaction="ignore")
     w.writeheader()
-    for r in _query_records(tier, q, subject, level, erschliessung, oer, crawler, min_count,
-                            flag, show_blacklist, sort, order, only_field_profile,
-                            has_node, has_bezugsquelle, has_spider, lrt or None):
+    for r in _query_records(tier, **f):
         w.writerow(views.flat(r, team=team))
     return StreamingResponse(iter(["﻿" + buf.getvalue()]), media_type="text/csv; charset=utf-8",
                              headers={"Content-Disposition": "attachment; filename=quellen_export.csv"})
@@ -423,61 +405,6 @@ def admin_reload(team: bool = Depends(tiers.is_team)):
         raise HTTPException(403, "Nur intern.")
     _load()
     return {"ok": True, "meta": _DATA["meta"]}
-
-
-# ---------------------------------------------------------------------------
-# Preview-image proxy for the PDF export (works around the canvas CORS taint so
-# jsPDF.addImage can draw repository thumbnails). Only the configured repository
-# host is allowed (repo-neutral; not an open proxy).
-# ---------------------------------------------------------------------------
-_THUMB_CACHE: dict[str, tuple[bytes, str]] = {}
-_REPO_HOST = (urlparse(config.REPO_URL).hostname or "").lower()
-_THUMB_MAX_BYTES = 5 * 1024 * 1024   # hard cap per preview image (5 MB)
-
-
-@app.get("/api/thumb")
-def thumb(url: str = Query(..., description="Preview URL on the configured repository host")):
-    parts = urlparse(url)
-    host = (parts.hostname or "").lower()
-    # HTTPS only, and only the EXACT configured repository host (or a sub-domain of it) — repo-neutral,
-    # never an open proxy. Matching the exact host (not the registrable domain) means a deployment
-    # against a multi-label TLD (e.g. example.co.uk) cannot accidentally widen the allow-list.
-    if parts.scheme != "https" or not (host == _REPO_HOST or host.endswith("." + _REPO_HOST)):
-        raise HTTPException(400, "Host nicht erlaubt.")
-    cached = _THUMB_CACHE.get(url)
-    if cached is None:
-        rr = None
-        try:
-            rr = requests.get(url, timeout=8, stream=True)
-            rr.raise_for_status()
-            ct = rr.headers.get("Content-Type", "image/jpeg")
-            # Raster images only — reject SVG (can embed script) and any non-image payload.
-            if not ct.startswith("image/") or "svg" in ct.lower():
-                raise HTTPException(415, "Kein Bild.")
-            # Reject oversized images: trust the declared length when present, and enforce the cap
-            # while streaming so a lying/absent Content-Length cannot bust the memory budget.
-            declared = rr.headers.get("Content-Length")
-            if declared and declared.isdigit() and int(declared) > _THUMB_MAX_BYTES:
-                raise HTTPException(413, "Vorschau zu groß.")
-            buf = bytearray()
-            for chunk in rr.iter_content(8192):
-                buf.extend(chunk)
-                if len(buf) > _THUMB_MAX_BYTES:
-                    raise HTTPException(413, "Vorschau zu groß.")
-            content = bytes(buf)
-        except HTTPException:
-            raise
-        except Exception:
-            raise HTTPException(502, "Vorschau nicht abrufbar.") from None
-        finally:
-            if rr is not None:
-                rr.close()
-        cached = (content, ct)
-        if len(_THUMB_CACHE) < 2000:
-            _THUMB_CACHE[url] = cached
-    content, ct = cached
-    return Response(content=content, media_type=ct,
-                    headers={"Cache-Control": "public, max-age=86400", "X-Content-Type-Options": "nosniff"})
 
 
 # In production serve the built Angular SPA (frontend/dist/browser) at "/". In dev this folder

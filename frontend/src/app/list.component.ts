@@ -77,9 +77,9 @@ import { I18n } from './i18n.service';
                 @if (s.oer) { <span class="tag oer">OER</span> }
               </td>
               <td class="c-status">
-                @if (s.erschliessungsstatus) {
-                  <span class="status-badge" [class.done]="s.erschliessungsstatus.charAt(0) === '9'"
-                    [matTooltip]="s.erschliessungsstatus">{{ s.erschliessungsstatus.charAt(0) }}</span>
+                @if (statusCode(s.erschliessungsstatus); as code) {
+                  <span class="status-badge" [class.done]="code === '9'"
+                    [matTooltip]="s.erschliessungsstatus">{{ code }}</span>
                 }
               </td>
               <td class="c-qual">
@@ -160,5 +160,13 @@ export class ListComponent {
   /** Fallback avatar letter when a source has no preview image. */
   initial(s: SourceCard): string {
     return (s.name || '?').charAt(0).toUpperCase();
+  }
+
+  /** Leading digit of the exact editorial status code (team / tier 2, e.g. "9." → "9"); '' for the
+   *  coarse public statement (tier 0/1), so the compact status badge shows only the real code — the
+   *  coarse statement itself is shown in the detail dialog. */
+  statusCode(status: string): string {
+    const s = status ?? '';
+    return /^\d/.test(s) ? s.charAt(0) : '';
   }
 }

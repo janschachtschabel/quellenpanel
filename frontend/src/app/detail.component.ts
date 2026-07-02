@@ -149,28 +149,6 @@ import { I18n } from './i18n.service';
       </section>
     }
 
-    <!-- Verwandte Quellen unter derselben Bezugsquelle (Publisher + Sub-Channels, z. B. YouTube),
-         tier 1+ — nur sichtbar, wenn es Geschwister-Quellen gibt. -->
-    @if (detail.related; as rel) {
-      <section class="sb">
-        <h3><mat-icon>account_tree</mat-icon> {{ i18n.t('detail.sec.related') }}</h3>
-        <p class="sb-hint">{{ i18n.t('detail.related.hint') }} <strong>{{ rel.bezugsquelle }}</strong></p>
-        <div class="rel-list">
-          @for (s of rel.items; track s.id) {
-            <div class="rel-item">
-              <mat-icon class="rel-ic" [class.node]="s.hasNode"
-                [title]="s.hasNode ? i18n.t('detail.related.node') : i18n.t('detail.related.bq')">{{ s.hasNode ? 'description' : 'public' }}</mat-icon>
-              <span class="rel-name" [title]="s.name">{{ s.name }}</span>
-              <span class="rel-cc">{{ s.contentCount | number }}</span>
-            </div>
-          }
-          @if (rel.count > rel.items.length) {
-            <div class="rel-more">+ {{ rel.count - rel.items.length }} {{ i18n.t('detail.related.andMore') }}</div>
-          }
-        </div>
-      </section>
-    }
-
     <!-- Qualitätsmerkmale -->
     @if (hasQuality()) {
       <section class="sb">
@@ -191,20 +169,6 @@ import { I18n } from './i18n.service';
             </div>
           }
         }
-      </section>
-    }
-
-    <!-- KI-Nutzung & Recht (tier 1+): always the four legal/AI fields; empty → — -->
-    @if (detail.ki && keys(detail.ki).length) {
-      <section class="sb">
-        <h3><mat-icon>balance</mat-icon> {{ i18n.t('detail.field.ki') }}</h3>
-        <p class="sb-hint">{{ i18n.t('detail.ki.hint') }}</p>
-        <div class="kv ki">
-          @for (k of keys(detail.ki); track k) {
-            <div class="k">{{ k }}<ng-container [ngTemplateOutlet]="pp" [ngTemplateOutletContext]="{ $implicit: k }"></ng-container></div>
-            <div class="v">@if (detail.ki[k]) { {{ detail.ki[k] }} } @else { <span class="muted">—</span> }</div>
-          }
-        </div>
       </section>
     }
 
@@ -231,6 +195,21 @@ import { I18n } from './i18n.service';
             }
           </tbody>
         </table>
+      </section>
+    }
+
+    <!-- KI-Nutzung & Recht (tier 1+): the four legal/AI fields (empty → —). Placed AFTER the crawler
+         field-generation table (editorial order). -->
+    @if (detail.ki && keys(detail.ki).length) {
+      <section class="sb">
+        <h3><mat-icon>balance</mat-icon> {{ i18n.t('detail.field.ki') }}</h3>
+        <p class="sb-hint">{{ i18n.t('detail.ki.hint') }}</p>
+        <div class="kv ki">
+          @for (k of keys(detail.ki); track k) {
+            <div class="k">{{ k }}<ng-container [ngTemplateOutlet]="pp" [ngTemplateOutletContext]="{ $implicit: k }"></ng-container></div>
+            <div class="v">@if (detail.ki[k]) { {{ detail.ki[k] }} } @else { <span class="muted">—</span> }</div>
+          }
+        </div>
       </section>
     }
 
@@ -261,6 +240,30 @@ import { I18n } from './i18n.service';
       <section class="sb">
         <h3><mat-icon>flag</mat-icon> {{ i18n.t('detail.field.flags') }}</h3>
         <mat-chip-set>@for (f of detail.flags; track f) { <mat-chip>{{ f }}</mat-chip> }</mat-chip-set>
+      </section>
+    }
+
+    <!-- Verwandte Quellen unter derselben Bezugsquelle (Publisher + Sub-Channels, z. B. YouTube).
+         Audit-Tier (tier 2): data-work context, hier bei den Datenproblemen/Anmerkungen — nur
+         sichtbar, wenn der Backend es liefert (tier 2) UND es Geschwister-Quellen gibt. -->
+    @if (detail.related; as rel) {
+      <section class="sb">
+        <h3><mat-icon>account_tree</mat-icon> {{ i18n.t('detail.sec.related') }}</h3>
+        <p class="sb-hint">{{ i18n.t('detail.related.hint') }} <strong>{{ rel.bezugsquelle }}</strong></p>
+        <div class="rel-list">
+          @for (s of rel.items; track s.id) {
+            <div class="rel-item">
+              <mat-icon class="rel-ic" [class.node]="s.hasNode"
+                [title]="s.hasNode ? i18n.t('detail.related.node') : i18n.t('detail.related.bq')">{{ s.hasNode ? 'description' : 'public' }}</mat-icon>
+              <span class="rel-name" [title]="s.name">{{ s.name }}</span>
+              @if (s.nodeId) { <span class="rel-node" [title]="i18n.t('bind.node')">{{ s.nodeId }}</span> }
+              <span class="rel-cc">{{ s.contentCount | number }}</span>
+            </div>
+          }
+          @if (rel.count > rel.items.length) {
+            <div class="rel-more">+ {{ rel.count - rel.items.length }} {{ i18n.t('detail.related.andMore') }}</div>
+          }
+        </div>
       </section>
     }
 
@@ -322,6 +325,8 @@ import { I18n } from './i18n.service';
     .rel-ic { font-size: 16px; width: 16px; height: 16px; color: #8aa0c0; flex-shrink: 0; }
     .rel-ic.node { color: #1a8a4d; }
     .rel-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--wlo-text); }
+    /* Node-ID (Audit tier): the edu-sharing Quelldatensatz id, monospace + copy-selectable. */
+    .rel-node { flex-shrink: 0; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: ui-monospace, Consolas, monospace; font-size: 10px; color: var(--wlo-text-muted); user-select: all; }
     .rel-cc { font-size: 11px; color: var(--wlo-text-muted); flex-shrink: 0; }
     .rel-more { font-size: 12px; color: var(--wlo-text-muted); font-style: italic; padding-top: 4px; }
     .sb.internal > h3 { color: #b3261e; }

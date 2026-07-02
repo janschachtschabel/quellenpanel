@@ -24,6 +24,11 @@ jobs:
         run: |
           pip install -r backend/requirements-dev.txt
           python -m pytest backend/tests
+      - name: Backend dependency audit
+        # Hard gate: fails the build on any known CVE in the pinned backend deps (tree verified clean).
+        run: |
+          pip install pip-audit
+          pip-audit -r backend/requirements.txt
 
       - uses: actions/setup-node@v4
         with:
@@ -34,6 +39,15 @@ jobs:
         run: |
           npm --prefix frontend ci
           npm --prefix frontend test -- --watch=false
+      - name: Frontend dependency audit — shipped deps
+        # Hard gate on PRODUCTION dependencies — what actually ships in the SPA bundle (verified clean).
+        run: npm --prefix frontend audit --omit=dev --audit-level=high
+      - name: Frontend dependency audit — build tooling (advisory)
+        # Dev/build-tooling CVEs (devDependencies, e.g. undici via @angular/build & cli) affect only
+        # the build machine, not the shipped app, and can't be fixed without Angular-tooling bumps —
+        # surfaced as a warning, not release-blocking.
+        continue-on-error: true
+        run: npm --prefix frontend audit --audit-level=high
 
   # Gate the publish on the Docker Hub secrets actually being present, so the workflow stays green
   # (with a warning) on forks / repos without credentials instead of failing at the login step.
