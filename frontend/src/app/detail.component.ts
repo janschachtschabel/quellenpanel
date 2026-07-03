@@ -250,6 +250,7 @@ import { I18n } from './i18n.service';
       <section class="sb">
         <h3><mat-icon>account_tree</mat-icon> {{ i18n.t('detail.sec.related') }}</h3>
         <p class="sb-hint">{{ i18n.t('detail.related.hint') }} <strong>{{ rel.bezugsquelle }}</strong></p>
+        <p class="sb-hint rel-warn"><mat-icon>flag</mat-icon> {{ i18n.t('detail.related.problem') }}</p>
         <div class="rel-list">
           @for (s of rel.items; track s.id) {
             <div class="rel-item">
@@ -320,6 +321,9 @@ import { I18n } from './i18n.service';
     .sb-sub { font-weight: 400; font-size: 12px; color: var(--wlo-text-muted); }
     .sb-hint { font-size: 12px; color: var(--wlo-text-muted); margin: -4px 0 10px; line-height: 1.45; }
     /* Related sources (Bezugsquelle family — publisher + its sub-channels) */
+    /* Data-problem note: multiple datasets per Bezugsquelle are tracked in the audit protocol. */
+    .rel-warn { display: flex; align-items: flex-start; gap: 5px; color: #aa6600; }
+    .rel-warn mat-icon { font-size: 14px; width: 14px; height: 14px; margin-top: 1px; flex-shrink: 0; }
     .rel-list { display: flex; flex-direction: column; gap: 1px; }
     .rel-item { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 13px; }
     .rel-ic { font-size: 16px; width: 16px; height: 16px; color: #8aa0c0; flex-shrink: 0; }

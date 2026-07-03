@@ -156,6 +156,12 @@ export class SourcesService {
     return this.http.get(`${this.base}/protokoll.md`, { responseType: 'text' });
   }
 
+  /** Download URL for the MACHINE-READABLE protocol (team only) — JSON (structured, per category)
+   * or CSV (flat, one row per case) for consumption by other applications. Uncapped. */
+  protokollUrl(format: 'json' | 'csv'): string {
+    return `${this.base}/protokoll.${format}`;
+  }
+
   /** Trigger the live data rebuild (team only) — the same job the nightly scheduler runs. */
   refreshStart(): Observable<{ status: string }> {
     return this.http.post<{ status: string }>(`${this.base}/jobs/refresh`, null);

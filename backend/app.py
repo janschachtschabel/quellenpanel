@@ -376,6 +376,34 @@ def protokoll_md(team: bool = Depends(tiers.is_team)):
                     headers={"Content-Disposition": "attachment; filename=fehler-protokoll.md"})
 
 
+@app.get("/api/protokoll.json")
+def protokoll_json(team: bool = Depends(tiers.is_team)):
+    """Machine-readable data-problem protocol (uncapped) — for consumption by other applications."""
+    if not team:
+        raise HTTPException(403, "Nur intern (Team-Login nötig).")
+    data = protokoll.build_protokoll_data(_DATA["records"], _DATA["meta"])
+    return JSONResponse(data, headers={"Content-Disposition": "attachment; filename=fehler-protokoll.json"})
+
+
+@app.get("/api/protokoll.csv")
+def protokoll_csv(team: bool = Depends(tiers.is_team)):
+    """The protocol as FLAT rows (one line per category × case) — the spreadsheet-friendly shape."""
+    if not team:
+        raise HTTPException(403, "Nur intern (Team-Login nötig).")
+    data = protokoll.build_protokoll_data(_DATA["records"], _DATA["meta"])
+    buf = io.StringIO()
+    w = csv.DictWriter(buf, fieldnames=["kennung", "rubrik", "quelle", "nodeId", "bezugsquelle",
+                                        "inhalte", "fixHinweis"], delimiter=";")
+    w.writeheader()
+    for cat in data["categories"]:
+        for c in cat["cases"]:
+            w.writerow({"kennung": cat["key"], "rubrik": cat["title"], "quelle": c["name"],
+                        "nodeId": c["nodeId"], "bezugsquelle": c["bezugsquelle"],
+                        "inhalte": c["contentCount"], "fixHinweis": c["detail"] or ""})
+    return StreamingResponse(iter(["﻿" + buf.getvalue()]), media_type="text/csv; charset=utf-8",
+                             headers={"Content-Disposition": "attachment; filename=fehler-protokoll.csv"})
+
+
 @app.post("/api/sources/batch")
 def sources_batch(ids: list[str] = Body(..., embed=True), tier: int = Depends(tiers.effective_tier)):
     """Several records at the granted tier — feeds the client-side multi-source PDF export."""

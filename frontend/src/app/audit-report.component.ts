@@ -30,6 +30,12 @@ import { I18n } from './i18n.service';
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button mat-dialog-close>{{ i18n.t('action.close') }}</button>
+      <button mat-stroked-button type="button" [disabled]="!text()" (click)="downloadData('json')" [attr.title]="i18n.t('audit.data')">
+        <mat-icon>data_object</mat-icon> JSON
+      </button>
+      <button mat-stroked-button type="button" [disabled]="!text()" (click)="downloadData('csv')" [attr.title]="i18n.t('audit.data')">
+        <mat-icon>table_view</mat-icon> CSV
+      </button>
       <button mat-stroked-button type="button" [disabled]="!text()" (click)="print()">
         <mat-icon>print</mat-icon> {{ i18n.t('audit.print') }}
       </button>
@@ -63,6 +69,17 @@ export class AuditReportComponent implements OnInit {
       next: (md) => { this.text.set(md); this.loading.set(false); },
       error: () => { this.error.set(true); this.loading.set(false); },
     });
+  }
+
+  /** Download the machine-readable protocol (JSON structured / CSV flat) for other applications —
+   * served by the team-gated backend endpoints; the same-origin session cookie authorises it. */
+  downloadData(format: 'json' | 'csv'): void {
+    const a = document.createElement('a');
+    a.href = this.api.protokollUrl(format);
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
   /** Save the protocol as a Markdown file (client-side blob download). */

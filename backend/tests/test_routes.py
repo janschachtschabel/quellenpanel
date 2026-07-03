@@ -87,6 +87,33 @@ def test_protokoll_team_only(client, team_pw):
     assert r.status_code == 200 and r.text.strip()
 
 
+def test_protokoll_json_team_only_and_machine_readable(client, team_pw):
+    # Machine-readable protocol: same gating as the .md, structured shape, and NOT capped —
+    # every flagged case is present (the .md caps long tables at 300 for readability).
+    assert client.get("/api/protokoll.json").status_code == 403
+    r = client.get("/api/protokoll.json", headers={"X-Team-Password": team_pw})
+    assert r.status_code == 200
+    d = r.json()
+    assert d["recordsTotal"] > 0 and "generatedAt" in d
+    cats = {c["key"]: c for c in d["categories"]}
+    zw = cats["ZWEITDATENSATZ"]
+    assert zw["count"] == len(zw["cases"]) > 0          # uncapped: count == emitted cases
+    case = zw["cases"][0]
+    assert {"id", "name", "nodeId", "bezugsquelle", "contentCount", "detail"} <= set(case)
+    assert case["detail"]                                # merge target (Primär-Datensatz) filled
+    # every rubric of the .md catalog is present, with problem + recommendation text
+    assert all(c["title"] and c["problem"] and c["recommendation"] for c in d["categories"])
+
+
+def test_protokoll_csv_team_only_flat_rows(client, team_pw):
+    assert client.get("/api/protokoll.csv").status_code == 403
+    r = client.get("/api/protokoll.csv", headers={"X-Team-Password": team_pw})
+    assert r.status_code == 200
+    lines = r.text.lstrip("﻿").splitlines()
+    assert lines[0] == "kennung;rubrik;quelle;nodeId;bezugsquelle;inhalte;fixHinweis"
+    assert any(line.startswith("ZWEITDATENSATZ;") for line in lines[1:])
+
+
 def test_batch_is_tiered(client, team_pw):
     sid = client.get("/api/sources?page_size=1").json()["items"][0]["id"]
     pub = client.post("/api/sources/batch", json={"ids": [sid]}).json()["items"]

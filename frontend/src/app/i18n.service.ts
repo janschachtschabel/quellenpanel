@@ -64,6 +64,7 @@ const DICT: Record<string, { de: string; en: string }> = {
   'audit.hint':           { de: 'Datenprobleme zur Bereinigung — lesbar, speicherbar (.md) und druckbar.', en: 'Data problems for cleanup — readable, savable (.md) and printable.' },
   'audit.print':          { de: 'Drucken', en: 'Print' },
   'audit.save':           { de: 'Speichern (.md)', en: 'Save (.md)' },
+  'audit.data':           { de: 'Maschinenlesbarer Export für andere Anwendungen (alle Fälle, ungekürzt)', en: 'Machine-readable export for other applications (all cases, uncapped)' },
   // manual data sync (team) — triggers the same live rebuild as the nightly job
   'sync.start':           { de: 'Daten aktualisieren', en: 'Refresh data' },
   'sync.title':           { de: 'Live-Abruf von WLO starten und die Datenbasis neu aufbauen (wie der nächtliche Lauf).', en: 'Fetch live from WLO and rebuild the data (like the nightly job).' },
@@ -208,6 +209,7 @@ const DICT: Record<string, { de: string; en: string }> = {
   'detail.sec.license':   { de: 'Lizenz', en: 'Licence' },
   'detail.sec.related':   { de: 'Verwandte Quellen', en: 'Related sources' },
   'detail.related.hint':  { de: 'Weitere Quellen unter derselben Bezugsquelle:', en: 'Other sources under the same publisher:' },
+  'detail.related.problem': { de: 'Hinweis: Mehrere Quelldatensätze je Bezugsquelle sind ein Datenproblem — im Audit-Protokoll als ZWEITDATENSATZ / BQ_SUBCHANNEL erfasst.', en: 'Note: several source datasets per publisher are a data problem — tracked in the audit report as ZWEITDATENSATZ / BQ_SUBCHANNEL.' },
   'detail.related.andMore': { de: 'weitere', en: 'more' },
   'detail.related.node':  { de: 'mit Quelldatensatz', en: 'with source dataset' },
   'detail.related.bq':    { de: 'nur Bezugsquelle', en: 'publisher only' },

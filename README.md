@@ -80,7 +80,9 @@ GET  /api/sources/{id}/contents        live example content (public)
 GET  /api/stats                        statistics overview — end-user (0) · extended/full (1+)
 GET  /api/stats/team                   data-problem / origin / fill-level addendum (team)
 GET  /api/export.json | .csv           leak-safe flat export (tier 1+)
-GET  /api/protokoll.md                 data-problem audit protocol (team)
+GET  /api/protokoll.md | .json | .csv  data-problem audit protocol (team) — .md readable (tables
+                                       capped at 300/rubric), .json structured / .csv flat rows,
+                                       both UNCAPPED for consumption by other applications
 POST /api/sources/batch                several records at the tier — feeds the multi-source PDF
 GET  /api/thumb                        preview-image proxy for the PDF (configured repo host only)
 POST /api/auth · /api/logout · GET /api/auth/status     team login (httpOnly session cookie)
@@ -90,8 +92,9 @@ POST /jobs/refresh (team) · GET /jobs/latest            live data refresh
 ## Tests
 
 ```bash
-cd backend && python -m pytest -q       # 41 tests: tier model, no-leak invariant per tier, route gating,
-                                        #   login/fetch rate limits, SSRF guard, hidden-breakdown split
+cd backend && python -m pytest -q       # 44 tests: tier model, no-leak invariant per tier, route gating,
+                                        #   login/fetch rate limits, SSRF guard, hidden-breakdown split,
+                                        #   protocol exports (.json/.csv) + family-multiplicity guard
 cd frontend && npm test -- --watch=false  # 41 tests: i18n, services, quality, selection, grid columns,
                                           #   PDF builders (content-asserted) + URL-safety helpers (vitest)
 ```
@@ -148,10 +151,12 @@ Deployment targets:
 
 ## Status
 
-- ✅ **Backend** — merged 3-tier API; 41 tests green; ruff clean (`backend/ruff.toml`); no-leak
+- ✅ **Backend** — merged 3-tier API; 44 tests green; ruff clean (`backend/ruff.toml`); no-leak
   invariant + `QE_PUBLIC_ONLY` hard cap verified; login/fetch rate limits (proxy-safe) + thumbnail
   SSRF guard tested; deps pinned + CVE-clean (`pip-audit`). The Bezugsquelle-family index (publisher
-  + sub-channels, e.g. YouTube) drives the card badge + the detail "related sources" — Audit-tier only.
+  + sub-channels, e.g. YouTube) drives the card badge + the detail "related sources" — Audit-tier
+  only; family multiplicity is covered in the audit protocol (ZWEITDATENSATZ / BQ_SUBCHANNEL, guarded
+  by test), exportable as readable .md and machine-readable .json/.csv.
 - ✅ **Frontend** — Angular 21 web component (Material 3, i18n): tiles/list, search + sort on top, no
   sidebars, detail popup (with per-source PDF), tier toggles (Basisinfos / Details / Audit), tiered
   statistics (base + Details fill-levels + team problem groups/examples + an interactive engine

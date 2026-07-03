@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, OnDestroy, inject, signal, computed, Signal } from '@angular/core';
-import { Subscription, timer } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { Subscription, timer, of } from 'rxjs';
+import { switchMap, catchError } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,7 +15,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
-import { FilterOptions, FullStats, SourcesPage, Stats, TeamStats } from './models';
+import { FilterOptions, FullStats, RefreshStatus, SourcesPage, Stats, TeamStats } from './models';
 import { SourcesService } from './sources.service';
 import { StatsComponent } from './stats.component';
 import { FullStatsComponent } from './full-stats.component';
@@ -597,15 +597,20 @@ export class AppComponent implements OnInit {
 
   private pollRefresh(): void {
     this.refreshSub?.unsubscribe();
-    // Poll the public status every 2 s; a running job reports percent + a step message.
-    this.refreshSub = timer(0, 2000).pipe(switchMap(() => this.api.refreshStatus())).subscribe({
-      next: (s) => {
-        this.refreshPct = s.percent ?? 0;
-        this.refreshMsg = s.message || this.i18n.t('sync.running');
-        if (s.status === 'done') { this.finishRefresh(false); }
-        else if (s.status === 'error') { this.finishRefresh(true); }
-      },
-      error: () => this.finishRefresh(true),
+    // Poll the public status every 2 s; a running job reports percent + a step message. A single
+    // failed status poll (e.g. a transient 502 during the minutes-long rebuild) must NOT abort the
+    // poll — the job keeps running server-side — so swallow it and keep the last known progress.
+    this.refreshSub = timer(0, 2000).pipe(
+      switchMap(() => this.api.refreshStatus().pipe(
+        catchError(() => of<RefreshStatus>({
+          status: 'running', percent: this.refreshPct, message: this.refreshMsg, error: null,
+        })),
+      )),
+    ).subscribe((s) => {
+      this.refreshPct = s.percent ?? 0;
+      this.refreshMsg = s.message || this.i18n.t('sync.running');
+      if (s.status === 'done') { this.finishRefresh(false); }
+      else if (s.status === 'error') { this.finishRefresh(true); }
     });
   }
 

@@ -1,6 +1,7 @@
 """The Bezugsquelle-family grouping (publisher + its sub-channels) behind the detail view's
 "related sources" — e.g. all YouTube channels group under the parent "YouTube"."""
 import store
+from protokoll import CATALOG
 
 
 def _r(rid, name, bq, flags=(), cc=0, node=""):
@@ -44,3 +45,27 @@ def test_related_sources_returns_family_siblings():
         assert store.family_count(_r("x", "NoBq", "")) == 0
     finally:
         store._DATA["byFamily"] = saved
+
+
+def test_family_multiplicity_is_fully_covered_by_protocol(client):
+    """Invariant against the bundled snapshot: what the Audit detail shows as "related sources"
+    (several records per Bezugsquelle family) IS a data problem, and the exportable protocol must
+    carry it — per family with siblings, at most ONE member (the legitimate primary / merge target)
+    may lack a protocol flag; every extra dataset must be flagged (ZWEITDATENSATZ / BQ_SUBCHANNEL /
+    …). Guards the build's problem detection: if a data rebuild ever produced sibling records
+    without a protocol rubric, the protocol would silently under-report and this test fails."""
+    catalog_flags = {flag for _k, _t, _d, _r, flag in CATALOG}
+    families = {}
+    for r in store._DATA["records"]:
+        key = store._family_key(r)
+        if key:
+            families.setdefault(key, []).append(r)
+    gaps = []
+    for key, members in families.items():
+        if len(members) < 2:
+            continue
+        unflagged = [r for r in members
+                     if not any(f in catalog_flags for f in r.get("flags", []))]
+        if len(unflagged) > 1:
+            gaps.append((key, [r["name"] for r in unflagged]))
+    assert not gaps, f"families with >1 unflagged member (protocol under-reports): {gaps[:5]}"

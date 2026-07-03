@@ -283,10 +283,43 @@ def _nicht_pruefbar():
     ]
 
 
+def _sections(records):
+    """Every catalog rubric with its matched cases — the ONE case collection shared by the
+    readable (.md) and the machine-readable (.json/.csv) protocol, so they never diverge."""
+    return [(key, title, desc, rec, [r for r in records if _matches(r, match)])
+            for key, title, desc, rec, match in CATALOG]
+
+
+def build_protokoll_data(records, meta) -> dict:
+    """Machine-readable protocol (feeds /api/protokoll.json and the flat .csv): the same catalog,
+    counts and per-case fix details as the Markdown, as plain data — and deliberately UNCAPPED
+    (the .md truncates long tables at 300 for readability; a consuming app needs every case).
+    Duplicate clustering (the .md's keep/remove groups) is not replicated — DUBLETTE_VERDACHT
+    cases are listed flat like every other rubric."""
+    primary_by_bq = _primary_by_bq(records)
+    sections = _sections(records)
+    categories = []
+    for key, title, desc, rec, cases in sections:
+        detailed = key in DETAIL_LABEL
+        categories.append({
+            "key": key, "title": title, "problem": desc, "recommendation": rec,
+            "detailLabel": DETAIL_LABEL.get(key), "count": len(cases),
+            "cases": [{
+                "id": r["id"], "name": r.get("name", ""),
+                "nodeId": r["identity"].get("nodeId", ""),
+                "bezugsquelle": r["identity"].get("bezugsquelle", ""),
+                "contentCount": r.get("contentCount") or 0,
+                "detail": _detail(key, r, primary_by_bq) if detailed else None,
+            } for r in sorted(cases, key=lambda r: -(r.get("contentCount") or 0))],
+        })
+    problem_ids = {c["id"] for cat in categories for c in cat["cases"]}
+    return {"generatedAt": meta.get("generatedAt", ""), "recordsTotal": len(records),
+            "recordsWithProblems": len(problem_ids), "categories": categories}
+
+
 def build_protokoll(records, meta) -> str:
     primary_by_bq = _primary_by_bq(records)
-    sections = [(key, title, desc, rec, [r for r in records if _matches(r, match)])
-                for key, title, desc, rec, match in CATALOG]
+    sections = _sections(records)
     problem_ids = {r["id"] for _k, _t, _d, _r, cases in sections for r in cases}
 
     L = ["# Fehler-Protokoll — Datenprobleme bei WLO-Quellen", ""]
