@@ -38,6 +38,9 @@ backend/
 The data engine is reused unchanged; the new code is the tier model (`tiers.py`), the tiered
 serializer (`serialize.py`), the merged `app.py`, and the tier additions in `config.py`.
 
+How the data is assembled (live fetch + curated files → merged `truth.json` → hide/filter/overlay/tier
+on serve): [`docs/datenaufbereitung.md`](docs/datenaufbereitung.md) (compact tables + process diagram).
+
 ## Run (development)
 
 ```bash
