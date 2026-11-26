@@ -38,11 +38,13 @@ import session
 import stats as stats_mod
 import stats_team as stats_team_mod
 import thumb
+import team_routes
 import tiers
 import views
 import obs
 import wlo_content
 from store import _DATA, family_count, load as _load, related_sources
+from team_routes import require_team_role
 
 log = logging.getLogger("quellenpanel")
 
@@ -104,8 +106,8 @@ app.include_router(thumb.router)   # /api/thumb — repository preview-image pro
 # session cookie is only honoured for origins on the explicit trust list (config.ALLOWED_ORIGINS),
 # which get an origin-specific, credentialed grant so an embedded widget can log in cross-origin —
 # without turning the API into a credentialed open-CORS endpoint.
-_CORS_METHODS = "GET, POST, OPTIONS"
-_CORS_REQ_HEADERS = "Content-Type, X-Team-Password, X-Tier1-Password"
+_CORS_METHODS = "GET, POST, PUT, DELETE, OPTIONS"
+_CORS_REQ_HEADERS = "Content-Type, X-Team-Password, X-Tier1-Password, X-Zuordnung"
 
 # Reject request bodies larger than this before they are buffered/parsed (defence in depth; a
 # reverse proxy should cap too). Generous vs. the largest legitimate body (a batch of 100 ids).
@@ -131,9 +133,11 @@ async def _http_mw(request: Request, call_next):
     origin = request.headers.get("origin")
     # Cap oversized uploads up front, based on the declared Content-Length (as proxies do), so a
     # huge payload is refused before FastAPI buffers and parses it.
-    if request.method in ("POST", "PUT", "PATCH"):
+    if request.method in ("POST", "PUT", "PATCH", "DELETE"):
         cl = request.headers.get("content-length")
-        if cl and cl.isdigit() and int(cl) > _MAX_BODY_BYTES:
+        limit = (team_routes.MAX_UPLOAD_BYTES if request.url.path.startswith("/api/team/")
+                 else _MAX_BODY_BYTES)
+        if cl and cl.isdigit() and int(cl) > limit:
             return errors.response(413, "Anfrage zu groß.", headers=_cors_headers(origin))
     # CORS preflight: the API declares no OPTIONS routes, so answer it here.
     if request.method == "OPTIONS" and origin is not None:
@@ -144,6 +148,7 @@ async def _http_mw(request: Request, call_next):
         return Response(status_code=204, headers=headers)
     # Team instance still building its first data set: data routes answer 503 with a retry hint.
     if (request.url.path.startswith("/api/") and request.url.path not in _NO_DATA_NEEDED
+            and not request.url.path.startswith("/api/team/")
             and config.role() == "team" and not _DATA["records"]):
         resp = errors.response(503, "Daten werden aufgebaut", headers={"Retry-After": "60"}, retryAfter=60)
         for k, v in _cors_headers(origin).items():
@@ -173,12 +178,6 @@ def _export(tier: int) -> dict:
     if doc is None:
         raise HTTPException(503, "Daten werden geladen")
     return doc
-
-
-def require_team_role() -> None:
-    """Team-only routes do not exist on partner/public instances (404, not 403)."""
-    if config.role() != "team":
-        raise HTTPException(404, "Not Found")
 
 
 _TEAM_ONLY = [Depends(require_team_role)]
@@ -545,6 +544,9 @@ def admin_reload(team: bool = Depends(tiers.is_team)):
     enduser.reload_supplements()
     _rebuild_exports()
     return {"ok": True, "meta": _DATA["meta"]}
+
+
+app.include_router(team_routes.router)
 
 
 # Registered LAST so it wraps every other middleware (add_middleware inserts outermost): trace
