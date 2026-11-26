@@ -1,35 +1,69 @@
-# WLO Quellenpanel — deployment WITH automatic HTTPS (Caddy + nip.io/sslip.io).
-# Self-contained compose file. Start:
-#   docker compose -f docker-compose.tls.yml up -d
-# Config in .env (see .env.example): IMAGE, SITE_ADDRESS, plus the access-tier vars.
-# (PORT is NOT used here — only Caddy listens on 80/443.)
+# WLO Quellenpanel — three instances WITH automatic HTTPS (Caddy + nip.io/sslip.io).
+# Start:  docker compose -f docker-compose.tls.yml up -d
+# Config in .env (see .env.example): IMAGE, SITE_ADDRESS (public), PARTNER_ADDRESS, plus the
+# access-tier vars. Only Caddy listens publicly (80/443). The team instance stays on 127.0.0.1.
+x-common: &common
+  image: ${IMAGE:?please set IMAGE in .env (e.g. youruser/quellenpanel:0.3.0)}
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+    - /tmp
+  user: "10001"
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
 services:
-  quellenpanel:
-    image: ${IMAGE:?please set IMAGE in .env (e.g. youruser/quellenpanel:latest)}
-    container_name: quellenpanel
-    restart: unless-stopped
-    expose:
-      - "8080"            # internal to the compose network only; Caddy proxies to it
-    # The app is reachable ONLY via Caddy here (expose, not published ports), and Caddy overwrites
-    # X-Forwarded-For with the real client IP — so it is safe to let uvicorn trust the proxy headers
-    # and report the real client IP (which the per-client rate limits key on). Do NOT add this where
-    # the app port is published directly (docker-compose.yml / bare `docker run`): a client could
-    # then spoof the forwarded IP and evade the throttle.
-    command: ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080", "--forwarded-allow-ips", "*"]
+  team:
+    <<: *common
+    container_name: quellenpanel-team
+    ports:
+      - "127.0.0.1:${TEAM_PORT:-8082}:8080"
+    volumes:
+      - quellenpanel-data:/data
     environment:
-      # Access tiers (all optional; unset = end-user-only, fail-closed — see docker-compose.yml).
+      - QE_ROLE=team
       - QE_TEAM_PASSWORD=${QE_TEAM_PASSWORD:-}
-      - QE_TIER1_PASSWORD=${QE_TIER1_PASSWORD:-}
-      - QE_PUBLIC_ONLY=${QE_PUBLIC_ONLY:-}
-      - QE_ROLE=${QE_ROLE:-}
-      - QE_EXPORT_SOURCE=${QE_EXPORT_SOURCE:-}
-      - QE_EXPORT_POLL_MINUTES=${QE_EXPORT_POLL_MINUTES:-}
-      # Cross-origin team login (this HTTPS variant satisfies the required Secure cookie). Comma-
-      # separated origins allowed the credentialed session cookie; empty = same-origin only.
-      - QE_ALLOWED_ORIGINS=${QE_ALLOWED_ORIGINS:-}
+      - QE_SESSION_SECRET=${QE_SESSION_SECRET:-}
+      - QE_SEED_URL=${QE_SEED_URL:-}
       - QE_AUTO_REFRESH_HOUR=${QE_AUTO_REFRESH_HOUR:-}
       - QE_REPO_URL=${QE_REPO_URL:-https://redaktion.openeduhub.net}
       - QE_SEARCH_URL=${QE_SEARCH_URL:-https://suche.wirlernenonline.de}
+
+  # partner and public are reachable ONLY via Caddy (expose, no published ports). Caddy overwrites
+  # X-Forwarded-For with the real client IP, so TRUST_PROXY=1 lets the rate limits key on it. Never
+  # set TRUST_PROXY where the app port is published directly: a client could forge the header.
+  partner:
+    <<: *common
+    container_name: quellenpanel-partner
+    expose:
+      - "8080"
+    environment:
+      - QE_ROLE=partner
+      - TRUST_PROXY=1
+      - QE_TIER1_PASSWORD=${QE_TIER1_PASSWORD:-}
+      - QE_EXPORT_SOURCE=http://team:9090/internal/exports/stufe{tier}.json
+      - QE_EXPORT_POLL_MINUTES=${QE_EXPORT_POLL_MINUTES:-10}
+      - QE_REPO_URL=${QE_REPO_URL:-https://redaktion.openeduhub.net}
+      - QE_SEARCH_URL=${QE_SEARCH_URL:-https://suche.wirlernenonline.de}
+    depends_on:
+      - team
+
+  public:
+    <<: *common
+    container_name: quellenpanel-public
+    expose:
+      - "8080"
+    environment:
+      - QE_ROLE=public
+      - TRUST_PROXY=1
+      - QE_EXPORT_SOURCE=http://team:9090/internal/exports/stufe{tier}.json
+      - QE_EXPORT_POLL_MINUTES=${QE_EXPORT_POLL_MINUTES:-10}
+      - QE_REPO_URL=${QE_REPO_URL:-https://redaktion.openeduhub.net}
+      - QE_SEARCH_URL=${QE_SEARCH_URL:-https://suche.wirlernenonline.de}
+    depends_on:
+      - team
 
   caddy:
     image: caddy:2
@@ -39,14 +73,17 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      - SITE_ADDRESS=${SITE_ADDRESS:?please set SITE_ADDRESS in .env (e.g. quellenpanel.31.70.69.94.nip.io)}
+      - SITE_ADDRESS=${SITE_ADDRESS:?please set SITE_ADDRESS in .env (e.g. quellen.31.70.69.94.nip.io)}
+      - PARTNER_ADDRESS=${PARTNER_ADDRESS:?please set PARTNER_ADDRESS in .env (e.g. steckbrief.31.70.69.94.nip.io)}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data        # keep certificates across restarts (else re-issued every restart)
       - caddy_config:/config
     depends_on:
-      - quellenpanel
+      - partner
+      - public
 
 volumes:
+  quellenpanel-data:
   caddy_data:
   caddy_config:

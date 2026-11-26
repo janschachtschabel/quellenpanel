@@ -256,3 +256,17 @@ def test_malformed_items_rejected_keep_last_good(export_files, bad_items):
     (export_files / "stufe0.json").write_text(json.dumps(doc), encoding="utf-8")
     assert export_store.load_remote(0) is False
     assert export_store.current(0) is good
+
+
+# --- Etappe 3, Compose-Probe: Partner/Public starten vor dem Team -----------------------------
+def test_poll_retries_fast_while_export_missing():
+    export_store.reset()
+    assert export_store.next_delay((0,), 10) == export_store.RETRY_SECONDS
+    assert export_store.RETRY_SECONDS <= 30
+
+
+def test_poll_normal_interval_once_held(export_files):
+    export_store.reset()
+    assert export_store.load_remote(0)
+    assert export_store.next_delay((0,), 10) == 600
+    assert export_store.next_delay((0, 1), 10) == export_store.RETRY_SECONDS   # tier 1 still missing

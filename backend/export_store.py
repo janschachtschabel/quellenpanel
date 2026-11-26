@@ -26,6 +26,7 @@ log = logging.getLogger("quellenpanel.export")
 
 TMP_DIR = Path(tempfile.gettempdir())
 _TIMEOUT = 20
+RETRY_SECONDS = 15        # while a tier export is still missing (e.g. the team starts later)
 _LOCK = threading.Lock()
 _POLLING = False
 _DOCS: dict[int, dict | None] = {0: None, 1: None}
@@ -133,10 +134,17 @@ def start_polling(tiers: tuple[int, ...], minutes: int) -> None:
     threading.Thread(target=_poll_loop, args=(tiers, minutes), name="export-poll", daemon=True).start()
 
 
+def next_delay(tiers: tuple[int, ...], minutes: int) -> int:
+    """Seconds to the next fetch: the poll interval once every tier is held, else a short retry."""
+    if all(current(t) is not None for t in tiers):
+        return minutes * 60
+    return min(RETRY_SECONDS, minutes * 60)
+
+
 def _poll_loop(tiers: tuple[int, ...], minutes: int) -> None:
     """Never dies on an error: a failed round is logged and retried at the next interval."""
     while True:
-        time.sleep(minutes * 60)
+        time.sleep(next_delay(tiers, minutes))
         for t in tiers:
             try:
                 load_remote(t)

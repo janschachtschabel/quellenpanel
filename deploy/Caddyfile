@@ -1,10 +1,17 @@
-# Caddy fetches a Let's Encrypt certificate for $SITE_ADDRESS and redirects HTTP -> HTTPS.
-# The hostname comes from .env (SITE_ADDRESS), e.g. quellenpanel.31.70.69.94.nip.io
+# Caddy fetches Let's Encrypt certificates and redirects HTTP -> HTTPS. Hostnames come from .env:
+#   SITE_ADDRESS     public instance (tier 0), e.g. quellen.31.70.69.94.nip.io
+#   PARTNER_ADDRESS  partner instance (tier 1), e.g. steckbrief.31.70.69.94.nip.io
+# Only port 8080 of each instance is proxied; the internal port is never exposed.
+# X-Forwarded-For is OVERWRITTEN with the real client IP (any client value is discarded), which is
+# what TRUST_PROXY=1 in docker-compose.tls.yml relies on.
 {$SITE_ADDRESS} {
-	reverse_proxy quellenpanel:8080 {
-		# Overwrite X-Forwarded-For with the REAL client IP (discarding any value the client sent),
-		# so the app's per-client rate limits key on a trusted, unspoofable value. Paired with
-		# uvicorn's --forwarded-allow-ips in docker-compose.tls.yml.
+	reverse_proxy public:8080 {
+		header_up X-Forwarded-For {remote_host}
+	}
+}
+
+{$PARTNER_ADDRESS} {
+	reverse_proxy partner:8080 {
 		header_up X-Forwarded-For {remote_host}
 	}
 }
