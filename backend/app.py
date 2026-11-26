@@ -240,7 +240,7 @@ def source_contents(request: Request, source_id: str, max_items: int = Query(12,
     try:
         return wlo_content.fetch_contents(prop, value, max_items, skip)
     except Exception:  # noqa: BLE001 — live API is best-effort; never 500 the detail
-        raise HTTPException(502, "WLO-Inhalte derzeit nicht abrufbar") from None
+        raise HTTPException(502, "Inhalte des Repositorys derzeit nicht abrufbar") from None
 
 
 @app.get("/api/sources/{source_id:path}")

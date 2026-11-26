@@ -6,6 +6,7 @@ dependency; intended for the team only (server-side password-protected).
 """
 from collections import Counter
 
+import repo_profile
 from stats_common import _FUELL_KI
 
 # Flags shown in the problem charts → for each, collect a few example sources (drill-down). Mirrors
@@ -28,6 +29,7 @@ def _defect_bucket(n):
 
 def compute_stats_team(recs, meta):
     """Negative/data-problem statistics + origin + spider reconciliation. Team only."""
+    migration_quelle = repo_profile.get().migration_quelle
     flags = Counter()
     conf = Counter()
     nur_quelle = schnitt = nur_bq = 0
@@ -65,7 +67,7 @@ def compute_stats_team(recs, meta):
         intr = r.get("internal", {})
         g = str(intr.get("general_identifier", "")); rs = str(intr.get("replicationsource", ""))
         if g and "spider" in g.lower(): gi += 1
-        if rs == "wirlernenonline_spider": wlo_migr += 1
+        if rs == migration_quelle: wlo_migr += 1
         if g and rs: both_fields += 1
         # Spider binding broken down (general_identifier vs. replicationsource)
         g2 = g.strip(); rs2 = rs.strip()
@@ -75,7 +77,7 @@ def compute_stats_team(recs, meta):
             sb_both += 1
             if g2 != rs2: sb_bothdiff += 1
         elif rs2:                                       # ONLY replicationsource (no gi)
-            if rs2 == "wirlernenonline_spider": sb_onlyrs_wlo += 1
+            if rs2 == migration_quelle: sb_onlyrs_wlo += 1
             elif rs2.endswith("_spider"): sb_onlyrs_spider += 1   # real spider, only via rs!
             else: sb_onlyrs_named += 1                  # legacy vocab name (real source)
         u = idn.get("url") or r["public"].get("URL", "")

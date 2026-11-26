@@ -81,8 +81,6 @@ TIER1_PW = os.environ.get("QE_TIER1_PASSWORD", "").strip()
 # unreachable even if an auth check were wrong.
 PUBLIC_ONLY = os.environ.get("QE_PUBLIC_ONLY", "").strip().lower() in ("1", "true", "yes", "on")
 
-# "Spiders" that are NOT real content crawlers but WLO migration/import.
-WLO_SPIDERS = {"wirlernenonline_spider", "wirlernenonline_gsheet_spider"}
 
 
 def _auto_refresh_hour():
@@ -117,7 +115,7 @@ def _allowed_origins():
 # log in from an embedded widget on a DIFFERENT origin, list those origins here: they receive an
 # origin-specific, credentialed CORS grant and the login cookie is issued cross-site (SameSite=None;
 # Secure → HTTPS required). Public wildcard access for every other origin is unchanged.
-# Example: QE_ALLOWED_ORIGINS=https://wirlernenonline.de,https://www.wirlernenonline.de
+# Example: QE_ALLOWED_ORIGINS=https://portal.example.org,https://www.portal.example.org
 ALLOWED_ORIGINS = _allowed_origins()
 
 

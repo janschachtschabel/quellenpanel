@@ -4,7 +4,7 @@ Pure function over the records (no web/IO dependency). Maps the frontend's
 selection dimensions; the provenance rules (real binding, WLO migration,
 blacklist hiding) are documented centrally here.
 """
-from config import WLO_SPIDERS
+import repo_profile
 from field_policy import HIDDEN_BY_DEFAULT
 
 
@@ -44,15 +44,15 @@ def filter_records(recs, q, kind, oer, subject, level, min_count, has_node, only
         if spider_real:
             _g = str((r.get("internal") or {}).get("general_identifier", "")).strip()
             _rs = str((r.get("internal") or {}).get("replicationsource", "")).strip()
-            # real binding = general_identifier OR replicationsource != wirlernenonline_spider
-            if not (_g or (_rs and _rs != "wirlernenonline_spider")):
+            # real binding = general_identifier OR replicationsource != the migration-origin spider
+            if not (_g or (_rs and _rs != repo_profile.get().migration_quelle)):
                 continue
         _sp = str(r["identity"].get("spider", "")).strip()
-        if exclude_wlo and _sp in WLO_SPIDERS:
+        if exclude_wlo and _sp in repo_profile.get().migration_spiders:
             continue
         if wlo_migration and not (
-                str((r.get("internal") or {}).get("replicationsource", "")) == "wirlernenonline_spider"
-                or _sp in WLO_SPIDERS):
+                str((r.get("internal") or {}).get("replicationsource", "")) == repo_profile.get().migration_quelle
+                or _sp in repo_profile.get().migration_spiders):
             continue
         if oer is not None and ("OER" in r.get("flags", [])) != oer:
             continue
