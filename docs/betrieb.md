@@ -1,4 +1,4 @@
-# Betrieb – Quellenpanel (Dienst-ID `quellenpanel`, Version 0.3.0)
+# Betrieb – Quellenpanel (Dienst-ID `quellenpanel`, Version 0.4.0)
 
 Dieses Dokument beschreibt den Betrieb nach dem Diensteleitfaden: Rollen, Ports, Probes, Metriken,
 Alarme, Logs und Tracing, Erststart, Daten-Updates, Secrets. Bereitstellung: Compose in
@@ -61,6 +61,34 @@ Fehlern den letzten gültigen Stand, auch als Kopie in `/tmp`.
   einen zweiten Weg zu den Daten; der Rebuild nutzt dieselbe Sperre wie der Knopf
   „Daten aktualisieren“, läuft also nie doppelt. Nach dem Rebuild baut das Team die Exporte neu,
   Partner und Öffentlich übernehmen sie beim nächsten Abruf.
+
+## Korrekturen und Crawler-Tabelle (Team-Bereich)
+
+Die Team-Instanz hat die Ansicht **Korrekturen** (Stufe 2, nach dem Team-Login). Sie pflegt zwei
+Dateien auf dem Volume:
+
+| Datei | Inhalt |
+|---|---|
+| `/data/korrekturen.csv` | Korrekturen im Langformat. Bis zur ersten Änderung gilt der Startstand aus dem Profil; der wird nie überschrieben. |
+| `/data/crawler.csv` | Crawler-Tabelle, per Upload ersetzt (Pflichtspalten aus `profil.toml`: Spider- und Quelldatensatz-Spalte). |
+| `/data/korrekturen-verlauf.csv` | Verlauf: `Zeitpunkt;Wer;Vorgang;Alt;Neu`; „Wer“ ist das im Browser eingegebene Kürzel. |
+| `/data/korrekturen-<zeit>.csv`, `/data/crawler-<zeit>.csv` | Sicherungen vor jedem Ersetzen (Import „ersetzen“, Crawler-Upload). Werden nicht automatisch gelöscht. |
+
+- **Funktionen:** Tabelle mit Suche und Filter, Anlegen/Ändern/Löschen, Download als CSV, Import
+  aus CSV (`;` oder `,`), JSON (Liste von Objekten) und XLSX mit Spaltenzuordnung und Vorschau
+  (neu, geändert, unverändert, fehlerhaft, entfallen), Modus „ergänzen“ oder „ersetzen“. Im
+  Steckbrief einer Quelle: „Auf Blacklist“ und „Beschreibung ergänzen“.
+- **Wirkung:** Nach jeder Änderung rechnet der Team-Pod den Merge aus den Roh-Caches
+  (`/data/raw/`) neu, lädt die Daten und schreibt die Exporte (Sekundenbereich, ohne Live-Abruf).
+  Partner und Öffentlich übernehmen sie beim nächsten Export-Abruf. Fehlen die Roh-Caches (Pod
+  nur mit `truth.json` geseedet), wirken Beschreibungen und Vorschaubilder sofort, Node-Korrekturen
+  und die Crawler-Tabelle beim nächsten Datenaufbau; die Oberfläche sagt das an.
+- **Schutz:** Die Routen `/api/team/…` gibt es nur in der Rolle `team` (sonst 404) und nur mit
+  Team-Login (403). Schreibende Anfragen mit fremdem `Origin` werden abgewiesen (CSRF), ebenso
+  Änderungen während eines Rebuilds (409) und Änderungen auf veraltetem Stand (409, Feld `version`).
+  Uploads dürfen bis 5 MB groß sein (sonst 1 MB), XLSX höchstens 20 000 Zeilen.
+- Die Routen sind auch beim Erststart ohne Daten erreichbar, damit das Team eine fehlerhafte
+  Crawler-Tabelle ersetzen kann.
 
 ## Metriken (`/metrics`, Prometheus)
 
@@ -142,5 +170,5 @@ interne Daten liegen nie auf den öffentlichen Instanzen.
 
 Die einzige Versionsquelle ist `backend/pyproject.toml`. Helm-Chart (`version`, `appVersion`) und
 `frontend/package.json` müssen gleich sein; CI und Tests prüfen das. Ein Release-Tag heißt `v` +
-Version (`v0.3.0`); das Image wird dann mit `0.3.0` und `0.3` getaggt. Die Basis-Images sind per
+Version (`v0.4.0`); das Image wird dann mit `0.4.0` und `0.4` getaggt. Die Basis-Images sind per
 Digest festgelegt und werden bewusst angehoben.

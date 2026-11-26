@@ -88,3 +88,10 @@ def test_no_data_alert():
     assert "QuellenpanelNoData" in rules
     assert "QuellenpanelNoData" in (CHART / "tests" / "rules.yaml").read_text(encoding="utf-8")
     assert "QuellenpanelNoData" in (CHART / "tests" / "rules-test.yaml").read_text(encoding="utf-8")
+
+
+def test_team_ingress_allows_uploads():
+    """Etappe 4: Uploads bis 5 MB (Crawler-Tabelle, Import) müssen durch das Team-Ingress passen."""
+    v = yaml.safe_load((CHART / "values-team.yaml").read_text(encoding="utf-8"))
+    size = v["ingress"]["annotations"]["nginx.ingress.kubernetes.io/proxy-body-size"]
+    assert size.endswith("m") and int(size[:-1]) >= 6

@@ -3,6 +3,6 @@ name = "quellenpanel"
 # The ONE version source: config.VERSION reads it (OpenAPI, /health, /metrics); the Helm chart
 # (version/appVersion) and frontend/package.json must match (checked by tests and CI); a release tag
 # is "v" + this version.
-version = "0.3.0"
+version = "0.4.0"
 description = "WLO Quellenpanel: Quellenliste, Steckbrief und Team-Audit aus einem Image"
 requires-python = ">=3.12"

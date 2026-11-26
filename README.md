@@ -50,6 +50,9 @@ backend/
   repo_profile.py the active repository profile (profiles/<id>/profil.toml) — property names,
                     special-case spiders, crawler-table columns, branding
   korrekturen.py  curated corrections: one long-format, semicolon-separated CSV (read/validate/write)
+  korrektur_store.py / korrektur_import.py / crawler_upload.py / anwenden.py / team_routes.py
+                  team area: edit/import/export corrections, replace the crawler table, history +
+                  backups, recompute the merge from the raw caches after each change (/api/team/…)
   field_policy.py THE public/internal field + flag policy
   ── shared data-truth engine (from the Quellensteckbriefe app) ──
   truth*.py store.py filtering.py stats*.py protokoll.py fetcher.py refresh.py session.py wlo_content.py
@@ -137,6 +140,10 @@ POST /api/sources/batch                several records at the tier — feeds the
 GET  /api/thumb                        preview-image proxy for the PDF (configured repo host only)
 POST /api/auth · /api/logout · GET /api/auth/status     team login (httpOnly session cookie)
 POST /jobs/refresh (team) · GET /jobs/latest            live data refresh
+GET|POST /api/team/korrekturen · PUT|DELETE /api/team/korrekturen/{id}   corrections (team)
+GET  /api/team/korrekturen.csv · /api/team/korrekturen/verlauf          download · change history
+POST /api/team/korrekturen/import/vorschau · /api/team/korrekturen/import   CSV/JSON/XLSX import
+POST /api/team/crawler/vorschau · /api/team/crawler                     replace the crawler table
 ```
 
 Errors share one shape: `{"error", "message", "status", "trace_id"}` (+ `details` on 422,
@@ -209,7 +216,7 @@ Deployment targets:
 - ✅ **Operations (Etappe 3)** — JSON logs + B3 tracing, one error shape with trace id, internal
   port 9090 (health/ready/metrics), signed sessions, data out of the image (seed / first-start build),
   hardened digest-pinned image, three-service Compose, Helm chart per role with alerts, CI gates,
-  version 0.3.0 from `backend/pyproject.toml`. Details: [`docs/betrieb.md`](docs/betrieb.md).
+  version 0.4.0 from `backend/pyproject.toml`. Details: [`docs/betrieb.md`](docs/betrieb.md).
 - ✅ **Backend** — merged 3-tier API; ruff clean (`backend/ruff.toml`); no-leak
   invariant + `QE_PUBLIC_ONLY` hard cap verified; login/fetch rate limits (proxy-safe) + thumbnail
   SSRF guard tested; deps pinned + CVE-clean (`pip-audit`). The Bezugsquelle-family index (publisher

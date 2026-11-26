@@ -9,6 +9,9 @@ config:
 persistence:
   size: 2Gi
 ingress:
+  annotations:
+    # Team uploads (crawler table, correction import) up to 5 MB; the API caps them at 5 MB.
+    nginx.ingress.kubernetes.io/proxy-body-size: "6m"
   hosts:
   - quellenpanel-team.intern.example.de
 resources:
