@@ -1,0 +1,26 @@
+# Static rendering of templates/prometheusrule.yaml (job = quellenpanel-team-internal for the team
+# rules, quellenpanel-public-internal for the export rule), for `promtool test rules`. CI checks that
+# `helm template` produces the same expressions (see .github/workflows/ci.yml, job chart).
+groups:
+- name: quellenpanel
+  rules:
+  - alert: QuellenpanelRebuildStale
+    expr: quellenpanel_data_age_seconds{job="quellenpanel-team-internal"} > 26 * 3600
+    for: 15m
+    labels:
+      severity: warning
+  - alert: QuellenpanelExportFetchFailing
+    expr: |
+      sum(increase(quellenpanel_export_fetch_total{job="quellenpanel-public-internal",result="error"}[30m])) > 0
+      unless
+      sum(increase(quellenpanel_export_fetch_total{job="quellenpanel-public-internal",result=~"ok|not_modified"}[30m])) > 0
+    for: 5m
+    labels:
+      severity: warning
+  - alert: QuellenpanelHigh5xx
+    expr: |
+      sum(rate(http_requests_total{job="quellenpanel-team-internal",status=~"5.."}[10m]))
+        / sum(rate(http_requests_total{job="quellenpanel-team-internal"}[10m])) > 0.05
+    for: 10m
+    labels:
+      severity: critical

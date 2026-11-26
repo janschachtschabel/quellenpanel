@@ -1,12 +1,13 @@
 apiVersion: v2
 
-name: edu_sharing-projects-wlo-quellenpanel
-description: WLO Quellenpanel — 3-tier FastAPI API + embedded Angular SPA over the shared data-truth engine
+name: quellenpanel
+description: >-
+  WLO Quellenpanel: source list (public), Steckbrief (partner) and team audit from one image.
+  One release per role (values-public.yaml, values-partner.yaml, values-team.yaml).
 
 type: application
 
-# Chart version (SemVer of the packaging itself).
-version: 0.1.0
-# Version of the shipped application — matches the image tag.
-appVersion: "latest"
+# Chart version and app version move together with the backend/frontend version (semver).
+version: 0.3.0
+appVersion: "0.3.0"
 kubeVersion: ">=1.23.0-0"

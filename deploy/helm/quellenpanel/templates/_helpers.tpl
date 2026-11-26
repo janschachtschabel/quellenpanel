@@ -7,13 +7,20 @@ the value is a valid Kubernetes (RFC 1123 / DNS-1035) resource-name component.
 {{- end -}}
 
 {{/*
-Fully qualified app name used for resource names. Following the edu-sharing
-convention this is the chart name (or nameOverride/fullnameOverride) WITHOUT a
-release-name prefix. Underscores are sanitized to hyphens for RFC 1123 / DNS-1035.
+Fully qualified app name used for resource names: the chart name plus the role (quellenpanel-team,
+quellenpanel-partner, quellenpanel-public), WITHOUT a release-name prefix (edu-sharing convention),
+so the three releases can share a namespace. fullnameOverride replaces it entirely.
 */}}
 {{- define "quellenpanel.fullname" -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
+{{- $name := printf "%s-%s" (default .Chart.Name .Values.nameOverride) .Values.config.role -}}
 {{- default $name .Values.fullnameOverride | replace "_" "-" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Secret holding the QE_* secrets: an existing one, or the chart's own.
+*/}}
+{{- define "quellenpanel.secretName" -}}
+{{- default (printf "%s-env" (include "quellenpanel.fullname" .)) .Values.config.existingSecret -}}
 {{- end -}}
 
 {{/*
@@ -42,6 +49,7 @@ Selector labels (stable across upgrades).
 {{- define "quellenpanel.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "quellenpanel.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/component: {{ .Values.config.role }}
 {{- end -}}
 
 {{/*

@@ -1,0 +1,20 @@
+# Team instance (tier 2): audit, data owner. One replica, Recreate, data volume at /data.
+# Put the ingress behind VPN/SSO (e.g. an oauth2-proxy annotation) — it is internal.
+#   helm upgrade --install quellenpanel-team deploy/helm/quellenpanel -f deploy/helm/quellenpanel/values-team.yaml \
+#     --set config.existingSecret=quellenpanel-team-secrets
+config:
+  role: team
+  autoRefreshHour: "3"
+  seedUrl: ""
+persistence:
+  size: 2Gi
+ingress:
+  hosts:
+  - quellenpanel-team.intern.example.de
+resources:
+  requests:
+    cpu: 200m
+    memory: 768Mi
+  limits:
+    cpu: "2"
+    memory: 2Gi

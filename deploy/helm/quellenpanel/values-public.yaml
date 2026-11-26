@@ -1,0 +1,16 @@
+# Public instance (tier 0): source list and widgets. Holds only the tier-0 export.
+#   helm upgrade --install quellenpanel-public deploy/helm/quellenpanel -f deploy/helm/quellenpanel/values-public.yaml
+config:
+  role: public
+  exportSource: http://quellenpanel-team-internal:9090/internal/exports/stufe{tier}.json
+replicaCount: 2
+ingress:
+  hosts:
+  - quellen.example.de
+resources:
+  requests:
+    cpu: 50m
+    memory: 192Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
