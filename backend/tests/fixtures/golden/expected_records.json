@@ -1,0 +1,836 @@
+[
+ {
+  "confidence": "high",
+  "contentCount": 120,
+  "erschliessung": "im Bestand verfuegbar",
+  "fieldActiveCount": 1,
+  "fieldGeneration": [
+   {
+    "aktiv": true,
+    "field": "title",
+    "how": "Crawler",
+    "item": "LomGeneralItem",
+    "status": "aktiv | Crawler"
+   }
+  ],
+  "flags": [
+   "OER"
+  ],
+  "id": "crawler:alpha_spider",
+  "identity": {
+   "bezugsquelle": "Alpha Verlag",
+   "nodeId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+   "spider": "alpha_spider",
+   "spiderVocabName": "",
+   "url": "https://alpha.test"
+  },
+  "internal": {
+   "Erschliessungsstatus (genau)": "9 Fertig",
+   "Node-ID": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+   "Vertrag/Vereinbarung": "ja",
+   "Workflow-Status": "150_PUBLISH_IN_SEARCH",
+   "general_identifier": "alpha_spider",
+   "prio": "1",
+   "replicationsource": "alpha_spider",
+   "spider": "alpha_spider",
+   "spiderBemerkungen": "läuft",
+   "zuletzt geaendert": "2026-10-01T10:00:00Z",
+   "zustand": "aktiv"
+  },
+  "kind": "crawler",
+  "name": "Alpha Verlag",
+  "previewUrl": "https://repo.test/preview/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "provenance": {
+   "Beschreibung": "WLO-API",
+   "Bezugsquelle": "WLO-API (Facette)",
+   "Bildungsstufen": "WLO-API",
+   "Faecher": "WLO-API",
+   "Inhaltsanzahl": "WLO-API (Facette)",
+   "Inhaltstypen": "WLO-API",
+   "Lizenz": "WLO-API",
+   "OER": "WLO-API",
+   "Schlagworte": "WLO-API",
+   "Sprache": "WLO-API",
+   "Titel": "WLO-API",
+   "URL": "WLO-API",
+   "Urheber": "WLO-API",
+   "robots.txt": "datencrawler.csv"
+  },
+  "public": {
+   "Beschreibung": "Beschreibung",
+   "Bezugsquelle": "Alpha Verlag",
+   "Bildungsstufen": [
+    "Sekundarstufe I"
+   ],
+   "Faecher": [
+    "Mathematik"
+   ],
+   "Inhaltsanzahl": 120,
+   "Inhaltstypen": [
+    "Quelle"
+   ],
+   "Lizenz": "CC_BY",
+   "OER": true,
+   "Schlagworte": [
+    "k1",
+    "k2"
+   ],
+   "Sprache": "de",
+   "Titel": "Alpha Lernportal",
+   "URL": "https://alpha.test",
+   "Urheber": "Autor A, Autor B",
+   "robots.txt": "Allow: /"
+  },
+  "quality": {}
+ },
+ {
+  "confidence": "high",
+  "contentCount": 40,
+  "erschliessung": "im Bestand verfuegbar",
+  "fieldActiveCount": 2,
+  "fieldGeneration": [
+   {
+    "aktiv": true,
+    "field": "title",
+    "how": "KI",
+    "item": "LomGeneralItem",
+    "status": "aktiv | KI"
+   },
+   {
+    "aktiv": true,
+    "field": "description",
+    "how": "",
+    "item": "LomGeneralItem",
+    "status": "aktiv"
+   }
+  ],
+  "flags": [
+   "OER"
+  ],
+  "id": "crawler:beta_spider",
+  "identity": {
+   "bezugsquelle": "Beta Portal",
+   "nodeId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+   "spider": "beta_spider",
+   "spiderVocabName": "",
+   "url": "https://beta.test"
+  },
+  "internal": {
+   "Erschliessungsstatus (genau)": "9 Fertig",
+   "Node-ID": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+   "Workflow-Status": "150_PUBLISH_IN_SEARCH",
+   "general_identifier": "",
+   "prio": "2",
+   "quelldatensatzProd": "https://repo.test/edu-sharing/components/render/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+   "replicationsource": "",
+   "spider": "beta_spider",
+   "zuletzt geaendert": "2026-10-01T10:00:00Z",
+   "zustand": "aktiv"
+  },
+  "kind": "crawler",
+  "name": "Beta Portal",
+  "previewUrl": "https://repo.test/preview/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+  "provenance": {
+   "Beschreibung": "WLO-API",
+   "Bezugsquelle": "WLO-API (Facette)",
+   "Bildungsstufen": "WLO-API",
+   "Faecher": "WLO-API",
+   "Inhaltsanzahl": "WLO-API (Facette)",
+   "Inhaltstypen": "WLO-API",
+   "Lizenz": "WLO-API",
+   "OER": "WLO-API",
+   "Schlagworte": "WLO-API",
+   "Sprache": "WLO-API",
+   "Titel": "WLO-API",
+   "URL": "WLO-API",
+   "Urheber": "WLO-API"
+  },
+  "public": {
+   "Beschreibung": "Beschreibung",
+   "Bezugsquelle": "Beta Portal",
+   "Bildungsstufen": [
+    "Sekundarstufe I"
+   ],
+   "Faecher": [
+    "Mathematik"
+   ],
+   "Inhaltsanzahl": 40,
+   "Inhaltstypen": [
+    "Quelle"
+   ],
+   "Lizenz": "CC_BY",
+   "OER": true,
+   "Schlagworte": [
+    "k1",
+    "k2"
+   ],
+   "Sprache": "de",
+   "Titel": "Beta Portal",
+   "URL": "https://beta.test",
+   "Urheber": "Autor A, Autor B"
+  },
+  "quality": {}
+ },
+ {
+  "confidence": "medium",
+  "contentCount": 0,
+  "erschliessung": "nur als Bezugsquelle bekannt",
+  "fieldActiveCount": 0,
+  "fieldGeneration": [],
+  "flags": [
+   "FACETS_ONLY",
+   "BINDUNG_UNVOLLSTAENDIG"
+  ],
+  "id": "crawler:gamma_spider",
+  "identity": {
+   "bezugsquelle": "Gamma Org",
+   "nodeId": "",
+   "spider": "gamma_spider",
+   "spiderVocabName": "",
+   "url": "https://gamma.test"
+  },
+  "internal": {
+   "Vertrag/Vereinbarung": "nein",
+   "prio": "3",
+   "spider": "gamma_spider",
+   "spiderBemerkungen": "alt",
+   "zustand": "outdated"
+  },
+  "kind": "crawler",
+  "name": "Gamma Org",
+  "previewUrl": "https://img.test/g.png",
+  "provenance": {
+   "Bezugsquelle": "WLO-API (Facette)",
+   "URL": "datencrawler.csv",
+   "Urheber": "datencrawler.csv"
+  },
+  "public": {
+   "Bezugsquelle": "Gamma Org",
+   "URL": "https://gamma.test",
+   "Urheber": "Gamma e.V."
+  },
+  "quality": {}
+ },
+ {
+  "confidence": "medium",
+  "contentCount": 0,
+  "erschliessung": "Zweit-Datensatz (Inhalte unter Bezugsquelle 'Delta Medien')",
+  "fieldActiveCount": 0,
+  "fieldGeneration": [],
+  "flags": [
+   "FEHLTAGGING",
+   "BLACKLIST",
+   "OER",
+   "ZWEITDATENSATZ"
+  ],
+  "id": "node:eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+  "identity": {
+   "bezugsquelle": "Delta Medien",
+   "nodeId": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+   "spider": "",
+   "spiderVocabName": "",
+   "url": "https://delta.test/bienen"
+  },
+  "internal": {
+   "Erschliessungsstatus (genau)": "9 Fertig",
+   "Korrekturliste": "blacklist",
+   "Node-ID": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+   "Workflow-Status": "150_PUBLISH_IN_SEARCH",
+   "general_identifier": "",
+   "replicationsource": "",
+   "zuletzt geaendert": "2026-10-01T10:00:00Z"
+  },
+  "kind": "manuell",
+  "name": "Einzelnes Video über Bienen",
+  "previewUrl": "https://repo.test/preview/eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+  "provenance": {
+   "Beschreibung": "WLO-API",
+   "Bezugsquelle": "WLO-API (Facette)",
+   "Bildungsstufen": "WLO-API",
+   "Faecher": "WLO-API",
+   "Inhaltstypen": "WLO-API",
+   "Lizenz": "WLO-API",
+   "OER": "WLO-API",
+   "Schlagworte": "WLO-API",
+   "Sprache": "WLO-API",
+   "Titel": "WLO-API",
+   "URL": "WLO-API",
+   "Urheber": "WLO-API"
+  },
+  "public": {
+   "Beschreibung": "Beschreibung",
+   "Bezugsquelle": "Delta Medien",
+   "Bildungsstufen": [
+    "Sekundarstufe I"
+   ],
+   "Faecher": [
+    "Mathematik"
+   ],
+   "Inhaltstypen": [
+    "Quelle",
+    "Video"
+   ],
+   "Lizenz": "CC_BY",
+   "OER": true,
+   "Schlagworte": [
+    "k1",
+    "k2"
+   ],
+   "Sprache": "de",
+   "Titel": "Einzelnes Video über Bienen",
+   "URL": "https://delta.test/bienen",
+   "Urheber": "Autor A, Autor B"
+  },
+  "quality": {}
+ },
+ {
+  "confidence": "high",
+  "contentCount": 60,
+  "erschliessung": "im Bestand verfuegbar",
+  "fieldActiveCount": 0,
+  "fieldGeneration": [],
+  "flags": [
+   "OER"
+  ],
+  "id": "node:dddddddd-dddd-dddd-dddd-dddddddddddd",
+  "identity": {
+   "bezugsquelle": "Delta Medien",
+   "nodeId": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+   "spider": "",
+   "spiderVocabName": "",
+   "url": "https://delta.test"
+  },
+  "internal": {
+   "Erschliessungsstatus (genau)": "9 Fertig",
+   "Node-ID": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+   "Workflow-Status": "150_PUBLISH_IN_SEARCH",
+   "general_identifier": "",
+   "replicationsource": "",
+   "zuletzt geaendert": "2026-10-01T10:00:00Z"
+  },
+  "kind": "manuell",
+  "name": "Delta Medien Mediathek",
+  "previewUrl": "https://repo.test/preview/dddddddd-dddd-dddd-dddd-dddddddddddd",
+  "provenance": {
+   "Beschreibung": "WLO-API",
+   "Bezugsquelle": "WLO-API (Facette)",
+   "Bildungsstufen": "WLO-API",
+   "Faecher": "WLO-API",
+   "Inhaltsanzahl": "WLO-API (Facette)",
+   "Inhaltstypen": "WLO-API",
+   "Lizenz": "WLO-API",
+   "OER": "WLO-API",
+   "Schlagworte": "WLO-API",
+   "Sprache": "WLO-API",
+   "Titel": "WLO-API",
+   "URL": "WLO-API",
+   "Urheber": "WLO-API"
+  },
+  "public": {
+   "Beschreibung": "Beschreibung",
+   "Bezugsquelle": "Delta Medien",
+   "Bildungsstufen": [
+    "Sekundarstufe I"
+   ],
+   "Faecher": [
+    "Mathematik"
+   ],
+   "Inhaltsanzahl": 60,
+   "Inhaltstypen": [
+    "Quelle"
+   ],
+   "Lizenz": "CC_BY",
+   "OER": true,
+   "Schlagworte": [
+    "k1",
+    "k2"
+   ],
+   "Sprache": "de",
+   "Titel": "Delta Medien Mediathek",
+   "URL": "https://delta.test",
+   "Urheber": "Autor A, Autor B"
+  },
+  "quality": {}
+ },
+ {
+  "confidence": "high",
+  "contentCount": 20,
+  "erschliessung": "im Bestand verfuegbar",
+  "fieldActiveCount": 0,
+  "fieldGeneration": [],
+  "flags": [
+   "WHITELIST",
+   "OER",
+   "METADATEN_DUENN"
+  ],
+  "id": "node:00000000-0000-0000-0000-000000000000",
+  "identity": {
+   "bezugsquelle": "Epsilon",
+   "nodeId": "00000000-0000-0000-0000-000000000000",
+   "spider": "",
+   "spiderVocabName": "",
+   "url": "https://eps.test/ab"
+  },
+  "internal": {
+   "Erschliessungsstatus (genau)": "9 Fertig",
+   "Korrekturliste": "whitelist",
+   "Node-ID": "00000000-0000-0000-0000-000000000000",
+   "Workflow-Status": "150_PUBLISH_IN_SEARCH",
+   "general_identifier": "",
+   "replicationsource": "",
+   "zuletzt geaendert": "2026-10-01T10:00:00Z"
+  },
+  "kind": "manuell",
+  "name": "Epsilon",
+  "previewUrl": "https://repo.test/preview/00000000-0000-0000-0000-000000000000",
+  "provenance": {
+   "Bezugsquelle": "WLO-API (Facette)",
+   "Bildungsstufen": "WLO-API",
+   "Faecher": "WLO-API",
+   "Inhaltsanzahl": "WLO-API (Facette)",
+   "Inhaltstypen": "WLO-API",
+   "Lizenz": "WLO-API",
+   "OER": "WLO-API",
+   "Schlagworte": "WLO-API",
+   "Sprache": "WLO-API",
+   "Titel": "Bezugsquelle (kein eigener Quell-Datensatz)",
+   "URL": "WLO-API",
+   "Urheber": "WLO-API"
+  },
+  "public": {
+   "Bezugsquelle": "Epsilon",
+   "Bildungsstufen": [
+    "Sekundarstufe I"
+   ],
+   "Faecher": [
+    "Mathematik"
+   ],
+   "Inhaltsanzahl": 20,
+   "Inhaltstypen": [
+    "Quelle"
+   ],
+   "Lizenz": "CC_BY",
+   "OER": true,
+   "Schlagworte": [
+    "k1",
+    "k2"
+   ],
+   "Sprache": "de",
+   "Titel": "Epsilon",
+   "URL": "https://eps.test/ab",
+   "Urheber": "Autor A, Autor B"
+  },
+  "quality": {}
+ },
+ {
+  "confidence": "high",
+  "contentCount": 900,
+  "erschliessung": "im Bestand verfuegbar",
+  "fieldActiveCount": 0,
+  "fieldGeneration": [],
+  "flags": [
+   "WLO_MIGRATION",
+   "OER"
+  ],
+  "id": "node:ffffffff-ffff-ffff-ffff-ffffffffffff",
+  "identity": {
+   "bezugsquelle": "WirLernenOnline",
+   "nodeId": "ffffffff-ffff-ffff-ffff-ffffffffffff",
+   "spider": "",
+   "spiderVocabName": "",
+   "url": "https://migr.test"
+  },
+  "internal": {
+   "Erschliessungsstatus (genau)": "9 Fertig",
+   "Korrekturliste": "—",
+   "Node-ID": "ffffffff-ffff-ffff-ffff-ffffffffffff",
+   "Workflow-Status": "150_PUBLISH_IN_SEARCH",
+   "general_identifier": "",
+   "replicationsource": "wirlernenonline_spider",
+   "zuletzt geaendert": "2026-10-01T10:00:00Z"
+  },
+  "kind": "manuell",
+  "name": "Migrierte Quelle",
+  "previewUrl": "https://repo.test/preview/ffffffff-ffff-ffff-ffff-ffffffffffff",
+  "provenance": {
+   "Beschreibung": "WLO-API",
+   "Bezugsquelle": "WLO-API (Facette)",
+   "Bildungsstufen": "WLO-API",
+   "Faecher": "WLO-API",
+   "Inhaltsanzahl": "WLO-API (Facette)",
+   "Inhaltstypen": "WLO-API",
+   "Lizenz": "WLO-API",
+   "OER": "WLO-API",
+   "Schlagworte": "WLO-API",
+   "Sprache": "WLO-API",
+   "Titel": "WLO-API",
+   "URL": "WLO-API",
+   "Urheber": "WLO-API"
+  },
+  "public": {
+   "Beschreibung": "Beschreibung",
+   "Bezugsquelle": "WirLernenOnline",
+   "Bildungsstufen": [
+    "Sekundarstufe I"
+   ],
+   "Faecher": [
+    "Mathematik"
+   ],
+   "Inhaltsanzahl": 900,
+   "Inhaltstypen": [
+    "Quelle"
+   ],
+   "Lizenz": "CC_BY",
+   "OER": true,
+   "Schlagworte": [
+    "k1",
+    "k2"
+   ],
+   "Sprache": "de",
+   "Titel": "Migrierte Quelle",
+   "URL": "https://migr.test",
+   "Urheber": "Autor A, Autor B"
+  },
+  "quality": {}
+ },
+ {
+  "confidence": "high",
+  "contentCount": 15,
+  "erschliessung": "im Bestand verfuegbar",
+  "fieldActiveCount": 0,
+  "fieldGeneration": [],
+  "flags": [
+   "LEGACY_BINDUNG",
+   "OER"
+  ],
+  "id": "node:11111111-1111-1111-1111-111111111111",
+  "identity": {
+   "bezugsquelle": "Eta Stiftung",
+   "nodeId": "11111111-1111-1111-1111-111111111111",
+   "spider": "http://w3id.org/openeduhub/vocabs/sources/1111aaaa-1111-1111-1111-111111111111",
+   "spiderVocabName": "Legacy Quelle",
+   "url": "https://eta.test"
+  },
+  "internal": {
+   "Erschliessungsstatus (genau)": "9 Fertig",
+   "Korrekturliste": "—",
+   "Node-ID": "11111111-1111-1111-1111-111111111111",
+   "Workflow-Status": "150_PUBLISH_IN_SEARCH",
+   "general_identifier": "",
+   "replicationsource": "Legacy Quelle",
+   "zuletzt geaendert": "2026-10-01T10:00:00Z"
+  },
+  "kind": "manuell",
+  "name": "Eta Stiftung",
+  "previewUrl": "https://repo.test/preview/11111111-1111-1111-1111-111111111111",
+  "provenance": {
+   "Beschreibung": "WLO-API",
+   "Bezugsquelle": "WLO-API (Facette)",
+   "Bildungsstufen": "WLO-API",
+   "Faecher": "WLO-API",
+   "Inhaltsanzahl": "WLO-API (Facette)",
+   "Inhaltstypen": "WLO-API",
+   "Lizenz": "WLO-API",
+   "OER": "WLO-API",
+   "Schlagworte": "WLO-API",
+   "Sprache": "WLO-API",
+   "Titel": "Bezugsquelle (kein eigener Quell-Datensatz)",
+   "URL": "WLO-API",
+   "Urheber": "WLO-API"
+  },
+  "public": {
+   "Beschreibung": "Beschreibung",
+   "Bezugsquelle": "Eta Stiftung",
+   "Bildungsstufen": [
+    "Sekundarstufe I"
+   ],
+   "Faecher": [
+    "Mathematik"
+   ],
+   "Inhaltsanzahl": 15,
+   "Inhaltstypen": [
+    "Quelle"
+   ],
+   "Lizenz": "CC_BY",
+   "OER": true,
+   "Schlagworte": [
+    "k1",
+    "k2"
+   ],
+   "Sprache": "de",
+   "Titel": "Eta Stiftung",
+   "URL": "https://eta.test",
+   "Urheber": "Autor A, Autor B"
+  },
+  "quality": {}
+ },
+ {
+  "confidence": "high",
+  "contentCount": 0,
+  "erschliessung": "Quelle erfasst, (noch) keine Inhalte",
+  "fieldActiveCount": 0,
+  "fieldGeneration": [],
+  "flags": [
+   "BLACKLIST",
+   "TYP_NICHT_QUELLE",
+   "OER",
+   "QD_OHNE_BEZUGSQUELLE",
+   "OHNE_STATUS",
+   "NICHT_PUBLIZIERT"
+  ],
+  "id": "crawler:theta_spider",
+  "identity": {
+   "bezugsquelle": "",
+   "nodeId": "22222222-2222-2222-2222-222222222222",
+   "spider": "theta_spider",
+   "spiderVocabName": "",
+   "url": "https://theta.test"
+  },
+  "internal": {
+   "Erschliessungsstatus (genau)": "",
+   "Korrekturliste": "blacklist",
+   "Node-ID": "22222222-2222-2222-2222-222222222222",
+   "Workflow-Status": "100_CHECKED",
+   "general_identifier": "theta_spider",
+   "replicationsource": "",
+   "zuletzt geaendert": "2026-10-01T10:00:00Z"
+  },
+  "kind": "crawler",
+  "name": "Theta Arbeitsblätter",
+  "previewUrl": "https://repo.test/preview/22222222-2222-2222-2222-222222222222",
+  "provenance": {
+   "Alter": "WLO-API",
+   "Beschreibung": "WLO-API",
+   "Bildungsstufen": "WLO-API",
+   "Faecher": "WLO-API",
+   "Inhaltstypen": "WLO-API",
+   "Lizenz": "WLO-API",
+   "OER": "WLO-API",
+   "Schlagworte": "WLO-API",
+   "Sprache": "WLO-API",
+   "Titel": "WLO-API",
+   "URL": "WLO-API",
+   "Urheber": "WLO-API"
+  },
+  "public": {
+   "Alter": "6–10 Jahre",
+   "Beschreibung": "Beschreibung",
+   "Bildungsstufen": [
+    "Sekundarstufe I"
+   ],
+   "Faecher": [
+    "Mathematik"
+   ],
+   "Inhaltstypen": [
+    "Arbeitsblatt"
+   ],
+   "Lizenz": "CC_BY",
+   "OER": true,
+   "Schlagworte": [
+    "k1",
+    "k2"
+   ],
+   "Sprache": "de",
+   "Titel": "Theta Arbeitsblätter",
+   "URL": "https://theta.test",
+   "Urheber": "Autor A, Autor B"
+  },
+  "quality": {
+   "Aktualität": "aktuell",
+   "Datenschutz (rechtl.)": "unbedenklich",
+   "Sachrichtigkeit": "sehr gut"
+  }
+ },
+ {
+  "confidence": "high",
+  "contentCount": 30,
+  "erschliessung": "im Bestand verfuegbar",
+  "fieldActiveCount": 0,
+  "fieldGeneration": [],
+  "flags": [
+   "OER",
+   "BQ_SUBCHANNEL"
+  ],
+  "id": "node:33333333-3333-3333-3333-333333333333",
+  "identity": {
+   "bezugsquelle": "YouTube - Kanal X",
+   "nodeId": "33333333-3333-3333-3333-333333333333",
+   "spider": "",
+   "spiderVocabName": "",
+   "url": "https://youtube.test/x"
+  },
+  "internal": {
+   "Erschliessungsstatus (genau)": "9 Fertig",
+   "Node-ID": "33333333-3333-3333-3333-333333333333",
+   "Workflow-Status": "150_PUBLISH_IN_SEARCH",
+   "general_identifier": "",
+   "replicationsource": "",
+   "zuletzt geaendert": "2026-10-01T10:00:00Z"
+  },
+  "kind": "manuell",
+  "name": "Kanal X",
+  "previewUrl": "https://repo.test/preview/33333333-3333-3333-3333-333333333333",
+  "provenance": {
+   "Beschreibung": "WLO-API",
+   "Bezugsquelle": "WLO-API (Facette)",
+   "Bildungsstufen": "WLO-API",
+   "Faecher": "WLO-API",
+   "Inhaltsanzahl": "WLO-API (Facette)",
+   "Inhaltstypen": "WLO-API",
+   "Lizenz": "WLO-API",
+   "OER": "WLO-API",
+   "Schlagworte": "WLO-API",
+   "Sprache": "WLO-API",
+   "Titel": "WLO-API",
+   "URL": "WLO-API",
+   "Urheber": "WLO-API"
+  },
+  "public": {
+   "Beschreibung": "Beschreibung",
+   "Bezugsquelle": "YouTube - Kanal X",
+   "Bildungsstufen": [
+    "Sekundarstufe I"
+   ],
+   "Faecher": [
+    "Mathematik"
+   ],
+   "Inhaltsanzahl": 30,
+   "Inhaltstypen": [
+    "Quelle"
+   ],
+   "Lizenz": "CC_BY",
+   "OER": true,
+   "Schlagworte": [
+    "k1",
+    "k2"
+   ],
+   "Sprache": "de",
+   "Titel": "Kanal X",
+   "URL": "https://youtube.test/x",
+   "Urheber": "Autor A, Autor B"
+  },
+  "quality": {}
+ },
+ {
+  "confidence": "low",
+  "contentCount": 3,
+  "erschliessung": "im Bestand verfuegbar",
+  "fieldGeneration": [],
+  "flags": [
+   "FACETS_ONLY",
+   "DUBLETTE_VERDACHT",
+   "BQ_OHNE_QD"
+  ],
+  "id": "bq:klicksafe",
+  "identity": {
+   "bezugsquelle": "Klicksafe",
+   "nodeId": "",
+   "spider": "",
+   "spiderVocabName": "",
+   "url": ""
+  },
+  "internal": {},
+  "kind": "bezugsquelle",
+  "name": "Klicksafe",
+  "previewUrl": "",
+  "provenance": {
+   "Bezugsquelle": "WLO-API (Facette)",
+   "Inhaltsanzahl": "WLO-API (Facette)"
+  },
+  "public": {
+   "Bezugsquelle": "Klicksafe",
+   "Inhaltsanzahl": 3
+  }
+ },
+ {
+  "confidence": "low",
+  "contentCount": 2,
+  "erschliessung": "im Bestand verfuegbar",
+  "fieldGeneration": [],
+  "flags": [
+   "FACETS_ONLY",
+   "DUBLETTE_VERDACHT",
+   "BQ_OHNE_QD"
+  ],
+  "id": "bq:klicksafe#2",
+  "identity": {
+   "bezugsquelle": "klicksafe",
+   "nodeId": "",
+   "spider": "",
+   "spiderVocabName": "",
+   "url": ""
+  },
+  "internal": {},
+  "kind": "bezugsquelle",
+  "name": "klicksafe",
+  "previewUrl": "",
+  "provenance": {
+   "Bezugsquelle": "WLO-API (Facette)",
+   "Inhaltsanzahl": "WLO-API (Facette)"
+  },
+  "public": {
+   "Bezugsquelle": "klicksafe",
+   "Inhaltsanzahl": 2
+  }
+ },
+ {
+  "confidence": "low",
+  "contentCount": 500,
+  "erschliessung": "im Bestand verfuegbar",
+  "fieldGeneration": [],
+  "flags": [
+   "FACETS_ONLY",
+   "BQ_OHNE_QD"
+  ],
+  "id": "bq:youtube",
+  "identity": {
+   "bezugsquelle": "YouTube",
+   "nodeId": "",
+   "spider": "",
+   "spiderVocabName": "",
+   "url": ""
+  },
+  "internal": {},
+  "kind": "bezugsquelle",
+  "name": "YouTube",
+  "previewUrl": "https://img.test/yt.png",
+  "provenance": {
+   "Bezugsquelle": "WLO-API (Facette)",
+   "Inhaltsanzahl": "WLO-API (Facette)"
+  },
+  "public": {
+   "Bezugsquelle": "YouTube",
+   "Inhaltsanzahl": 500
+  }
+ },
+ {
+  "confidence": "low",
+  "contentCount": 1,
+  "erschliessung": "im Bestand verfuegbar",
+  "fieldGeneration": [],
+  "flags": [
+   "FACETS_ONLY",
+   "BQ_EINZELINHALT"
+  ],
+  "id": "bq:zeta einzel",
+  "identity": {
+   "bezugsquelle": "Zeta Einzel",
+   "nodeId": "",
+   "spider": "",
+   "spiderVocabName": "",
+   "url": ""
+  },
+  "internal": {},
+  "kind": "bezugsquelle",
+  "name": "Zeta Einzel",
+  "previewUrl": "",
+  "provenance": {
+   "Bezugsquelle": "WLO-API (Facette)",
+   "Inhaltsanzahl": "WLO-API (Facette)"
+  },
+  "public": {
+   "Bezugsquelle": "Zeta Einzel",
+   "Inhaltsanzahl": 1
+  }
+ }
+]

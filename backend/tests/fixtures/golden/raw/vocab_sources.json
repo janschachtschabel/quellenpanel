@@ -1,0 +1,11 @@
+{
+ "hasTopConcept": [
+  {
+   "id": "https://w3id.org/openeduhub/vocabs/sources/1111aaaa-1111-1111-1111-111111111111",
+   "prefLabel": {
+    "de": "Legacy Quelle"
+   },
+   "url": "https://legacy.test"
+  }
+ ]
+}

@@ -1,0 +1,11 @@
+{
+ "_provenance": "Testdaten",
+ "youtube": {
+  "description": "Videoplattform.",
+  "previewUrl": "https://img.test/yt-sup.png"
+ },
+ "klicksafe": {
+  "description": "EU-Initiative.",
+  "previewUrl": ""
+ }
+}
