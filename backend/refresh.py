@@ -14,6 +14,7 @@ import config
 import enduser
 import export_store
 import fetcher
+import obs
 import store
 import truth
 
@@ -23,6 +24,7 @@ _JOB_LOCK = threading.Lock()
 
 
 def _run_refresh():
+    started = time.monotonic()
     try:
         _JOB.update(status="running", percent=0, message="Start …", error=None,
                     startedAt=time.strftime("%Y-%m-%d %H:%M:%S"), finishedAt=None)
@@ -35,12 +37,17 @@ def _run_refresh():
                                           config.data_dir() / "exports")
         _JOB.update(status="done", percent=100, message="Fertig.",
                     meta=meta, finishedAt=time.strftime("%Y-%m-%d %H:%M:%S"))
+        obs.REBUILD_TOTAL.labels("success").inc()
+        obs.REBUILD_LAST_SUCCESS.set_to_current_time()
     except Exception:                        # noqa: BLE001
         # Log the full exception server-side, but NEVER surface its text on the public /jobs/latest
         # status (it could leak file paths, the repo host or upstream API error detail).
         logging.getLogger("refresh").exception("refresh job failed")
         _JOB.update(status="error", error="internal", message="Aktualisierung fehlgeschlagen.",
                     finishedAt=time.strftime("%Y-%m-%d %H:%M:%S"))
+        obs.REBUILD_TOTAL.labels("error").inc()
+    finally:
+        obs.REBUILD_DURATION.observe(time.monotonic() - started)
 
 
 def start():

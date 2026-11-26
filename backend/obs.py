@@ -25,6 +25,8 @@ from collections.abc import Mapping
 from datetime import datetime, timezone
 from urllib.parse import parse_qs
 
+from prometheus_client import REGISTRY as REGISTRY, Counter, Gauge, Histogram
+
 SERVICE = "quellenpanel"
 
 trace_id: contextvars.ContextVar[str | None] = contextvars.ContextVar("trace_id", default=None)
@@ -37,6 +39,18 @@ _SPAN_RE = re.compile(r"^[0-9a-f]{16}$")
 _SAMPLED = ("0", "1", "d")
 _CLIENT_ID_RE = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
 _log = logging.getLogger("quellenpanel.request")
+
+# ---------------------------------------------------------------- metrics (default registry)
+HTTP_REQUESTS = Counter("http_requests_total", "HTTP-Anfragen", ["route", "method", "status"])
+HTTP_DURATION = Histogram("http_request_duration_seconds", "Dauer der HTTP-Anfragen", ["route", "method"])
+REBUILD_TOTAL = Counter("quellenpanel_rebuild_total", "Datenaufbau-Läufe", ["result"])
+REBUILD_DURATION = Histogram("quellenpanel_rebuild_duration_seconds", "Dauer des Datenaufbaus",
+                             buckets=(60, 300, 600, 1200, 1800, 3600, 7200, 14400, float("inf")))
+REBUILD_LAST_SUCCESS = Gauge("quellenpanel_rebuild_last_success_timestamp_seconds",
+                             "Zeitpunkt des letzten erfolgreichen Datenaufbaus")
+DATA_AGE = Gauge("quellenpanel_data_age_seconds", "Alter des ausgelieferten Datenstands (NaN = keiner)")
+EXPORT_FETCH = Counter("quellenpanel_export_fetch_total", "Abrufe des Exports", ["tier", "result"])
+UPSTREAM = Counter("quellenpanel_upstream_requests_total", "Ausgehende Anfragen", ["target", "result"])
 
 
 # ---------------------------------------------------------------- logging
@@ -233,3 +247,5 @@ class TraceMiddleware:
                 if q.strip():
                     fields["q_pseudonym"] = pseudonym(q.strip())
                 _log.info("request", extra={"fields": fields})
+                HTTP_REQUESTS.labels(fields["route"], fields["method"], str(fields["status"])).inc()
+                HTTP_DURATION.labels(fields["route"], fields["method"]).observe(fields["duration_ms"] / 1000)

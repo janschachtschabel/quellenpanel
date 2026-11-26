@@ -531,18 +531,6 @@ def admin_reload(team: bool = Depends(tiers.is_team)):
     return {"ok": True, "meta": _DATA["meta"]}
 
 
-@app.get("/internal/exports/stufe{tier}.json", dependencies=_TEAM_ONLY)
-def internal_export(tier: int, if_none_match: str | None = Header(None)):
-    """Team: the tier export for the partner/public instances (conditional GET via ETag)."""
-    if tier not in (0, 1):
-        raise HTTPException(404, "Not Found")
-    doc = _export(tier)
-    tag = export_store.etag(tier)
-    if if_none_match and if_none_match == tag:
-        return Response(status_code=304, headers={"ETag": tag})
-    return Response(exports_mod.dumps(doc), media_type="application/json", headers={"ETag": tag})
-
-
 # In production serve the built Angular SPA (frontend/dist/browser) at "/". In dev this folder
 # does not exist → use `ng serve` (proxies /api). The web-component build is served the same way.
 _DIST = config.FRONTEND / "dist" / "browser"

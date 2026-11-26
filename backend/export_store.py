@@ -95,12 +95,15 @@ def load_remote(tier: int) -> bool:
     try:
         raw = _fetch(src, tier)
         if raw is None:                       # 304: what we hold is current
+            obs.EXPORT_FETCH.labels(str(tier), "not_modified").inc()
             return True
         doc = json.loads(raw)
         set_doc(tier, doc)
     except Exception as exc:  # noqa: BLE001 — keep serving the last valid export
+        obs.EXPORT_FETCH.labels(str(tier), "error").inc()
         log.warning("Export Stufe %d von %s nicht übernommen (%s); letzter Stand bleibt", tier, src, exc)
         return False
+    obs.EXPORT_FETCH.labels(str(tier), "ok").inc()
     try:
         exports.write_doc(doc, _tmp_path(tier))
     except OSError:

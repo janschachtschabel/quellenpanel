@@ -47,8 +47,13 @@ def fetch_contents(prop: str, value: str, max_items: int = 12, skip: int = 0) ->
         headers={"Content-Type": "application/json", "Accept": "application/json",
                  **obs.outgoing_headers()},
     )
-    with urllib.request.urlopen(req, timeout=20) as resp:  # noqa: S310 — fixed https host
-        data = json.load(resp)
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:  # noqa: S310 — fixed https host
+            data = json.load(resp)
+    except Exception:
+        obs.UPSTREAM.labels("repository", "error").inc()
+        raise
+    obs.UPSTREAM.labels("repository", "ok").inc()
     f = repo_profile.get().felder
     nodes = []
     for n in data.get("nodes", []):

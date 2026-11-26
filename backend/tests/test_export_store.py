@@ -45,14 +45,6 @@ def test_team_filters_have_erschliessung(client, team_pw):
     assert client.get("/api/meta/filters?tier=2").json()["erschliessung"] == []
 
 
-def test_internal_export_etag_304(client):
-    r = client.get("/internal/exports/stufe0.json")
-    assert r.status_code == 200 and r.headers["etag"] == export_store.etag(0)
-    assert client.get("/internal/exports/stufe0.json",
-                      headers={"If-None-Match": r.headers["etag"]}).status_code == 304
-    assert client.get("/internal/exports/stufe2.json").status_code == 404
-
-
 @pytest.mark.parametrize("role", ["partner", "public"])
 def test_team_routes_404_outside_team(client, team_pw, monkeypatch, role):
     monkeypatch.setenv("QE_ROLE", role)
