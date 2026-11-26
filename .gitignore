@@ -4,6 +4,9 @@
 **/.pytest_cache/
 **/.ruff_cache/
 
+# Live API caches (rebuilt by the fetcher; QE_DATA_DIR/raw in production)
+backend/data/raw/
+
 # Secrets / local env (never commit — holds QE_TEAM_PASSWORD / QE_TIER1_PASSWORD)
 **/.env
 deploy/.env

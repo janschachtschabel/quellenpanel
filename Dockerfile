@@ -32,6 +32,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # App code + data snapshot, then the SPA built in stage 1. app.py serves the SPA from
 # ../frontend/dist/browser via StaticFiles, so it must land at that sibling path.
 COPY backend/ /app/quellenpanel/backend/
+# Repository profiles (profil.toml + curated starting data: crawler table, corrections).
+COPY profiles/ /app/quellenpanel/profiles/
 COPY --from=frontend /build/dist/browser /app/quellenpanel/frontend/dist/browser
 
 RUN chown -R appuser:appuser /app

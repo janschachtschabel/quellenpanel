@@ -29,11 +29,23 @@ backend/
                     tier 2 → + internal, all flags, bind (list badges) & per-field provenance
                     + Bezugsquelle-family link: familyCount (card badge) / related (detail) — Audit-tier only
   config.py       env config (repo/search URLs, team/tier-1 passwords, public-only, refresh hour)
+                    + data paths: data dir (QE_DATA_DIR) first, then the profile's starting data
+  repo_profile.py the active repository profile (profiles/<id>/profil.toml) — property names,
+                    special-case spiders, crawler-table columns, branding
+  korrekturen.py  curated corrections: one long-format, semicolon-separated CSV (read/validate/write)
   field_policy.py THE public/internal field + flag policy
   ── shared data-truth engine (from the Quellensteckbriefe app) ──
   truth*.py store.py filtering.py stats*.py protokoll.py fetcher.py refresh.py session.py wlo_content.py
-  data/           truth.json snapshot · curated inputs · source_supplements.json (overlay)
+  data/           truth.json snapshot · raw/ live API caches (git-ignored, rebuilt by the fetcher)
+  tools/          migrate_korrekturen.py (one-off: old correction list + overlay → korrekturen.csv)
+profiles/
+  wlo/            profil.toml + daten/crawler.csv + daten/korrekturen.csv (WLO production profile)
+  beispiel/       minimal foreign profile — proves the core carries no WLO constants
 ```
+
+The generic core knows no repository specifics; everything repository-specific lives in a profile.
+How a profile is built and how the correction CSV is maintained (Excel-friendly):
+[`profiles/README.md`](profiles/README.md).
 
 The data engine is reused unchanged; the new code is the tier model (`tiers.py`), the tiered
 serializer (`serialize.py`), the merged `app.py`, and the tier additions in `config.py`.
@@ -66,10 +78,16 @@ All optional, with production defaults:
 | `QE_REPO_URL` | `https://redaktion.openeduhub.net` | edu-sharing repository base — all live queries + the thumb proxy |
 | `QE_SEARCH_URL` | `https://suche.wirlernenonline.de` | WLO search base — the per-source "contents in search" link |
 | `QE_AUTO_REFRESH_HOUR` | unset (off) | hour 0–23 for the optional nightly data rebuild (Docker) |
+| `QE_PROFILE` | `wlo` | repository profile to load (`profiles/<id>/profil.toml`) |
+| `QE_PROFILES_DIR` | `<repo>/profiles` | where profiles live (e.g. a mounted volume) |
+| `QE_DATA_DIR` | `backend/data` | writable data dir: `truth.json`, `raw/` caches, and optional `crawler.csv` / `korrekturen.csv` that override the profile's starting data |
 
-**Repository neutrality:** `QE_REPO_URL`/`QE_SEARCH_URL` repoint every live query. NOT covered (by
-design, must be maintained manually per repository): the bundled `data/truth.json` snapshot, the
-curated blacklists baked into it, and the `source_supplements.json` overlay images.
+**Repository neutrality:** the core reads every property name, vocabulary URL, special-case spider
+and crawler-table column from the active profile (`QE_PROFILE`); `QE_REPO_URL`/`QE_SEARCH_URL`
+override the profile's URLs. A test (`test_neutral.py`) keeps WLO strings out of the core, and
+`profiles/beispiel` runs the full merge against a foreign metadata set. Still per repository (by
+design): the bundled `data/truth.json` snapshot and the profile's curated data
+(`crawler.csv`, `korrekturen.csv`).
 
 ## API (tier in parentheses; `?tier=` requests a tier, capped to what is allowed)
 

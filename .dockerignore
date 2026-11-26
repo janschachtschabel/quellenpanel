@@ -25,3 +25,4 @@ deploy/
 .dockerignore
 vercel.json
 *.md
+profiles/*/daten/migration-bericht.md
