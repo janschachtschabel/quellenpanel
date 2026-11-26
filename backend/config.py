@@ -104,6 +104,18 @@ def public_only() -> bool:
     return role() == "public"
 
 
+def export_source() -> str:
+    """Partner/public: where the tier export comes from — URL or file path with '{tier}',
+    e.g. http://quellenpanel-team:8080/internal/exports/stufe{tier}.json (QE_EXPORT_SOURCE)."""
+    return os.environ.get("QE_EXPORT_SOURCE", "").strip()
+
+
+def export_poll_minutes() -> int:
+    """Partner/public: re-fetch interval of the export in minutes (QE_EXPORT_POLL_MINUTES, 0 = off)."""
+    raw = os.environ.get("QE_EXPORT_POLL_MINUTES", "").strip()
+    return int(raw) if raw.isdigit() else 10
+
+
 # Kept for compatibility (read once at import); code paths use public_only()/role().
 PUBLIC_ONLY = public_only()
 

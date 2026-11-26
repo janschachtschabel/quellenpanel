@@ -53,11 +53,40 @@ async def _lifespan(_app: FastAPI):
     role = config.role()                  # fail fast on an invalid QE_ROLE
     if role == "partner" and not config.TIER1_PW:
         log.warning("Rolle partner ohne QE_TIER1_PASSWORD: Stufe 1 (Details, Steckbrief) bleibt gesperrt")
-    _load()
-    log.info("Quellenpanel: %d records loaded", len(_DATA["records"]))
-    _rebuild_exports()
-    refresh.start_scheduler(config.AUTO_REFRESH_HOUR)  # optional nightly refresh (daemon; no-op if unset)
+    if role == "team":
+        _load()
+        log.info("Quellenpanel: %d records loaded", len(_DATA["records"]))
+        _rebuild_exports()
+        refresh.start_scheduler(config.AUTO_REFRESH_HOUR)  # optional nightly refresh (daemon; no-op if unset)
+    else:
+        _start_from_export(role)
     yield
+
+
+def _role_tiers(role: str) -> tuple[int, ...]:
+    return tuple(range(config.ROLE_MAX_TIER[role] + 1))
+
+
+def _start_from_export(role: str) -> None:
+    """Partner/public: hold ONLY the export(s) of this role — never the merged records."""
+    export_store.reset()
+    _DATA.update({"meta": {}, "records": [], "byId": {}, "byFamily": {}})
+    tiers_needed = _role_tiers(role)
+    if config.export_source():
+        for t in tiers_needed:
+            export_store.load_tmp(t)          # last copy first (fast restart), then the source
+            export_store.load_remote(t)
+        export_store.start_polling(tiers_needed, config.export_poll_minutes())
+    else:
+        # Transitional until stage 3 removes the data from the image: build the exports once from
+        # the bundled truth.json, then drop the records so only the export stays in memory.
+        log.warning("Rolle %s ohne QE_EXPORT_SOURCE: Export einmalig aus der lokalen truth.json", role)
+        _load()
+        for t in tiers_needed:
+            export_store.set_doc(t, exports_mod.build_export(_DATA["records"], _DATA["meta"], t))
+        _DATA.update({"meta": {}, "records": [], "byId": {}, "byFamily": {}})
+    log.info("Quellenpanel (%s): Export Stufe %s %s", role, max(tiers_needed),
+             "geladen" if export_store.current(max(tiers_needed)) else "fehlt")
 
 
 app = FastAPI(title="Quellenpanel", version="0.1.0", lifespan=_lifespan)
@@ -140,7 +169,13 @@ _TEAM_ONLY = [Depends(require_team_role)]
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "records": len(_DATA["records"])}
+    role = config.role()
+    if role == "team":
+        return {"status": "ok", "records": len(_DATA["records"])}
+    doc = export_store.current(config.ROLE_MAX_TIER[role])
+    if doc is None:
+        return JSONResponse({"status": "starting", "role": role}, status_code=503)
+    return {"status": "ok", "records": len(doc["items"]), "role": role}
 
 
 @app.get("/api/capabilities")
