@@ -51,6 +51,12 @@ CRAWLER_INTERNAL_BASE = {
     "Vereinb. alt": "Vereinbarung (alt)",
 }
 
+# Key sets (the policy proper). The repository profile maps its crawler-table column names
+# onto these keys; every key it uses must be listed here, so the public/internal split stays
+# in this file regardless of how a repository names its columns.
+CRAWLER_PUBLIC_KEYS = frozenset(CRAWLER_PUBLIC_BASE.values())
+CRAWLER_INTERNAL_KEYS = frozenset(CRAWLER_INTERNAL_BASE.values())
+
 # --- Live API fields (Quelldatensatz) --------------------------------------
 # Public
 NODE_PUBLIC = {
