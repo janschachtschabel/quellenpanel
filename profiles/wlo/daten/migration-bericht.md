@@ -1,0 +1,86 @@
+# Migrationsbericht Korrekturen
+
+752 Zeilen geschrieben nach `korrekturen.csv`.
+
+- Zeile 137: Node 80bd5688-c7df-4eb2-9f3c-f259d595af26 doppelt, gilt Zeile 149 (wie bisher)
+- Zeile 101: Node 168c1b50-37b9-4904-a53c-eb1465b17081 doppelt, gilt Zeile 342 (wie bisher)
+- Zeile 346: Node b286b1dc-5373-483a-822e-fca3870ee8dd doppelt, gilt Zeile 438 (wie bisher)
+- Zeile 349: Node fa374c70-6a98-4f7e-b42a-fe9571384ef4 doppelt, gilt Zeile 444 (wie bisher)
+- Zeile 345: Node 27c77a87-8250-4a26-9d95-3b24cd162539 (Warum Sport uns schlau macht und unser Gehirn fit hält | Quarks - YouTube): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 347: Node bf727265-d124-4c33-a924-d632d46ee855 (Subjuntivo und Indicativo | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 348: Node 6958c2f0-6d42-4ecd-a10d-2e53a057a5d6 (Steigerung von Adjektiven | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 350: Node 90b16cfb-eccf-4e87-be1e-45617396474d (Sommer-Spezial: nachhaltig entspannt!): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 351: Node fbf22c8a-96fe-4a2b-a88e-a5ab615608ed (St David's Day - A Welsh Holiday): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 352: Node 64f6d8e5-10dc-406f-b156-6e7d8eac0735 (Wozu brauchen wir den Gendershift?): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 353: Node bdc922c5-83e7-416d-b1ac-9ee50e3cfcf2 (Was geht morgen? Deine Zukunft im Job â€“ Gefragter Mangel): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 354: Node 513c302d-2f46-4890-bc30-2d2f46289065 (Warum Multi-PM?): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 355: Node 8c548834-9fcb-4419-9488-349fcba419e0 (Gewusst wie: Einführung ins Multi-PM): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 356: Node 9daf1ab5-4a3f-41eb-af1a-b54a3f31eb15 (Unternehmen wagen: 3 Wege in die Selbstständigkeit - Teach Economy): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 357: Node ade3d692-0a72-4ade-8b71-e88c9fd38492 (Pretérito imperfecto | Ejercicios 1): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 358: Node 5992e741-99ef-4dcb-a810-a4225cfd051e (RelativsÃ¤tze | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 359: Node 701849df-afb5-43f1-84d0-6e5d0a16be8e (Perífrasis verbales aspectuales en español): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 360: Node 543b68cd-2501-4078-b8d7-37d4153ea548 (Verbalperiphrasen | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 361: Node ea5a64f1-67a2-48a1-ba6d-5a26ed77c7b5 (Perífrasis de obligación | Ejercicios): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 362: Node 647dc772-4b35-4d91-9901-9791da015ab1 (Relativsatz in der spanischen Sprache): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 363: Node dda8fee9-dd44-4068-a3b4-ff7ce9c65c5b (¿Has estado alguna vez en Perú? | Un anuncio): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 364: Node 41fc775e-aa30-4e13-b5d4-d5b0a2d2c8cd (El acoso escolar |  Unidad didáctica): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 365: Node 442ef7b4-df36-4cd3-88bc-2c73c30781b2 (Steigerung von Adverbien | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 366: Node 90d53b48-710e-41f8-ad01-fa86d52c1f0f (Vocabulario del cuerpo humano en español): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 367: Node 336bbec7-1075-4693-84e0-5cfd4712f8bf (Verkleinerung, VergrÃ¶ÃŸerung, Abwertung | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 368: Node e24bdfea-51e6-43fd-860d-0bd19a3fa013 (Typen von Adverbien | ErklÃ¤rung und Ãœbungen): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 369: Node c73f7669-89e2-4865-8cf2-0d49e0d192f5 (Reflexivpronomen | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 370: Node 2d51022b-9826-4c1f-996a-cf7a96310a83 (Plural | Spanische Nomen in der Mehrzahl): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 371: Node 46326aa3-b953-4412-85e5-ac2fa702f982 (Relativpronomen | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 372: Node cbd971a8-a934-4a64-b883-4965c1e38d6e (Pretérito perfecto vs. pretérito indefinido): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 373: Node 85a22a72-a097-434d-8b61-70c81914322e (PretÃ©rito perfecto vs. Indefinido | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 374: Node 71b485b3-512c-4f54-af6b-bcaf6230d65e (Recomendación de herramientas): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 375: Node 44b1dd67-afdd-4015-bfc3-4f8e5f2acf93 (Veinticinco cortos para el aula): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 376: Node 77b16e13-592f-42a0-9c3f-9923805c21da (Noviembre 2021: Calendario de publicaciones): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 377: Node 8b590535-4cfb-46ab-8b2e-6cb59a7d755a (Vetusta Morla | 23 de junio): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 378: Node 77ddc457-a527-4150-a4e7-e287e885afcc (Was ist Energie?): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 379: Node d478e881-7d85-49dc-96ee-0ceda0981a26 (Sorgsamer Umgang mit Energie): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 380: Node 95379819-e4a1-4871-8025-aa38c1e13520 (Las Fallas de Valencia): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 381: Node e899af7d-e004-4682-9da4-63efea4b992a (POR und PARA | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 382: Node 6185fc61-4550-4bfb-bb4b-5540ab6fd3b7 (Passiv | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 383: Node 07573189-4189-4b27-a09f-c56d2dd8bb79 (¿Quién trae los regalos en Navidad?): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 384: Node 74b69de0-bdae-4722-a60e-59c8817016b4 (PretÃ©rito anterior | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 385: Node 8e3f0ece-039a-42ff-87e0-374e0cf48876 (Pretérito anterior | Ejercicios, conjugación y ejemplos): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 386: Node 410d997d-d227-427c-8085-09c6ee549e77 (Personalpronomen | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 387: Node 685596ff-e2a3-4753-908d-d32bef9c1161 (Voseo | Erklärungen und Beispiele): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 388: Node dcd2eb4f-5117-4f2c-b3ee-4cc29f64695b (Verben der VerÃ¤nderung | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 389: Node f2b4937e-0de2-4bb6-9258-db21b056f36f (Ã„gypten - Welt der Pharaonen | ZDFmediathek): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 390: Node 1c680678-446d-4570-a54e-bc3ec760583f (Presente de subjuntivo | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 391: Node a53a381e-3fbc-4a9a-8b6c-6b6c57a07878 (Presente de subjuntivo | Ejercicios 1): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 392: Node d073fa2f-3cfe-4948-b00d-ae4bf7677dd4 (Perfecto de subjuntivo | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 393: Node e060963d-4ea8-4892-8fb7-0f25a2ee61dc (Stellung der Adverbien | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 394: Node e2261f58-ce51-43d8-b3aa-cc8919262344 (PretÃ©rito perfecto| ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 395: Node 1bd0c127-8c06-47a4-a5c0-74bc082c7e36 (Uhrzeit im Spanischen | Erklärung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 396: Node f650e19e-be33-4ba5-9d9f-e56db4fa8ba7 (RECORDAR und ACORDARSE | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 397: Node e038a951-93ef-4d65-a825-6ea427f1457d (Test de cultura de España online): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 398: Node a156886d-ddbf-400d-8f9a-c6429912789e (Newspapers - a supported learning unit): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 399: Node 7ac6e631-9c70-4753-a553-5939ba419146 (The Legacy of Elizabeth II: The Media Queen): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 400: Node cfe17194-d075-485e-8418-8852f6a905ba (Wortschatz Türkisch - Einkaufen): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 401: Node 2d00bc7c-8c78-40e8-b4fa-0834fb530648 (Wortschatz Türkisch - kleine Tiere): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 402: Node ff4b498f-592a-4ae4-97df-d0c761dbdf28 (TÃ¼rkisch Wortschatz - groÃŸe Tiere): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 403: Node 249a4907-752e-40b3-bf86-6e8a0e301487 (Anders bauen: Wohnungen für die Zukunft): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 404: Node 96de42a6-2fe5-4659-9d06-d7b1cd820a86 (Newspapers - a supported learning unit / Secondary ESOL / Teaching and learning sequences / Resources for planning / Planning for my students' needs / ESOL Online / English - ESOL - Literacy Online website - English - ESOL - Literacy Online): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 405: Node 42e842f6-231b-470c-bce3-68c57c2d5105 (Wortschatz Türkisch - Wetter): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 406: Node 0c35934f-1a36-40e6-ba07-e2e7ae5445ba (Possessivpronomen | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 407: Node fa0b0aa6-6e5d-4b88-b42d-d2f33f436084 (Preguntas en español | Ejercicios): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 408: Node 136f2288-6412-491b-a521-bf469ff129e2 (PretÃ©rito pluscuamperfecto | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 409: Node 99334547-3e03-4004-92b0-218e45fc8d8d (Verbos irregulares vocálicos | Ejercicios): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 410: Node dffa2f07-fff0-4c03-a6f1-c4e0530e3a8c (Participios regulares e irregulares en español): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 411: Node 2ce1493b-bb4e-455c-85ab-d551c6749410 (Partizipien | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 412: Node 01fe3e09-2e6e-4310-9056-d380fea22ead (PretÃ©rito indefinido | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 413: Node c06469fe-fde4-4906-8840-bd703cc1da8f (Principales usos de SER y ESTAR): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 414: Node c4a459c6-cd98-4d50-8157-57e2e852dd9c (Verneinung | ErklÃ¤rung und Ãœbung): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 415: Node 7639363b-05e5-488c-9374-c53a5ec0c846 (Verbos muy irregulares IR y SER | Ejercicios): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 416: Node 62d66cb7-b56a-4081-b8dc-9b13eaf8d52f (Verbos regulares | Ejercicios 1): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 417: Node b465047a-fd69-4a86-b05c-e4c2f6862174 (Verbos irregulares  |  Ejercicios 1): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 418: Node e27494e0-fc21-4e44-84a4-2303610c38a3 (Screencasts für den Unterricht von Wolfgang Dukorn- YouTube-Kanal): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 419: Node 72086ca9-4948-43c7-9383-cc789b57908c (Planet Wissen: Die Singstimme - Stimmbruch bei Jungen): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 420: Node 2b5bac2c-618b-4028-ae3a-6e67dcee8350 (Planet Wissen: Die Singstimme - Stimmbruch bei Mädchen): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 421: Node fd8b5b28-9340-475a-ad56-4fefb25b4a41 (We wish you a merry christmas (3-stimmiger Chorsatz)): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 422: Node bfe34b49-923e-4894-8ee4-ec8515bc73a4 (Wie New Work unsere Arbeitswelt verändern wird): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 423: Node 1f5140a5-63bf-4702-9b65-4816333b9f99 (New Work: Megatrend, oder schon wieder out?): Verdacht: Spalten verschoben, gemeint wohl blacklist
+- Zeile 424: Node 08b2214c-005b-4df9-bf2a-7845f39dadba (https://www.youtube.com/channel/UCJk5CbtQlYgQ1HtiD3eqHjQ/featured): Verdacht: Spalten verschoben, gemeint wohl blacklist

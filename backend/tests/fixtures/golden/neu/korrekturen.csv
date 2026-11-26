@@ -1,0 +1,10 @@
+﻿Typ;Schlüssel;Aktion;Wert;Kommentar;Geändert von;Geändert am
+node;eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee;blacklist;;Einzelnes Video;migration;2026-11-26
+node;00000000-0000-0000-0000-000000000000;whitelist;;Arbeitsblatt über Brüche | https://eps.test/ab;migration;2026-11-26
+node;00000000-0000-0000-0000-000000000000;bezugsquelle_setzen;Epsilon Neu;Arbeitsblatt über Brüche | https://eps.test/ab;migration;2026-11-26
+node;ffffffff-ffff-ffff-ffff-ffffffffffff;vermerk;;Migrierte Quelle;migration;2026-11-26
+node;22222222-2222-2222-2222-222222222222;blacklist;;Theta;migration;2026-11-26
+node;11111111-1111-1111-1111-111111111111;vermerk;;Legacy Angebot – Verdacht: Spalten verschoben, gemeint wohl blacklist;migration;2026-11-26
+bezugsquelle;youtube;beschreibung;Videoplattform.;;migration;2026-11-26
+bezugsquelle;youtube;vorschaubild;https://img.test/yt-sup.png;;migration;2026-11-26
+bezugsquelle;klicksafe;beschreibung;EU-Initiative.;;migration;2026-11-26
