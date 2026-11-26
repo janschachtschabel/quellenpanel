@@ -45,3 +45,25 @@ def test_tls_compose_trusts_caddy():
     caddy = (ROOT / "deploy" / "Caddyfile").read_text(encoding="utf-8")
     assert "public:8080" in caddy and "partner:8080" in caddy
     assert "9090" not in caddy
+
+
+def test_image_builds_and_ships_widgets():
+    """Etappe 5: Das Image baut das Widget-Skript und das Element-Bundle und liefert beide aus."""
+    text = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    assert "npm run build:widgets" in text and "npm run build:element" in text
+    assert "/build/dist-widgets /app/quellenpanel/frontend/dist-widgets" in text
+    ci = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+    assert "build:widgets" in ci and "build:element" in ci
+
+
+def test_element_bundle_styles_never_touch_host_page():
+    """Review-Befund Etappe 5: Das eingebettete App-Bundle darf html/body/:root der Gastseite nicht stylen."""
+    import json
+    import re
+    ang = json.loads((ROOT / "frontend/angular.json").read_text(encoding="utf-8"))
+    el = ang["projects"]["quellenliste-x"]["architect"]["build"]["configurations"]["element"]
+    styles = el["styles"]
+    assert "src/styles.element.scss" in styles and "src/styles.scss" not in styles
+    text = (ROOT / "frontend/src/styles.element.scss").read_text(encoding="utf-8")
+    code = re.sub(r"//[^\n]*", "", text)
+    assert not re.search(r"(^|[\s,}])(html|body|:root)\s*[,{]", code)

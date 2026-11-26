@@ -76,6 +76,45 @@ describe('widget elements', () => {
     expect(host.querySelectorAll('wlo-quellen-statistik .wq-bar').length).toBe(2);
   });
 
+  it('keeps the search field after a failed search (review finding)', async () => {
+    const host = await render('<wlo-quellen-liste api-base="/api"></wlo-quellen-liste>');
+    const input = host.querySelector('input')!;
+    fetchMock.mockImplementation(() => antwort({}, 500));
+    input.value = 'x';
+    input.dispatchEvent(new Event('input'));
+    await new Promise(r => setTimeout(r, 400));
+    expect(host.textContent).toContain('nicht erreichbar');
+    expect(host.querySelector('input')).toBe(input);
+    fetchMock.mockImplementation(() => antwort({ total: 2, items: ITEMS }));
+    input.dispatchEvent(new Event('input'));
+    await new Promise(r => setTimeout(r, 400));
+    expect(host.querySelector('input')).toBe(input);
+    expect(host.querySelectorAll('li').length).toBe(2);
+  });
+
+  it('announces results in one persistent live region (review finding)', async () => {
+    const host = await render('<wlo-quellen-liste api-base="/api"></wlo-quellen-liste>');
+    const live = host.querySelector('[aria-live]');
+    expect(live).not.toBeNull();
+    expect(live!.textContent).toContain('2 Quellen');
+    const input = host.querySelector('input')!;
+    input.value = 'y';
+    input.dispatchEvent(new Event('input'));
+    await new Promise(r => setTimeout(r, 400));
+    expect(host.querySelector('[aria-live]')).toBe(live);
+  });
+
+  it('single source: shows the license and a clear message without id', async () => {
+    const host = await render('<wlo-quelle api-base="/api" quelle="x"></wlo-quelle><wlo-quelle api-base="/api"></wlo-quelle>');
+    expect(host.textContent).toContain('CC_BY_SA');
+    expect(host.querySelectorAll('wlo-quelle')[1].textContent).toContain('Keine Quelle angegeben');
+  });
+
+  it('statistics clamps a negative max', async () => {
+    const host = await render('<wlo-quellen-statistik api-base="/api" max="-3"></wlo-quellen-statistik>');
+    expect(host.querySelectorAll('wlo-quellen-statistik .wq-bar').length).toBe(2);
+  });
+
   it('heavy elements load the Angular bundle once', async () => {
     await render('<wlo-quellen-kacheln></wlo-quellen-kacheln><wlo-quellenpanel></wlo-quellenpanel>');
     definiereElemente('');   // the script normally runs deferred, after the elements are parsed
@@ -95,5 +134,14 @@ describe('embed height', () => {
     expect(hoeheAntworten({ data: { type: 'anderes' }, source: src, origin: 'x' } as MessageEvent, 1)).toBe(false);
     expect(hoeheAntworten({ data: 'quellenpanel:hoehe?', source: src, origin: 'x' } as MessageEvent, 1)).toBe(false);
     expect(post).toHaveBeenCalledTimes(1);
+  });
+
+  it('accepts only the parent window and maps an opaque origin to *', () => {
+    const post = vi.fn();
+    const parent = { postMessage: post } as unknown as Window;
+    const fremd = { postMessage: vi.fn() } as unknown as Window;
+    expect(hoeheAntworten({ data: { type: 'quellenpanel:hoehe?' }, source: fremd, origin: 'https://x' } as MessageEvent, 5, parent)).toBe(false);
+    expect(hoeheAntworten({ data: { type: 'quellenpanel:hoehe?' }, source: parent, origin: 'null' } as MessageEvent, 5, parent)).toBe(true);
+    expect(post).toHaveBeenCalledWith({ type: 'quellenpanel:hoehe', hoehe: 5 }, '*');
   });
 });

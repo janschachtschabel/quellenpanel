@@ -12,58 +12,68 @@ interface Karte {
 }
 
 const CSS = `
-:is(wlo-quellen-liste, wlo-quellen-top, wlo-quellen-zahl, wlo-quelle, wlo-quellen-statistik) {
+.wq-w.wq-w {
   display: block; box-sizing: border-box; max-width: 100%;
   font: 400 15px/1.45 var(--wq-font, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif);
   color: var(--wq-text, #1d2433); text-align: left; letter-spacing: normal; text-transform: none;
   background: var(--wq-bg, #fff); border: 1px solid var(--wq-border, #dfe3ea); border-radius: var(--wq-radius, 10px);
   padding: 14px 16px;
 }
-:is(wlo-quellen-liste, wlo-quellen-top, wlo-quellen-zahl, wlo-quelle, wlo-quellen-statistik) * { box-sizing: border-box; }
-:is(wlo-quellen-liste, wlo-quellen-top, wlo-quellen-zahl, wlo-quelle, wlo-quellen-statistik).wq-schlicht {
+
+/* Reset inside the widgets, stronger than typical CMS theme rules (.entry-content ul …).
+   Host rules with !important still win. */
+.wq-w.wq-w :is(p, ul, ol, li, a, span, div, input, label) {
+  margin: 0; padding: 0; border: 0; background: none; box-shadow: none; float: none;
+  font: inherit; color: inherit; line-height: inherit; text-align: inherit; text-transform: none;
+  letter-spacing: normal; text-decoration: none; text-indent: 0; list-style: none; min-height: 0; max-width: none;
+}
+.wq-w.wq-w :is(p, ul, ol, li, a, span, div)::before, .wq-w.wq-w :is(p, ul, ol, li, a, span, div)::after { content: none; }
+.wq-w.wq-w * { box-sizing: border-box; }
+.wq-w.wq-w.wq-schlicht {
   background: transparent; border: 0; padding: 0;
 }
-:is(wlo-quellen-liste, wlo-quellen-top) :is(ul, ol) { list-style: none; margin: 0; padding: 0; }
-:is(wlo-quellen-liste, wlo-quellen-top) li {
+:is(wlo-quellen-liste, wlo-quellen-top).wq-w.wq-w :is(ul, ol) { list-style: none; margin: 0; padding: 0; }
+:is(wlo-quellen-liste, wlo-quellen-top).wq-w.wq-w li {
   display: flex; gap: 10px; align-items: baseline; padding: 8px 0; margin: 0;
   border-bottom: 1px solid var(--wq-line, #eef0f4);
 }
-:is(wlo-quellen-liste, wlo-quellen-top) li:last-child { border-bottom: 0; }
-:is(wlo-quellen-liste, wlo-quellen-top) .wq-main { flex: 1 1 auto; min-width: 0; }
-:is(wlo-quellen-liste, wlo-quellen-top) .wq-meta { display: block; color: var(--wq-muted, #5b6475); font-size: 13px; }
-:is(wlo-quellen-liste, wlo-quellen-top) .wq-num { color: var(--wq-muted, #5b6475); font-size: 13px; white-space: nowrap; }
-wlo-quellen-top .wq-rang {
+:is(wlo-quellen-liste, wlo-quellen-top).wq-w.wq-w li:last-child { border-bottom: 0; }
+:is(wlo-quellen-liste, wlo-quellen-top).wq-w.wq-w .wq-main { flex: 1 1 auto; min-width: 0; }
+:is(wlo-quellen-liste, wlo-quellen-top).wq-w.wq-w .wq-meta { display: block; color: var(--wq-muted, #5b6475); font-size: 13px; }
+:is(wlo-quellen-liste, wlo-quellen-top).wq-w.wq-w .wq-num { color: var(--wq-muted, #5b6475); font-size: 13px; white-space: nowrap; }
+wlo-quellen-top.wq-w.wq-w .wq-rang {
   flex: 0 0 1.8em; font-weight: 700; color: var(--wq-accent, #003b7c); text-align: right;
 }
-:is(wlo-quellen-liste, wlo-quellen-top, wlo-quellen-zahl, wlo-quelle, wlo-quellen-statistik) a.wq-link {
+.wq-w.wq-w a.wq-link {
   color: var(--wq-link, #003b7c); font-weight: 600; text-decoration: none; background: none;
 }
-:is(wlo-quellen-liste, wlo-quellen-top, wlo-quellen-zahl, wlo-quelle, wlo-quellen-statistik) a.wq-link:hover { text-decoration: underline; }
-:is(wlo-quellen-liste, wlo-quellen-top, wlo-quellen-zahl, wlo-quelle, wlo-quellen-statistik) a.wq-link:focus-visible {
+.wq-w.wq-w a.wq-link:hover { text-decoration: underline; }
+.wq-w.wq-w a.wq-link:focus-visible {
   outline: 2px solid var(--wq-accent, #003b7c); outline-offset: 2px;
 }
-:is(wlo-quellen-liste, wlo-quellen-top, wlo-quellen-zahl, wlo-quelle, wlo-quellen-statistik) .wq-sr {
+.wq-w.wq-w .wq-sr {
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); border: 0;
 }
-wlo-quellen-liste input.wq-suche {
+wlo-quellen-liste.wq-w.wq-w input.wq-suche {
   display: block; width: 100%; margin: 0 0 8px; padding: 8px 10px; font: inherit; color: inherit;
   background: var(--wq-input-bg, #fff); border: 1px solid var(--wq-border, #c9cfd9); border-radius: 6px;
 }
-:is(wlo-quellen-liste, wlo-quellen-top, wlo-quellen-zahl, wlo-quelle, wlo-quellen-statistik) .wq-status { color: var(--wq-muted, #5b6475); margin: 4px 0; }
-:is(wlo-quellen-liste, wlo-quellen-top, wlo-quellen-zahl, wlo-quelle, wlo-quellen-statistik) .wq-titel { font-size: 16px; font-weight: 700; margin: 0 0 8px; }
-wlo-quellen-zahl .wq-gross { font-size: 26px; font-weight: 700; color: var(--wq-accent, #003b7c); }
-wlo-quelle .wq-beschreibung { margin: 6px 0; }
-wlo-quelle .wq-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; padding: 0; list-style: none; }
-wlo-quelle .wq-chips li { background: var(--wq-chip, #eef2f8); border-radius: 12px; padding: 2px 10px; font-size: 13px; }
-wlo-quellen-statistik .wq-zeile { display: grid; grid-template-columns: minmax(6em, 40%) 1fr auto; gap: 8px; align-items: center; margin: 4px 0; font-size: 14px; }
-wlo-quellen-statistik .wq-bar { height: 10px; background: var(--wq-accent, #003b7c); border-radius: 5px; min-width: 2px; }
+.wq-w.wq-w .wq-status { color: var(--wq-muted, #5b6475); margin: 4px 0; }
+.wq-w.wq-w .wq-titel { font-size: 16px; font-weight: 700; margin: 0 0 8px; }
+wlo-quellen-zahl.wq-w.wq-w .wq-gross { font-size: 26px; font-weight: 700; color: var(--wq-accent, #003b7c); }
+wlo-quelle.wq-w.wq-w .wq-beschreibung { margin: 6px 0; }
+wlo-quelle.wq-w.wq-w .wq-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; padding: 0; list-style: none; }
+wlo-quelle.wq-w.wq-w .wq-chips li { background: var(--wq-chip, #eef2f8); border-radius: 12px; padding: 2px 10px; font-size: 13px; }
+wlo-quellen-statistik.wq-w.wq-w .wq-zeile { display: grid; grid-template-columns: minmax(6em, 40%) 1fr auto; gap: 8px; align-items: center; margin: 4px 0; font-size: 14px; }
+wlo-quellen-statistik.wq-w.wq-w .wq-bar { height: 10px; background: var(--wq-accent, #003b7c); border-radius: 5px; min-width: 2px; }
+.wq-w.wq-w input.wq-suche:focus-visible { outline: 2px solid var(--wq-accent, #003b7c); outline-offset: 1px; }
 `;
 
 let _scriptSrc = '';
 
 abstract class WqElement extends HTMLElement {
   static get observedAttributes(): string[] {
-    return ['api-base', 'fach', 'bildungsstufe', 'suche', 'max', 'sprache', 'nur-oer', 'variante', 'quelle'];
+    return ['api-base', 'fach', 'bildungsstufe', 'suche', 'max', 'sprache', 'nur-oer', 'variante', 'quelle', 'link'];
   }
   private _laufend = 0;
   private _verbunden = false;
@@ -73,6 +83,7 @@ abstract class WqElement extends HTMLElement {
 
   connectedCallback(): void {
     styles('wq-basis', CSS);
+    this.classList.add('wq-w');
     this._verbunden = true;
     this.aktualisieren();
   }
@@ -114,8 +125,62 @@ function zeileMeta(k: Karte, s: Sprache): string {
 class QuellenListe extends WqElement {
   private _suchbegriff: string | null = null;
   private _feld: HTMLInputElement | null = null;
-  private _liste: HTMLElement | null = null;
+  private _ergebnis: HTMLElement | null = null;
+  private _ansage: HTMLElement | null = null;
   private _timer: ReturnType<typeof setTimeout> | null = null;
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this._stoppeTimer();
+  }
+
+  private _stoppeTimer(): void {
+    if (this._timer) clearTimeout(this._timer);
+    this._timer = null;
+  }
+
+  /** Persistent skeleton: optional search field, result area, one polite live region for announcements. */
+  private _geruest(): HTMLElement {
+    const t = texte(this.s);
+    const mitSuche = (this.getAttribute('suche') ?? '').toLowerCase() !== 'aus';
+    const feldDa = !!this._feld && this.contains(this._feld);
+    if (!mitSuche && this._feld) { this._stoppeTimer(); this._feld = null; this._suchbegriff = null; }
+    if (!this._ergebnis || !this._ansage || !this.contains(this._ergebnis) || mitSuche !== feldDa) {
+      const teile: HTMLElement[] = [];
+      if (mitSuche) {
+        const input = this._feld ?? this._neuesFeld();
+        const label = el('label', 'wq-sr', t.suche);
+        label.htmlFor = input.id;
+        teile.push(label, input);
+      }
+      this._ergebnis = el('div', 'wq-ergebnis');
+      this._ansage = el('p', 'wq-sr');
+      this._ansage.setAttribute('aria-live', 'polite');
+      teile.push(this._ergebnis, this._ansage);
+      this.replaceChildren(...teile);
+    }
+    return this._ergebnis;
+  }
+
+  private _neuesFeld(): HTMLInputElement {
+    const t = texte(this.s);
+    const input = el('input', 'wq-suche');
+    input.type = 'search';
+    input.placeholder = t.suchePh;
+    input.id = `wq-suche-${Math.random().toString(36).slice(2, 8)}`;
+    input.value = this.getAttribute('suche') ?? '';
+    input.addEventListener('input', () => {
+      this._stoppeTimer();
+      this._timer = setTimeout(() => { this._timer = null; this._suchbegriff = input.value.trim(); this.aktualisieren(); }, 300);
+    });
+    this._feld = input;
+    return input;
+  }
+
+  protected override status(text: string): void {
+    this._geruest().replaceChildren(el('p', 'wq-status', text));
+    if (this._ansage) this._ansage.textContent = text;
+  }
 
   protected override laden(): Promise<unknown> {
     const q = queryFromAttributes(this, 10);
@@ -127,44 +192,24 @@ class QuellenListe extends WqElement {
 
   protected override zeichnen(daten: unknown): void {
     const t = texte(this.s);
-    const mitSuche = (this.getAttribute('suche') ?? '').toLowerCase() !== 'aus';
-    if (mitSuche && !this._feld) {
-      const label = el('label', 'wq-sr', t.suche);
-      const input = el('input', 'wq-suche');
-      input.type = 'search';
-      input.placeholder = t.suchePh;
-      input.id = `wq-suche-${Math.random().toString(36).slice(2, 8)}`;
-      label.htmlFor = input.id;
-      input.value = this.getAttribute('suche') ?? '';
-      input.addEventListener('input', () => {
-        if (this._timer) clearTimeout(this._timer);
-        this._timer = setTimeout(() => { this._suchbegriff = input.value.trim(); this.aktualisieren(); }, 300);
-      });
-      this._feld = input;
-      this.replaceChildren(label, input);
-    } else if (!mitSuche) {
-      this._feld = null;
-      this.replaceChildren();
-    }
-    this._liste?.remove();
-    const items = ((daten as { items?: Karte[] }).items ?? []);
-    const box = el('div', 'wq-ergebnis');
-    box.setAttribute('aria-live', 'polite');
+    const box = this._geruest();
+    const d = daten as { items?: Karte[]; total?: number };
+    const items = d.items ?? [];
     if (!items.length) {
-      box.append(el('p', 'wq-status', t.keine));
-    } else {
-      const ul = el('ul');
-      for (const k of items) {
-        const li = el('li');
-        const main = el('span', 'wq-main');
-        main.append(externerLink(k.url || k.searchUrl, k.name, this.s), el('span', 'wq-meta', zeileMeta(k, this.s)));
-        li.append(main, el('span', 'wq-num', `${formatZahl(k.contentCount, this.s)} ${t.inhalte}`));
-        ul.append(li);
-      }
-      box.append(ul);
+      box.replaceChildren(el('p', 'wq-status', t.keine));
+      this._ansage!.textContent = t.keine;
+      return;
     }
-    this._liste = box;
-    this.append(box);
+    const ul = el('ul');
+    for (const k of items) {
+      const li = el('li');
+      const main = el('span', 'wq-main');
+      main.append(externerLink(k.url || k.searchUrl, k.name, this.s), el('span', 'wq-meta', zeileMeta(k, this.s)));
+      li.append(main, el('span', 'wq-num', `${formatZahl(k.contentCount, this.s)} ${t.inhalte}`));
+      ul.append(li);
+    }
+    box.replaceChildren(ul);
+    this._ansage!.textContent = `${formatZahl(d.total ?? items.length, this.s)} ${t.quellen}`;
   }
 }
 
@@ -215,24 +260,28 @@ class QuellenZahl extends WqElement {
     p.append(el('span', 'wq-gross', formatZahl(d.quellen, this.s)), ` ${t.quellen} · `,
       el('span', 'wq-gross', formatZahl(d.inhalte, this.s)), ` ${t.inhalte}`);
     const ziel = this.getAttribute('link') || this.api.replace(/\/api$/, '/');
-    this.replaceChildren(p, externerLink(new URL(ziel, location.href).href, t.mehr, this.s));
+    let href: string | undefined;
+    try { href = new URL(ziel, location.href).href; } catch { href = undefined; }
+    this.replaceChildren(p, externerLink(href, t.mehr, this.s));
   }
 }
 
 class EineQuelle extends WqElement {
   protected override laden(): Promise<unknown> {
     const id = (this.getAttribute('quelle') ?? '').trim();
-    if (!id) return Promise.reject(new Error('quelle fehlt'));
+    if (!id) return Promise.resolve(null);
     return holeJson(`${this.api}/sources/${encodeURIComponent(id)}`);
   }
 
   protected override zeichnen(daten: unknown): void {
     const t = texte(this.s);
+    if (!daten) { this.status(t.ohneQuelle); return; }
     const k = daten as Karte;
     const teile: HTMLElement[] = [el('p', 'wq-titel', k.name)];
     if (k.description) teile.push(el('p', 'wq-beschreibung', k.description));
     const chips = el('ul', 'wq-chips');
     for (const v of [...(k.subjects ?? []).slice(0, 6), ...(k.educationalContext ?? []).slice(0, 4)]) chips.append(el('li', '', v));
+    if (k.license) chips.append(el('li', '', `${t.lizenz}: ${k.license}`));
     if (k.oer) chips.append(el('li', '', t.oer));
     if (chips.childElementCount) teile.push(chips);
     teile.push(el('p', 'wq-meta', `${formatZahl(k.contentCount, this.s)} ${t.inhalte}`));
@@ -249,7 +298,8 @@ class QuellenStatistik extends WqElement {
   protected override zeichnen(daten: unknown): void {
     const t = texte(this.s);
     const d = daten as { topSubjects?: { value: string; count: number }[]; topLevels?: { value: string; count: number }[] };
-    const max = Math.min(parseInt(this.getAttribute('max') ?? '', 10) || 8, 30);
+    const roh = parseInt(this.getAttribute('max') ?? '', 10);
+    const max = roh > 0 ? Math.min(roh, 30) : 8;
     const teile: HTMLElement[] = [];
     for (const [titel, rows] of [[t.faecher, d.topSubjects ?? []], [t.stufen, d.topLevels ?? []]] as const) {
       if (!rows.length) continue;
@@ -278,13 +328,15 @@ function bundleUrl(): string {
 
 let _bundleGeladen = false;
 
-/** Tiles / whole app: load the Angular element bundle once, when such an element appears. */
+/** Tiles / whole app: load the Angular element bundle once, when such an element appears.
+ *  Heavy elements added later still get the api-base of the script's host. */
 function schwereNachladen(): void {
   const gefunden = document.querySelectorAll<HTMLElement>(SCHWER.join(','));
-  if (!gefunden.length || _bundleGeladen) return;
-  _bundleGeladen = true;
+  if (!gefunden.length) return;
   const api = apiBaseFor(_scriptSrc, null);
   gefunden.forEach(e => { if (!e.hasAttribute('api-base') && _scriptSrc) e.setAttribute('api-base', api); });
+  if (_bundleGeladen) return;
+  _bundleGeladen = true;
   const css = document.createElement('link');
   css.rel = 'stylesheet';
   css.href = bundleUrl().replace(/main\.js$/, 'styles.css');
@@ -299,6 +351,8 @@ function schwereNachladen(): void {
   document.head.append(css, ...scripts);
 }
 
+let _beobachter = false;
+
 /** Register all light elements (idempotent) and watch for the heavy ones. */
 export function definiereElemente(scriptSrc: string): void {
   _scriptSrc = scriptSrc;
@@ -308,10 +362,13 @@ export function definiereElemente(scriptSrc: string): void {
   ];
   for (const [name, cls] of defs) if (!customElements.get(name)) customElements.define(name, cls);
   schwereNachladen();
-  if (!_bundleGeladen && typeof MutationObserver !== 'undefined') {
+  if (!_beobachter && typeof MutationObserver !== 'undefined') {
     try {
-      const mo = new MutationObserver(() => { schwereNachladen(); if (_bundleGeladen) mo.disconnect(); });
+      const mo = new MutationObserver((records) => {
+        if (records.some(r => Array.from(r.addedNodes).some(n => n.nodeType === 1))) schwereNachladen();
+      });
       mo.observe(document.documentElement, { childList: true, subtree: true });
+      _beobachter = true;
     } catch { /* environment without MutationObserver: heavy elements present at load still work */ }
   }
 }

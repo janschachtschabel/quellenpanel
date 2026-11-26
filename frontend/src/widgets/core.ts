@@ -11,12 +11,14 @@ const TEXTE = {
     keine: 'Keine Quellen gefunden.', suche: 'Quellen durchsuchen', suchePh: 'Name, Thema …',
     inhalte: 'Inhalte', quellen: 'Quellen', neuerTab: '(öffnet in neuem Tab)', mehr: 'Zum Quellenverzeichnis',
     faecher: 'Fächer', stufen: 'Bildungsstufen', lizenz: 'Lizenz', oer: 'OER', website: 'Zur Website',
+    ohneQuelle: 'Keine Quelle angegeben (Attribut quelle).',
   },
   en: {
     laden: 'Loading …', fehler: 'The source directory is not reachable right now.',
     keine: 'No sources found.', suche: 'Search sources', suchePh: 'Name, topic …',
     inhalte: 'contents', quellen: 'sources', neuerTab: '(opens in a new tab)', mehr: 'Open the source directory',
     faecher: 'Subjects', stufen: 'Educational levels', lizenz: 'License', oer: 'OER', website: 'Visit website',
+    ohneQuelle: 'No source given (attribute quelle).',
   },
 };
 export type Texte = typeof TEXTE.de;

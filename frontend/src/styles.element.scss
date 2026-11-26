@@ -1,0 +1,27 @@
+// Styles of the embedded element bundle (<wlo-quellenpanel>, <wlo-quellen-kacheln> on host pages).
+// Unlike styles.scss there are NO rules on html / body / :root: the host page stays untouched.
+// Theme and brand variables live on the host tags and on the CDK overlay container (dialogs,
+// menus, snackbars are attached to the host's <body>), which also gets an explicit font + z-index.
+@use '@angular/material' as mat;
+@use 'theme';
+
+@include mat.core();
+
+wlo-quellenpanel, wlo-quellen-kacheln, .cdk-overlay-container {
+  @include theme.wlo-theme-vars;
+  font-family: Roboto, system-ui, sans-serif;
+  color: var(--wlo-text);
+  text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+wlo-quellenpanel, wlo-quellen-kacheln {
+  display: block;
+}
+
+.cdk-overlay-container {
+  z-index: 100000;
+}
+
+@include theme.material-icons-class;
