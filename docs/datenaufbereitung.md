@@ -18,10 +18,10 @@ beim Ausliefern darübergelegt wird. Erzeuger: `fetcher.py` (Abruf) + `truth*.py
                  A) Crawler-Records   B) Quelldatensätze   C) Bezugsquelle-only
                  + per-Feld-Provenienz  + Flags (Datenprobleme, Blacklist/Whitelist, Provenienz)
                                              ▼
-              ④ SNAPSHOT  backend/data/truth.json   (im Docker-Image gebündelt = Basis)
+              ④ SNAPSHOT  $QE_DATA_DIR/truth.json  (nie im Image; Erststart: Seed oder Aufbau)
                  + EXPORTE je Stufe  $QE_DATA_DIR/exports/stufe0.json, stufe1.json
                    (Stufen-Serializer, inkl. Statistik/Filteroptionen; ohne Blacklist)
-                   → Team: GET /internal/exports/stufe{0,1}.json (ETag) → Partner/Öffentlich
+                   → Team, interner Port 9090: GET /internal/exports/stufe{0,1}.json (ETag) → Partner/Öffentlich
                                              ▼
               ⑤ SERVE  (im RAM, pro Request)
                  Stufe 0/1: nur aus dem Export der Stufe (alle Rollen)

@@ -24,3 +24,10 @@ groups:
     for: 10m
     labels:
       severity: critical
+  - alert: QuellenpanelHigh5xx
+    expr: |
+      sum(rate(http_requests_total{job="quellenpanel-public-internal",status=~"5.."}[10m]))
+        / sum(rate(http_requests_total{job="quellenpanel-public-internal"}[10m])) > 0.05
+    for: 10m
+    labels:
+      severity: critical

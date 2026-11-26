@@ -28,7 +28,8 @@ which is built by the same serializer that defines the tier (`exports.py`, `expo
 instance therefore cannot show more than its tier, even if an auth check were wrong. Partner/public
 load their export from `QE_EXPORT_SOURCE` (the team's `/internal/exports/stufe{tier}.json` with
 ETag, or a file path), re-fetch it every `QE_EXPORT_POLL_MINUTES`, keep the last valid copy on errors
-and in `/tmp`, and answer `/api/health` with 503 until they have one. Team-only routes (audit,
+and in `/tmp` (retrying every 15 s while they hold none), and report not ready (`/ready` on port 9090
+503, `/api/health` 503) until they have one. Team-only routes (audit,
 protocol, refresh, reload, login, `/internal/exports`) do not exist on partner/public (404).
 `QE_PUBLIC_ONLY=1` is the transitional alias for `QE_ROLE=public`; combined with another role it is
 refused at start. `field_policy.py` remains the single source of truth
@@ -74,8 +75,12 @@ on serve): [`docs/datenaufbereitung.md`](docs/datenaufbereitung.md) (compact tab
 ```bash
 cd backend
 pip install -r requirements.txt
-uvicorn app:app --port 8080 --reload        # → http://localhost:8080
+uvicorn app:app --port 8080 --reload        # → http://localhost:8080 (API only, dev)
+python serve.py                             # as in the container: 8080 + internal port 9090
 ```
+
+Operations (ports, probes, metrics, alerts, logs/tracing, first start, secrets): see
+[`docs/betrieb.md`](docs/betrieb.md).
 
 In production the backend serves the built Angular SPA from `frontend/dist/browser` at `/` (one
 container, like the previous apps). For the frontend in dev: `cd frontend && npm install && npm start`
@@ -91,7 +96,7 @@ All optional, with production defaults:
 | `QE_ROLE` | `team` | instance role: `team`, `partner` or `public` (see above) |
 | `QE_TIER1_PASSWORD` | unset (tier 1 open on `team`, **shut** on `partner`) | password for tier 1 |
 | `QE_PUBLIC_ONLY` | off | transitional alias for `QE_ROLE=public` |
-| `QE_EXPORT_SOURCE` | unset | partner/public: URL or path of the export with `{tier}`, e.g. `http://quellenpanel-team:8080/internal/exports/stufe{tier}.json`. Unset ⇒ transitional: built once from the bundled `truth.json`, records then dropped |
+| `QE_EXPORT_SOURCE` | unset | partner/public: URL or path of the export with `{tier}`, e.g. `http://quellenpanel-team-internal:9090/internal/exports/stufe{tier}.json`. Unset ⇒ local development only: built once from a local `truth.json` |
 | `QE_EXPORT_POLL_MINUTES` | `10` | partner/public: re-fetch interval (0 = off) |
 | `QE_ALLOWED_ORIGINS` | unset (same-origin) | comma-separated origins allowed to use a credentialed (cookie) cross-origin **team login** when the panel is embedded on another origin (e.g. `https://wirlernenonline.de`). Public read access stays open to any origin regardless. Requires HTTPS |
 | `QE_REPO_URL` | `https://redaktion.openeduhub.net` | edu-sharing repository base — all live queries + the thumb proxy |
@@ -99,19 +104,24 @@ All optional, with production defaults:
 | `QE_AUTO_REFRESH_HOUR` | unset (off) | hour 0–23 for the optional nightly data rebuild (Docker) |
 | `QE_PROFILE` | `wlo` | repository profile to load (`profiles/<id>/profil.toml`) |
 | `QE_PROFILES_DIR` | `<repo>/profiles` | where profiles live (e.g. a mounted volume) |
-| `QE_DATA_DIR` | `backend/data` | writable data dir: `truth.json`, `raw/` caches, and optional `crawler.csv` / `korrekturen.csv` that override the profile's starting data |
+| `QE_DATA_DIR` | `backend/data` (image: `/data`) | writable data dir: `truth.json`, `raw/` caches, `exports/`, `status.json`, and `crawler.csv` / `korrekturen.csv` that override the profile's starting data |
+| `QE_SEED_URL` | unset | team, first start: base URL with `crawler.csv`, `korrekturen.csv`, `truth.json` for missing files |
+| `QE_SESSION_SECRET` | random per process | HMAC key of the signed team session (set it so logins survive restarts) |
+| `TRUST_PROXY` | off | client IP from the rightmost `X-Forwarded-For` entry (only behind a proxy that overwrites it) |
+| `LOG_FORMAT` / `LOG_LEVEL` | `json` / `INFO` | JSON lines (or `text`) on stdout |
+| `QE_PORT` / `QE_INTERNAL_PORT` | `8080` / `9090` | ports of `serve.py` |
 
 **Repository neutrality:** the core reads every property name, vocabulary URL, special-case spider
 and crawler-table column from the active profile (`QE_PROFILE`); `QE_REPO_URL`/`QE_SEARCH_URL`
 override the profile's URLs. A test (`test_neutral.py`) keeps WLO strings out of the core, and
 `profiles/beispiel` runs the full merge against a foreign metadata set. Still per repository (by
-design): the bundled `data/truth.json` snapshot and the profile's curated data
+design): the data in `QE_DATA_DIR` (never in the image) and the profile's curated data
 (`crawler.csv`, `korrekturen.csv`).
 
 ## API (tier in parentheses; `?tier=` requests a tier, capped to what is allowed)
 
 ```
-GET  /api/health                       service + record count
+GET  /api/health                       service + record count (alias; probes use :9090/health and /ready)
 GET  /api/capabilities                 maxTier for the caller (drives the UI tier controls)
 GET  /api/meta/filters                 filter vocabulary
 GET  /api/sources                      list (0/1/2; familyCount badge + team filters flag/show_blacklist only at 2)
@@ -129,15 +139,22 @@ POST /api/auth · /api/logout · GET /api/auth/status     team login (httpOnly s
 POST /jobs/refresh (team) · GET /jobs/latest            live data refresh
 ```
 
+Errors share one shape: `{"error", "message", "status", "trace_id"}` (+ `details` on 422,
+`retryAfter` with a `Retry-After` header on upstream 502/429 and while the team builds its data).
+The OpenAPI document (`/openapi.json`) lists only the paths of the running role. Internal port 9090:
+`GET /health`, `/ready`, `/metrics`, `/internal/exports/stufe{0,1}.json` (team).
+
 ## Tests
 
 ```bash
-cd backend && python -m pytest -q       # 44 tests: tier model, no-leak invariant per tier, route gating,
-                                        #   login/fetch rate limits, SSRF guard, hidden-breakdown split,
-                                        #   protocol exports (.json/.csv) + family-multiplicity guard
-cd frontend && npm test -- --watch=false  # 41 tests: i18n, services, quality, selection, grid columns,
-                                          #   PDF builders (content-asserted) + URL-safety helpers (vitest)
+python -m ruff check .                    # lint (repo root)
+cd backend && python -m pytest -q         # tier model, no-leak invariant, exports, roles, logs/tracing,
+                                          #   errors, internal port, sessions, first start, deploy files, chart
+cd frontend && npm test -- --watch=false  # vitest
 ```
+
+CI (`.github/workflows/ci.yml`) runs these plus `pip-audit`, `npm audit`, `helm lint`, kubeconform,
+`promtool test rules` and the version check (pyproject = Chart = package.json; tag = `v` + version).
 
 ## Deployment
 
@@ -153,7 +170,8 @@ unset ⇒ end-user-only, fail-closed):
 | `QE_PUBLIC_ONLY=1` | transitional alias for `QE_ROLE=public` |
 | `QE_ALLOWED_ORIGINS` | comma-separated origins allowed a credentialed cross-origin team login (embedded widget on another origin); needs HTTPS. Public read access is unaffected |
 | `QE_REPO_URL` / `QE_SEARCH_URL` | point live queries + the search link at another repo (default = prod) |
-| `QE_AUTO_REFRESH_HOUR` | optional nightly rebuild (0–23; needs a writable FS) |
+| `QE_AUTO_REFRESH_HOUR` | optional nightly rebuild (0–23), team only |
+| `QE_SESSION_SECRET` / `QE_SEED_URL` / `TRUST_PROXY` | see the configuration table above |
 
 ```bash
 # Docker (build + run locally)
@@ -179,15 +197,20 @@ Deployment targets:
 - **Server (Docker Compose)**: ready-made `deploy/docker-compose.yml` + `.env.example`, plus an
   automatic-HTTPS variant (`deploy/docker-compose.tls.yml` + `Caddyfile`, Let's Encrypt via
   nip.io/sslip.io, no own domain needed) — step-by-step in [`deploy/README.md`](deploy/README.md).
-  The TLS variant runs uvicorn with `--forwarded-allow-ips` and lets Caddy overwrite
-  `X-Forwarded-For`, so the per-client rate limits key on the real client IP.
-- **Kubernetes (Helm)**: `deploy/helm/quellenpanel` — a single-replica `Deployment` (stateless;
-  bundled snapshot, no PVC), ConfigMap + Secret for the `QE_*` env, Service + Ingress. See
-  [`deploy/helm/quellenpanel/README.md`](deploy/helm/quellenpanel/README.md). `helm lint` clean.
+  Both start team, partner and public read-only; the TLS variant lets Caddy overwrite
+  `X-Forwarded-For` and sets `TRUST_PROXY=1`, so the per-client rate limits key on the real client IP.
+- **Kubernetes (Helm)**: `deploy/helm/quellenpanel` — one release per role (`values-team.yaml`,
+  `values-partner.yaml`, `values-public.yaml`): two ports, probes on 9090, restricted security
+  context, PVC only for the team, optional NetworkPolicy / ServiceMonitor / PrometheusRule. See
+  [`deploy/helm/quellenpanel/README.md`](deploy/helm/quellenpanel/README.md).
 
 ## Status
 
-- ✅ **Backend** — merged 3-tier API; 44 tests green; ruff clean (`backend/ruff.toml`); no-leak
+- ✅ **Operations (Etappe 3)** — JSON logs + B3 tracing, one error shape with trace id, internal
+  port 9090 (health/ready/metrics), signed sessions, data out of the image (seed / first-start build),
+  hardened digest-pinned image, three-service Compose, Helm chart per role with alerts, CI gates,
+  version 0.3.0 from `backend/pyproject.toml`. Details: [`docs/betrieb.md`](docs/betrieb.md).
+- ✅ **Backend** — merged 3-tier API; ruff clean (`backend/ruff.toml`); no-leak
   invariant + `QE_PUBLIC_ONLY` hard cap verified; login/fetch rate limits (proxy-safe) + thumbnail
   SSRF guard tested; deps pinned + CVE-clean (`pip-audit`). The Bezugsquelle-family index (publisher
   + sub-channels, e.g. YouTube) drives the card badge + the detail "related sources" — Audit-tier

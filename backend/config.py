@@ -8,12 +8,23 @@ import hmac
 import logging
 import os
 import secrets
+import tomllib
 from pathlib import Path
 
 import repo_profile
 
-VERSION = "0.3.0"   # backend version (OpenAPI info, /metrics build info)
 HERE = Path(__file__).parent
+
+
+def _read_version(path: Path) -> str:
+    """[project].version from backend/pyproject.toml (the one version source); "0.0.0" if missing."""
+    try:
+        return tomllib.loads(path.read_text(encoding="utf-8"))["project"]["version"]
+    except (OSError, KeyError, tomllib.TOMLDecodeError):
+        return "0.0.0"
+
+
+VERSION = _read_version(HERE / "pyproject.toml")
 FRONTEND = HERE.parent / "frontend"
 
 
@@ -109,7 +120,7 @@ def public_only() -> bool:
 
 def export_source() -> str:
     """Partner/public: where the tier export comes from — URL or file path with '{tier}',
-    e.g. http://quellenpanel-team:8080/internal/exports/stufe{tier}.json (QE_EXPORT_SOURCE)."""
+    e.g. http://quellenpanel-team-internal:9090/internal/exports/stufe{tier}.json (QE_EXPORT_SOURCE)."""
     return os.environ.get("QE_EXPORT_SOURCE", "").strip()
 
 
