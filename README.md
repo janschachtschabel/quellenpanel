@@ -14,8 +14,24 @@ different requirements, so the difference is modelled as three **access tiers** 
 | **2** | team | internal fields, all data-problem flags, audit protocol, exports, live refresh | team password (`QE_TEAM_PASSWORD`) |
 
 Each request is served at the **effective tier** = `min(requested, allowed)` (see `tiers.py`).
-`QE_PUBLIC_ONLY=1` hard-caps everyone at tier 0, so a public / embedded deployment cannot serve
-tier 1/2 data even if an auth check were wrong. `field_policy.py` remains the single source of truth
+
+## Three instances from one image (`QE_ROLE`)
+
+| Role | Max tier | Holds in memory | Reachable |
+|---|---|---|---|
+| `team` (default) | 2 | `truth.json` (merged records) → builds the tier exports `$QE_DATA_DIR/exports/stufe{0,1}.json` | internal only |
+| `partner` | 1 | only the tier-0 + tier-1 exports | public; tier 1 (details, Steckbrief PDF) **only** with `QE_TIER1_PASSWORD` — unset ⇒ tier 1 stays shut |
+| `public` | 0 | only the tier-0 export | public, embeddable |
+
+Every answer below tier 2 — on every instance, the team one included — comes from the tier export,
+which is built by the same serializer that defines the tier (`exports.py`, `export_query.py`). An
+instance therefore cannot show more than its tier, even if an auth check were wrong. Partner/public
+load their export from `QE_EXPORT_SOURCE` (the team's `/internal/exports/stufe{tier}.json` with
+ETag, or a file path), re-fetch it every `QE_EXPORT_POLL_MINUTES`, keep the last valid copy on errors
+and in `/tmp`, and answer `/api/health` with 503 until they have one. Team-only routes (audit,
+protocol, refresh, reload, login, `/internal/exports`) do not exist on partner/public (404).
+`QE_PUBLIC_ONLY=1` is the transitional alias for `QE_ROLE=public`; combined with another role it is
+refused at start. `field_policy.py` remains the single source of truth
 for the public/internal split; the no-leak invariant is tested per tier.
 
 ## Architecture (backend)
@@ -72,8 +88,11 @@ All optional, with production defaults:
 | Variable | Default | Purpose |
 |---|---|---|
 | `QE_TEAM_PASSWORD` | unset (team off) | enables tier 2 (team). Fail-closed: unset ⇒ no team access |
-| `QE_TIER1_PASSWORD` | unset (tier 1 open) | gate tier 1 behind a lighter password |
-| `QE_PUBLIC_ONLY` | off | hard-cap everyone at tier 0 (public / embedded deployment) |
+| `QE_ROLE` | `team` | instance role: `team`, `partner` or `public` (see above) |
+| `QE_TIER1_PASSWORD` | unset (tier 1 open on `team`, **shut** on `partner`) | password for tier 1 |
+| `QE_PUBLIC_ONLY` | off | transitional alias for `QE_ROLE=public` |
+| `QE_EXPORT_SOURCE` | unset | partner/public: URL or path of the export with `{tier}`, e.g. `http://quellenpanel-team:8080/internal/exports/stufe{tier}.json`. Unset ⇒ transitional: built once from the bundled `truth.json`, records then dropped |
+| `QE_EXPORT_POLL_MINUTES` | `10` | partner/public: re-fetch interval (0 = off) |
 | `QE_ALLOWED_ORIGINS` | unset (same-origin) | comma-separated origins allowed to use a credentialed (cookie) cross-origin **team login** when the panel is embedded on another origin (e.g. `https://wirlernenonline.de`). Public read access stays open to any origin regardless. Requires HTTPS |
 | `QE_REPO_URL` | `https://redaktion.openeduhub.net` | edu-sharing repository base — all live queries + the thumb proxy |
 | `QE_SEARCH_URL` | `https://suche.wirlernenonline.de` | WLO search base — the per-source "contents in search" link |
@@ -128,8 +147,10 @@ unset ⇒ end-user-only, fail-closed):
 | Variable | Effect |
 |----------|--------|
 | `QE_TEAM_PASSWORD` | enables tier 2 (Audit / team login) |
-| `QE_TIER1_PASSWORD` | optional password gate for tier 1 (Details); unset ⇒ open |
-| `QE_PUBLIC_ONLY=1` | hard-cap every request at tier 0 (public / embedded) |
+| `QE_ROLE` | `team` (default) · `partner` · `public` — see "Three instances from one image" |
+| `QE_TIER1_PASSWORD` | password gate for tier 1 (Details); unset ⇒ open on `team`, shut on `partner` |
+| `QE_EXPORT_SOURCE` / `QE_EXPORT_POLL_MINUTES` | partner/public: where to fetch the tier export, and how often |
+| `QE_PUBLIC_ONLY=1` | transitional alias for `QE_ROLE=public` |
 | `QE_ALLOWED_ORIGINS` | comma-separated origins allowed a credentialed cross-origin team login (embedded widget on another origin); needs HTTPS. Public read access is unaffected |
 | `QE_REPO_URL` / `QE_SEARCH_URL` | point live queries + the search link at another repo (default = prod) |
 | `QE_AUTO_REFRESH_HOUR` | optional nightly rebuild (0–23; needs a writable FS) |

@@ -21,6 +21,9 @@ services:
       - QE_TEAM_PASSWORD=${QE_TEAM_PASSWORD:-}
       - QE_TIER1_PASSWORD=${QE_TIER1_PASSWORD:-}
       - QE_PUBLIC_ONLY=${QE_PUBLIC_ONLY:-}
+      - QE_ROLE=${QE_ROLE:-}
+      - QE_EXPORT_SOURCE=${QE_EXPORT_SOURCE:-}
+      - QE_EXPORT_POLL_MINUTES=${QE_EXPORT_POLL_MINUTES:-}
       # Cross-origin team login (this HTTPS variant satisfies the required Secure cookie). Comma-
       # separated origins allowed the credentialed session cookie; empty = same-origin only.
       - QE_ALLOWED_ORIGINS=${QE_ALLOWED_ORIGINS:-}

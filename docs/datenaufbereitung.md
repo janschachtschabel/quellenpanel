@@ -19,9 +19,13 @@ beim Ausliefern darübergelegt wird. Erzeuger: `fetcher.py` (Abruf) + `truth*.py
                  + per-Feld-Provenienz  + Flags (Datenprobleme, Blacklist/Whitelist, Provenienz)
                                              ▼
               ④ SNAPSHOT  backend/data/truth.json   (im Docker-Image gebündelt = Basis)
+                 + EXPORTE je Stufe  $QE_DATA_DIR/exports/stufe0.json, stufe1.json
+                   (Stufen-Serializer, inkl. Statistik/Filteroptionen; ohne Blacklist)
+                   → Team: GET /internal/exports/stufe{0,1}.json (ETag) → Partner/Öffentlich
                                              ▼
               ⑤ SERVE  (im RAM, pro Request)
-                 Hide (Blacklist/Zweitdatensatz) → Filter → Overlay (korrekturen.csv: bezugsquelle) → Tier 0/1/2
+                 Stufe 0/1: nur aus dem Export der Stufe (alle Rollen)
+                 Stufe 2 (Team): Hide → Filter → Overlay (korrekturen.csv: bezugsquelle) → Tier 2
                                              ▼
               ⑥ LIVE pro Request (NICHT im Snapshot):
                  /api/sources/{id}/contents (Beispiel-Inhalte)  ·  /api/thumb (Vorschau-Proxy)

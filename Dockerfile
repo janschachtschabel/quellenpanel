@@ -4,8 +4,10 @@
 # data snapshot (backend/data/truth.json). Unlike the public-only Quellenliste image, this app has
 # team features — set the access env at run time (all optional; unset = end-user-only):
 #   QE_TEAM_PASSWORD   enables tier 2 (Audit / team)        — fail-closed: unset ⇒ no team access
-#   QE_TIER1_PASSWORD  optional password gate for tier 1 (Details); unset ⇒ tier 1 open
-#   QE_PUBLIC_ONLY=1   hard-cap everyone at tier 0 (public/embedded deployment)
+#   QE_ROLE            team (default) | partner | public — caps the tier; partner/public hold only
+#                      their tier export (QE_EXPORT_SOURCE, re-fetched every QE_EXPORT_POLL_MINUTES)
+#   QE_TIER1_PASSWORD  password gate for tier 1 (Details); unset ⇒ open on team, shut on partner
+#   QE_PUBLIC_ONLY=1   transitional alias for QE_ROLE=public
 #   QE_ALLOWED_ORIGINS comma-separated origins allowed a credentialed cross-origin team login
 #                      (embedded widget on another origin); needs HTTPS. Empty = same-origin only
 
