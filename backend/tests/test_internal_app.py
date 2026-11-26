@@ -148,3 +148,25 @@ def test_serve_builds_two_servers(monkeypatch):
     assert public.access_log is False and private.access_log is False
     assert public.lifespan == "on" and private.lifespan == "off"
     assert public.proxy_headers is False and private.server_header is False
+
+
+# --- Zwischenreview Etappe 3 ----------------------------------------------------------------
+@pytest.mark.parametrize("odd", [12345, ["x"], {"a": 1}, "kein datum"])
+def test_odd_generated_at_never_breaks_health_or_metrics(client, internal, monkeypatch, odd):
+    from store import _DATA
+    monkeypatch.setitem(_DATA["meta"], "generatedAt", odd)
+    h = internal.get("/health")
+    assert h.status_code == 200 and h.json()["data"]["ageSeconds"] is None
+    assert internal.get("/metrics").status_code == 200
+
+
+def test_serve_exits_nonzero_when_api_start_fails(monkeypatch):
+    import serve
+
+    async def fake_serve(self, sockets=None):
+        self.started = False                      # lifespan startup failed: serve() just returns
+
+    monkeypatch.setattr(serve._Server, "serve", fake_serve)
+    with pytest.raises(SystemExit) as exc:
+        serve.main()
+    assert exc.value.code == 3

@@ -14,11 +14,14 @@ def client_ip(request: Request) -> str:
     # Rate-limit key. Without TRUST_PROXY: the socket peer (request.client.host), never a raw
     # X-Forwarded-For — a client could rotate a forged XFF per request and get a fresh budget each
     # time. With TRUST_PROXY=1 (only behind our reverse proxy, which overwrites XFF with the real
-    # remote address, see deploy/): the FIRST XFF entry, i.e. the address our proxy saw.
+    # remote address, see deploy/): the RIGHTMOST XFF entry, i.e. the address our proxy saw. Behind a
+    # proxy that appends instead, the left entries are client-controlled; rightmost then fails safe
+    # (one shared bucket per proxy hop) instead of open (a fresh budget per forged value).
     if config.trust_proxy():
-        first = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
-        if first:
-            return first
+        entries = [e.strip() for e in (request.headers.get("x-forwarded-for") or "").split(",")]
+        entries = [e for e in entries if e]
+        if entries:
+            return entries[-1]
     return request.client.host if request.client else "?"
 
 

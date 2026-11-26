@@ -100,7 +100,7 @@ def _request(headers: dict, host="10.0.0.5") -> Request:
 
 
 def test_client_ip_trust_proxy(monkeypatch):
-    xff = {"X-Forwarded-For": "203.0.113.9, 10.0.0.1"}
+    xff = {"X-Forwarded-For": "203.0.113.9"}
     monkeypatch.delenv("TRUST_PROXY", raising=False)
     assert ratelimit.client_ip(_request(xff)) == "10.0.0.5"
     monkeypatch.setenv("TRUST_PROXY", "1")
@@ -110,3 +110,9 @@ def test_client_ip_trust_proxy(monkeypatch):
     assert ratelimit.client_ip(_request({"X-Forwarded-For": " , "})) == "10.0.0.5"
     monkeypatch.setenv("TRUST_PROXY", "nein")
     assert config.trust_proxy() is False
+
+
+def test_client_ip_trust_proxy_uses_rightmost(monkeypatch):
+    # Behind a proxy that APPENDS, the leftmost entries are client-controlled: take the rightmost.
+    monkeypatch.setenv("TRUST_PROXY", "1")
+    assert ratelimit.client_ip(_request({"X-Forwarded-For": "1.2.3.4, 203.0.113.9"})) == "203.0.113.9"

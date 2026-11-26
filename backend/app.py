@@ -91,7 +91,6 @@ def _start_from_export(role: str) -> None:
 
 app = FastAPI(title="Quellenpanel", version=config.VERSION, lifespan=_lifespan)
 errors.install(app)
-app.add_middleware(obs.TraceMiddleware, on_error=errors.internal_error_parts)  # outermost user middleware: trace + request line
 app.include_router(thumb.router)   # /api/thumb — repository preview-image proxy (see thumb.py)
 
 # CORS: PUBLIC (read-only) data is served to ANY origin WITHOUT credentials (wildcard). The team
@@ -530,6 +529,10 @@ def admin_reload(team: bool = Depends(tiers.is_team)):
     _rebuild_exports()
     return {"ok": True, "meta": _DATA["meta"]}
 
+
+# Registered LAST so it wraps every other middleware (add_middleware inserts outermost): trace
+# context, response headers and the request line also cover the 413 / CORS-preflight answers.
+app.add_middleware(obs.TraceMiddleware, on_error=errors.internal_error_parts)
 
 # In production serve the built Angular SPA (frontend/dist/browser) at "/". In dev this folder
 # does not exist → use `ng serve` (proxies /api). The web-component build is served the same way.

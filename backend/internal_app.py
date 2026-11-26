@@ -50,18 +50,21 @@ def _generated_at() -> str | None:
 
 def _age_seconds(generated_at: str | None) -> float | None:
     """Age of a 'YYYY-MM-DD HH:MM' (local time of the builder) or ISO-8601 timestamp."""
-    if not generated_at:
-        return None
+    if not isinstance(generated_at, str) or not generated_at:
+        return None                     # the remote export is only checked for the key's presence
     try:
         ts = datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
-    except ValueError:
+        epoch = ts.timestamp() if ts.tzinfo else time.mktime(ts.timetuple())
+    except (ValueError, OverflowError, OSError):
         return None
-    epoch = ts.timestamp() if ts.tzinfo else time.mktime(ts.timetuple())
     return max(0.0, time.time() - epoch)
 
 
 def data_age() -> float:
-    age = _age_seconds(_generated_at())
+    try:                                # a gauge callback must never break the whole scrape
+        age = _age_seconds(_generated_at())
+    except Exception:  # noqa: BLE001
+        return math.nan
     return math.nan if age is None else age
 
 
@@ -116,7 +119,7 @@ def health():
     gen = _generated_at()
     age = _age_seconds(gen)
     return {"status": "ok", "role": config.role(), "version": config.VERSION,
-            "data": {"state": _data_state(), "generatedAt": gen,
+            "data": {"state": _data_state(), "generatedAt": gen if isinstance(gen, str) else None,
                      "ageSeconds": None if age is None else round(age)},
             "rebuild": refresh.status()}
 

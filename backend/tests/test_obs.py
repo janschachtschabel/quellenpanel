@@ -184,3 +184,15 @@ def test_fetch_contents_sends_b3(monkeypatch):
     with obs.trace_scope(T32, S16, None, None):
         wlo_content.fetch_contents("ccm:publisher", "X")
     assert seen["x-b3-traceid"] == T32
+
+
+# --- Zwischenreview Etappe 3 ----------------------------------------------------------------
+def test_413_and_preflight_carry_trace(client, caplog):
+    caplog.set_level(logging.INFO)
+    caplog.clear()
+    r = client.post("/api/sources/batch", content=b"x", headers={"Content-Length": "99999999"})
+    assert r.status_code == 413
+    assert r.json()["trace_id"] == r.headers["X-B3-TraceId"]
+    p = client.options("/api/sources", headers={"Origin": "https://x.example"})
+    assert p.status_code == 204 and "X-B3-TraceId" in p.headers
+    assert len(_request_lines(caplog)) == 2

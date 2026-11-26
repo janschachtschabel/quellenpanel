@@ -11,6 +11,7 @@ import asyncio
 import contextlib
 import os
 import signal
+import sys
 
 import uvicorn
 
@@ -42,13 +43,20 @@ async def _serve() -> None:
     servers = [_Server(c) for c in build_servers()]
     loop = asyncio.get_running_loop()
 
+    stopped_by_signal = False
+
     def _stop() -> None:
         for s in servers:
             s.should_exit = True
 
+    def _on_signal() -> None:
+        nonlocal stopped_by_signal
+        stopped_by_signal = True
+        _stop()
+
     for sig in (signal.SIGTERM, signal.SIGINT):
         with contextlib.suppress(NotImplementedError):   # Windows: no loop signal handlers
-            loop.add_signal_handler(sig, _stop)
+            loop.add_signal_handler(sig, _on_signal)
     tasks = [asyncio.create_task(s.serve()) for s in servers]
     # One server ending (signal, or a failed start such as a busy port) ends the other one too.
     done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
@@ -56,6 +64,8 @@ async def _serve() -> None:
     await asyncio.gather(*pending)
     for t in done:
         t.result()                                       # re-raise a failed start (exit code ≠ 0)
+    if not stopped_by_signal and not servers[0].started:
+        sys.exit(3)                                      # API lifespan startup failed (as uvicorn.run)
 
 
 def main() -> None:
