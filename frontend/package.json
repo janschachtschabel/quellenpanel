@@ -5,7 +5,6 @@
   "scripts": {
     "start": "ng serve --port 4400",
     "build": "ng build",
-    "vercel-build": "ng build",
     "build:element": "ng build --configuration element",
     "test": "ng test"
   },

@@ -184,12 +184,6 @@ Deployment targets:
 - **Kubernetes (Helm)**: `deploy/helm/quellenpanel` — a single-replica `Deployment` (stateless;
   bundled snapshot, no PVC), ConfigMap + Secret for the `QE_*` env, Service + Ingress. See
   [`deploy/helm/quellenpanel/README.md`](deploy/helm/quellenpanel/README.md). `helm lint` clean.
-- **Vercel** (`vercel.json`): the `/api` routes run as a Python function (`backend/api/index.py`),
-  the SPA is built as a static site; set the env vars in the Vercel project settings.
-  **Caveat:** the team session store (and the in-process rate limits) are per-process, so on a
-  horizontally scaled / serverless host a follow-up request may hit another instance and be treated
-  as logged-out. For reliable team login use a single-instance container deployment (Compose/Helm);
-  the Vercel path is best suited to the public (tier-0 / `QE_PUBLIC_ONLY`) read-only mode.
 
 ## Status
 
@@ -210,7 +204,7 @@ Deployment targets:
   deps CVE-clean (`npm audit --omit=dev`).
 - ✅ **Deployment** — Docker image (build + run verified) · GitHub Actions → Docker Hub ·
   GitLab CI → self-hosted registry + Helm chart (`helm lint` clean) · Compose (HTTP + automatic
-  HTTPS) · Kubernetes (Helm) · Vercel.
+  HTTPS) · Kubernetes (Helm).
 
 The previous apps (`quellenliste-x`, `quellenerschliessung-app`) keep running unchanged until
 quellenpanel is deployed.

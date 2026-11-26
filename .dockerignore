@@ -13,16 +13,20 @@ frontend/dist/
 frontend/dist-element/
 frontend/.angular/
 
-# Not needed in the image (tests, dev tooling, deploy/CI/docs, Vercel)
+# Not needed in the image (tests, dev tooling, deploy/CI/docs)
 backend/tests/
 backend/requirements-dev.txt
 backend/pytest.ini
-backend/api/
 deploy/
 .git/
 .github/
 .gitignore
 .dockerignore
-vercel.json
 *.md
-profiles/*/daten/migration-bericht.md
+
+# Data never goes into the image: the team instance seeds/builds it in $QE_DATA_DIR at runtime
+backend/data/truth.json
+backend/data/raw/
+backend/data/exports/
+backend/data/status.json
+profiles/*/daten/

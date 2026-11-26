@@ -11,6 +11,7 @@ import threading
 import time
 
 import config
+import bootstrap
 import enduser
 import export_store
 import fetcher
@@ -37,6 +38,7 @@ def _run_refresh():
                                           config.data_dir() / "exports")
         _JOB.update(status="done", percent=100, message="Fertig.",
                     meta=meta, finishedAt=time.strftime("%Y-%m-%d %H:%M:%S"))
+        bootstrap.write_status(_JOB)
         obs.REBUILD_TOTAL.labels("success").inc()
         obs.REBUILD_LAST_SUCCESS.set_to_current_time()
     except Exception:                        # noqa: BLE001
@@ -45,6 +47,7 @@ def _run_refresh():
         logging.getLogger("refresh").exception("refresh job failed")
         _JOB.update(status="error", error="internal", message="Aktualisierung fehlgeschlagen.",
                     finishedAt=time.strftime("%Y-%m-%d %H:%M:%S"))
+        bootstrap.write_status(_JOB)
         obs.REBUILD_TOTAL.labels("error").inc()
     finally:
         obs.REBUILD_DURATION.observe(time.monotonic() - started)
@@ -56,7 +59,8 @@ def start():
         if _JOB["status"] == "running":
             return {"status": "running", "percent": _JOB["percent"], "message": _JOB["message"]}
         _JOB.update(status="running", percent=0, message="Start …", error=None,
-                    startedAt=time.strftime("%Y-%m-%d %H:%M:%S"))
+                    startedAt=time.strftime("%Y-%m-%d %H:%M:%S"), finishedAt=None)
+        bootstrap.write_status(_JOB)
     try:
         threading.Thread(target=_run_refresh, daemon=True).start()
     except Exception:

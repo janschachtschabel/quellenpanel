@@ -22,6 +22,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 import config
+import bootstrap
 import enduser
 import errors
 import export_query
@@ -54,13 +55,16 @@ async def _lifespan(_app: FastAPI):
     if role == "partner" and not config.TIER1_PW:
         log.warning("Rolle partner ohne QE_TIER1_PASSWORD: Stufe 1 (Details, Steckbrief) bleibt gesperrt")
     if role == "team":
-        _load()
-        log.info("Quellenpanel: %d records loaded", len(_DATA["records"]))
-        _rebuild_exports()
+        _DATA.update({"meta": {}, "records": [], "byId": {}, "byFamily": {}})
+        if bootstrap.start_team() == "ready":
+            log.info("Quellenpanel: %d records loaded", len(_DATA["records"]))
         refresh.start_scheduler(config.AUTO_REFRESH_HOUR)  # optional nightly refresh (daemon; no-op if unset)
     else:
         _start_from_export(role)
     yield
+    if refresh.status().get("status") == "running":     # shutdown mid-rebuild: leave a readable trace
+        bootstrap.write_status({**refresh.status(), "status": "abgebrochen",
+                                "finishedAt": time.strftime("%Y-%m-%d %H:%M:%S")})
 
 
 def _role_tiers(role: str) -> tuple[int, ...]:
@@ -78,8 +82,11 @@ def _start_from_export(role: str) -> None:
             export_store.load_remote(t)
         export_store.start_polling(tiers_needed, config.export_poll_minutes())
     else:
-        # Transitional until stage 3 removes the data from the image: build the exports once from
-        # the bundled truth.json, then drop the records so only the export stays in memory.
+        # Local development only (the image carries no data): build the exports once from a local
+        # truth.json, then drop the records so only the export stays in memory.
+        if not config.truth_path().is_file():
+            log.error("Rolle %s ohne QE_EXPORT_SOURCE und ohne truth.json: keine Daten", role)
+            return
         log.warning("Rolle %s ohne QE_EXPORT_SOURCE: Export einmalig aus der lokalen truth.json", role)
         _load()
         for t in tiers_needed:
@@ -103,6 +110,9 @@ _CORS_REQ_HEADERS = "Content-Type, X-Team-Password, X-Tier1-Password"
 # Reject request bodies larger than this before they are buffered/parsed (defence in depth; a
 # reverse proxy should cap too). Generous vs. the largest legitimate body (a batch of 100 ids).
 _MAX_BODY_BYTES = 1_000_000
+
+
+_NO_DATA_NEEDED = {"/api/health", "/api/capabilities", "/api/auth", "/api/auth/status", "/api/logout"}
 
 
 def _cors_headers(origin: str | None) -> dict[str, str]:
@@ -132,6 +142,13 @@ async def _http_mw(request: Request, call_next):
         headers["Access-Control-Allow-Headers"] = _CORS_REQ_HEADERS
         headers["Access-Control-Max-Age"] = "600"
         return Response(status_code=204, headers=headers)
+    # Team instance still building its first data set: data routes answer 503 with a retry hint.
+    if (request.url.path.startswith("/api/") and request.url.path not in _NO_DATA_NEEDED
+            and config.role() == "team" and not _DATA["records"]):
+        resp = errors.response(503, "Daten werden aufgebaut", headers={"Retry-After": "60"}, retryAfter=60)
+        for k, v in _cors_headers(origin).items():
+            resp.headers[k] = v
+        return resp
     resp = await call_next(request)
     for k, v in _cors_headers(origin).items():
         resp.headers[k] = v

@@ -119,6 +119,11 @@ def export_poll_minutes() -> int:
     return int(raw) if raw.isdigit() else 10
 
 
+def seed_url() -> str:
+    """QE_SEED_URL: base URL holding crawler.csv, korrekturen.csv and optionally truth.json."""
+    return os.environ.get("QE_SEED_URL", "").strip()
+
+
 _GENERATED_SECRET: bytes | None = None
 _TRUE = ("1", "true", "yes", "on")
 

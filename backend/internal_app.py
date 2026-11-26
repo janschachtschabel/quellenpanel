@@ -21,6 +21,7 @@ from fastapi.responses import JSONResponse
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 import config
+import bootstrap
 import errors
 import export_store
 import exports
@@ -121,7 +122,7 @@ def health():
     return {"status": "ok", "role": config.role(), "version": config.VERSION,
             "data": {"state": _data_state(), "generatedAt": gen if isinstance(gen, str) else None,
                      "ageSeconds": None if age is None else round(age)},
-            "rebuild": refresh.status()}
+            "rebuild": {**refresh.status(), "last": bootstrap.read_status()}}
 
 
 @app.get("/ready")

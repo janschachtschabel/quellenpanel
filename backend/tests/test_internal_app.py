@@ -106,7 +106,8 @@ def _counter(name, **labels):
     return v or 0.0
 
 
-def test_rebuild_metrics(client, monkeypatch):
+def test_rebuild_metrics(client, monkeypatch, tmp_path):
+    monkeypatch.setenv("QE_DATA_DIR", str(tmp_path))          # status.json goes here
     import enduser
     import fetcher
     import store

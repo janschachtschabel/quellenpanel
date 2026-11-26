@@ -24,3 +24,4 @@ frontend/.angular/
 # OS
 .DS_Store
 Thumbs.db
+backend/data/status.json
