@@ -6,16 +6,19 @@ single-process internal tool; see session.py for the same scaling caveat). No ex
 """
 import time
 
+import config
 from fastapi import Request
 
 
 def client_ip(request: Request) -> str:
-    # Rate-limit key = request.client.host, never a raw X-Forwarded-For read: a client can set XFF to
-    # any value and rotate it per request, which would give each forged value its own budget and
-    # defeat the throttle. request.client.host is the socket peer for a direct deployment; behind the
-    # documented reverse proxy it is the REAL client IP, safely — uvicorn is run with
-    # --forwarded-allow-ips and Caddy overwrites X-Forwarded-For with the real remote host (see
-    # deploy/), so the client cannot forge it. Either way the value is trustworthy, unlike raw XFF.
+    # Rate-limit key. Without TRUST_PROXY: the socket peer (request.client.host), never a raw
+    # X-Forwarded-For — a client could rotate a forged XFF per request and get a fresh budget each
+    # time. With TRUST_PROXY=1 (only behind our reverse proxy, which overwrites XFF with the real
+    # remote address, see deploy/): the FIRST XFF entry, i.e. the address our proxy saw.
+    if config.trust_proxy():
+        first = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
+        if first:
+            return first
     return request.client.host if request.client else "?"
 
 

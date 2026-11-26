@@ -5,7 +5,9 @@ shared constants and paths. Imported by all other backend modules as a
 dependency-free leaf module (avoids cycles).
 """
 import hmac
+import logging
 import os
+import secrets
 from pathlib import Path
 
 import repo_profile
@@ -115,6 +117,28 @@ def export_poll_minutes() -> int:
     """Partner/public: re-fetch interval of the export in minutes (QE_EXPORT_POLL_MINUTES, 0 = off)."""
     raw = os.environ.get("QE_EXPORT_POLL_MINUTES", "").strip()
     return int(raw) if raw.isdigit() else 10
+
+
+_GENERATED_SECRET: bytes | None = None
+_TRUE = ("1", "true", "yes", "on")
+
+
+def session_secret() -> bytes:
+    """HMAC key for team sessions (QE_SESSION_SECRET). Without it: one random key per process."""
+    global _GENERATED_SECRET
+    raw = os.environ.get("QE_SESSION_SECRET", "").strip()
+    if raw:
+        return raw.encode("utf-8")
+    if _GENERATED_SECRET is None:
+        _GENERATED_SECRET = secrets.token_bytes(32)
+        logging.getLogger("quellenpanel").warning(
+            "QE_SESSION_SECRET fehlt: zufälliger Schlüssel, Sitzungen überleben keinen Neustart")
+    return _GENERATED_SECRET
+
+
+def trust_proxy() -> bool:
+    """TRUST_PROXY: take the client IP from the first X-Forwarded-For entry (set by our proxy)."""
+    return os.environ.get("TRUST_PROXY", "").strip().lower() in _TRUE
 
 
 # Kept for compatibility (read once at import); code paths use public_only()/role().
