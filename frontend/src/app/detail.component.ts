@@ -1,6 +1,6 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { DecimalPipe, NgTemplateOutlet } from '@angular/common';
-import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,6 +13,11 @@ import { SourcesService } from './sources.service';
 import { PdfService } from './pdf.service';
 import { TierService } from './tier.service';
 import { I18n } from './i18n.service';
+import { KorrekturenService } from './korrekturen.service';
+import { KorrekturDialogComponent } from './korrektur-dialog.component';
+import { korrekturAusSteckbrief } from './korrekturen-utils';
+import { fehlertext } from './korrekturen-fehler';
+import { KorrekturFelder } from './models';
 
 /**
  * Source detail (Steckbrief) in a Material dialog. Laid out as tidy titled CARD sections
@@ -61,6 +66,12 @@ import { I18n } from './i18n.service';
           <mat-icon>picture_as_pdf</mat-icon> {{ pdfBusy() ? i18n.t('select.pdfBusy') : i18n.t('detail.pdf') }}
         </button>
       }
+      @if (tiers.tier() >= 2 && tiers.role() === 'team') {
+        @if (detail.binding?.node) {
+          <button mat-stroked-button type="button" (click)="korrektur('blacklist')"><mat-icon>block</mat-icon> {{ i18n.t('detail.korr.blacklist') }}</button>
+        }
+        <button mat-stroked-button type="button" (click)="korrektur('beschreibung')"><mat-icon>edit_note</mat-icon> {{ i18n.t('detail.korr.description') }}</button>
+      }
       @if (detail.searchUrl) {
         <a mat-stroked-button color="primary" [href]="detail.searchUrl" target="_blank" rel="noopener">
           <mat-icon>search</mat-icon> {{ i18n.t('action.search') }}
@@ -72,6 +83,7 @@ import { I18n } from './i18n.service';
         </a>
       }
     </div>
+    @if (korrMeldung()) { <p class="korr-msg" role="status">{{ korrMeldung() }}</p> }
 
     <!-- Grund-Informationen -->
     <section class="sb">
@@ -329,6 +341,7 @@ import { I18n } from './i18n.service';
     .rel-ic { font-size: 16px; width: 16px; height: 16px; color: #8aa0c0; flex-shrink: 0; }
     .rel-ic.node { color: #1a8a4d; }
     .rel-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--wlo-text); }
+    .korr-msg { background: #e8f1fb; padding: 8px 12px; border-radius: 6px; margin: 8px 0; }
     /* Node-ID (Audit tier): the edu-sharing Quelldatensatz id, monospace + copy-selectable. */
     .rel-node { flex-shrink: 0; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: ui-monospace, Consolas, monospace; font-size: 10px; color: var(--wlo-text-muted); user-select: all; }
     .rel-cc { font-size: 11px; color: var(--wlo-text-muted); flex-shrink: 0; }
@@ -398,6 +411,9 @@ export class DetailDialogComponent implements OnInit {
   readonly tiers = inject(TierService);
 
   readonly pdfBusy = signal(false);
+  readonly korrMeldung = signal('');
+  private readonly korrSvc = inject(KorrekturenService);
+  private readonly dialog = inject(MatDialog);
   readonly contents = signal<ContentItem[] | null>(null);
   readonly contentsTotal = signal(0);
   readonly contentsError = signal(false);
@@ -477,6 +493,23 @@ export class DetailDialogComponent implements OnInit {
   }
 
   /** Export THIS source as a single-source Steckbrief PDF (tier 1+), via the shared PdfService. */
+  /** Team: start a correction for this source (blacklist / description) in the correction dialog. */
+  korrektur(aktion: 'blacklist' | 'beschreibung'): void {
+    const vorlage = korrekturAusSteckbrief(aktion, {
+      name: this.detail.name, nodeId: this.detail.binding?.node, bezugsquelle: this.detail.bezugsquelle });
+    this.dialog.open(KorrekturDialogComponent, { data: { neu: true, korrektur: vorlage }, autoFocus: false })
+      .afterClosed().subscribe((k?: KorrekturFelder) => {
+        if (!k) return;
+        this.korrSvc.lesen().subscribe({
+          next: s => this.korrSvc.anlegen(k, s.version).subscribe({
+            next: r => this.korrMeldung.set(this.i18n.t(r.anwenden?.wirktBeimNaechstenAufbau ? 'korr.applied.later' : 'korr.applied.now')),
+            error: e => this.korrMeldung.set(fehlertext(e)),
+          }),
+          error: e => this.korrMeldung.set(fehlertext(e)),
+        });
+      });
+  }
+
   async exportPdf(): Promise<void> {
     if (this.pdfBusy()) return;
     this.pdfBusy.set(true);

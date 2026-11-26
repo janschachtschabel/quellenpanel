@@ -187,7 +187,7 @@ type View = 'tile' | 'list' | 'stats' | 'korrekturen';
     @if (loading && view !== 'stats' && view !== 'korrekturen') { <mat-progress-bar mode="indeterminate"></mat-progress-bar> }
 
     @if (view === 'korrekturen' && tiers.tier() >= 2) {
-      <wlo-korrekturen></wlo-korrekturen>
+      @defer { <wlo-korrekturen></wlo-korrekturen> } @loading { <mat-progress-bar mode="indeterminate"></mat-progress-bar> }
     } @else if (view === 'stats') {
       <!-- Base stats always shown; higher tiers append their extra swimlanes below (same optics). -->
       <wlo-stats [stats]="stats"></wlo-stats>

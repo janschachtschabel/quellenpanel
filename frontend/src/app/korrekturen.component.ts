@@ -11,16 +11,13 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 
 import { I18n } from './i18n.service';
+import { fehlertext } from './korrekturen-fehler';
+import { KorrekturImportComponent } from './korrektur-import.component';
+import { CrawlerUploadComponent } from './crawler-upload.component';
 import { KorrekturDialogComponent } from './korrektur-dialog.component';
 import { KorrekturenService } from './korrekturen.service';
 import { AKTIONEN_JE_TYP, TYPEN, filterKorrekturen } from './korrekturen-utils';
 import { Anwenden, Korrektur, KorrekturFelder, KorrekturStand, VerlaufEintrag } from './models';
-
-/** Message of an API error in the service's error shape ({error, message, …}). */
-export function fehlertext(e: unknown): string {
-  const err = e as HttpErrorResponse;
-  return (err?.error && typeof err.error === 'object' && err.error.message) || err?.message || String(e);
-}
 
 /**
  * Team area "Korrekturen" (tier 2): the corrections table with search/filter, create / edit / delete,
@@ -31,7 +28,7 @@ export function fehlertext(e: unknown): string {
   selector: 'wlo-korrekturen',
   standalone: true,
   imports: [FormsModule, MatButtonModule, MatDialogModule, MatFormFieldModule, MatIconModule, MatInputModule,
-            MatPaginatorModule, MatSelectModule, MatTabsModule],
+            MatPaginatorModule, MatSelectModule, MatTabsModule, KorrekturImportComponent, CrawlerUploadComponent],
   template: `
   <div class="tier-head team">🔒 {{ i18n.t('korr.title') }}</div>
   <mat-tab-group animationDuration="0ms" (selectedIndexChange)="tab($event)">
@@ -99,6 +96,12 @@ export function fehlertext(e: unknown): string {
           [pageSizeOptions]="[25, 50, 100, 250]" (page)="blaettern($event)"></mat-paginator>
       }
     </mat-tab>
+    <mat-tab [label]="i18n.t('korr.tab.import')">
+      <wlo-korrektur-import [version]="stand()?.version ?? ''" (uebernommen)="uebernehmen($event)"></wlo-korrektur-import>
+    </mat-tab>
+    <mat-tab [label]="i18n.t('korr.tab.crawler')">
+      <wlo-crawler-upload></wlo-crawler-upload>
+    </mat-tab>
     <mat-tab [label]="i18n.t('korr.tab.history')">
       <div class="tablewrap">
         <table class="korr">
@@ -156,7 +159,7 @@ export class KorrekturenComponent implements OnInit {
   }
 
   tab(i: number): void {
-    if (i === 1) this.svc.verlauf().subscribe({ next: v => this.verlauf.set(v), error: e => this.fehler.set(fehlertext(e)) });
+    if (i === 3) this.svc.verlauf().subscribe({ next: v => this.verlauf.set(v), error: e => this.fehler.set(fehlertext(e)) });
   }
 
   gefiltert(): Korrektur[] {
