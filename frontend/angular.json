@@ -15,16 +15,34 @@
             "outputPath": "dist",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "polyfills": ["zone.js"],
+            "polyfills": [
+              "zone.js"
+            ],
             "tsConfig": "tsconfig.app.json",
-            "assets": [{ "glob": "**/*", "input": "public" }],
-            "styles": ["src/styles.scss"],
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public"
+              }
+            ],
+            "styles": [
+              "node_modules/@fontsource/roboto/latin-300.css",
+              "node_modules/@fontsource/roboto/latin-400.css",
+              "node_modules/@fontsource/roboto/latin-500.css",
+              "node_modules/@fontsource/roboto/latin-700.css",
+              "node_modules/@fontsource/material-icons/latin-400.css",
+              "src/styles.scss"
+            ],
             "scripts": []
           },
           "configurations": {
             "production": {
               "budgets": [
-                { "type": "initial", "maximumWarning": "1mb", "maximumError": "2mb" }
+                {
+                  "type": "initial",
+                  "maximumWarning": "1mb",
+                  "maximumError": "2mb"
+                }
               ],
               "outputHashing": "all"
             },
@@ -35,7 +53,10 @@
             "element": {
               "browser": "src/main.element.ts",
               "index": false,
-              "outputPath": "dist-element",
+              "outputPath": {
+                "base": "dist-widgets/element",
+                "browser": ""
+              },
               "outputHashing": "none",
               "optimization": true
             }
@@ -45,8 +66,12 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "configurations": {
-            "production": { "buildTarget": "quellenliste-x:build:production" },
-            "development": { "buildTarget": "quellenliste-x:build:development" }
+            "production": {
+              "buildTarget": "quellenliste-x:build:production"
+            },
+            "development": {
+              "buildTarget": "quellenliste-x:build:development"
+            }
           },
           "defaultConfiguration": "development",
           "options": {

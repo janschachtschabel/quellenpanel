@@ -111,4 +111,10 @@ describe('SourcesService.filterOptions', () => {
     service.filterOptions().subscribe();
     httpMock.expectOne('/api/meta/filters?tier=2').flush({});
   });
+
+  it('resolves app assets against an absolute API base (embedded element)', () => {
+    expect(service.assetUrl('wlo-logo.svg')).toBe('wlo-logo.svg');
+    service.setBase('https://q.example/api');
+    expect(service.assetUrl('wlo-logo.svg')).toBe('https://q.example/wlo-logo.svg');
+  });
 });

@@ -16,6 +16,7 @@ deploy/.env
 frontend/node_modules/
 frontend/dist/
 frontend/dist-element/
+frontend/dist-widgets/
 frontend/.angular/
 
 # Vercel

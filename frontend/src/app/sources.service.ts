@@ -22,6 +22,11 @@ export class SourcesService {
     if (trimmed) this.base = trimmed.replace(/\/+$/, '');
   }
 
+  /** URL of a static app asset (logo …): next to the backend when embedded with an absolute base. */
+  assetUrl(name: string): string {
+    return /^https?:\/\//.test(this.base) ? new URL('/' + name, this.base).href : name;
+  }
+
   /** The current API base ('/api' or the embedded backend's URL). */
   apiBase(): string {
     return this.base;

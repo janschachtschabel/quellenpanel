@@ -23,6 +23,9 @@ import { appConfig } from './app/app.config';
 createApplication(appConfig)
   .then((appRef) => {
     const element = createCustomElement(AppComponent, { injector: appRef.injector });
-    customElements.define('wlo-quellenpanel', element);
+    // The same app under two names: the whole panel and the tiles widget (see docs/widgets.md).
+    if (!customElements.get('wlo-quellenpanel')) customElements.define('wlo-quellenpanel', element);
+    const kacheln = createCustomElement(AppComponent, { injector: appRef.injector });
+    if (!customElements.get('wlo-quellen-kacheln')) customElements.define('wlo-quellen-kacheln', kacheln);
   })
   .catch((err) => console.error(err));

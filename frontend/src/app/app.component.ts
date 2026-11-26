@@ -54,7 +54,7 @@ type View = 'tile' | 'list' | 'stats' | 'korrekturen';
   <div class="host">
     <header class="bar">
       <div class="bar-left">
-        <img class="logo" src="wlo-logo.svg" alt="WissenLebtOnline">
+        <img class="logo" [src]="api.assetUrl('wlo-logo.svg')" alt="WissenLebtOnline">
         <span class="sep"></span>
         <span class="brand">{{ i18n.t('app.title') }}</span>
         @if (data) { <span class="total-badge">{{ data.total | number }}</span> }
@@ -325,7 +325,7 @@ type View = 'tile' | 'list' | 'stats' | 'korrekturen';
   `],
 })
 export class AppComponent implements OnInit {
-  private readonly api = inject(SourcesService);
+  readonly api = inject(SourcesService);
   private readonly dialog = inject(MatDialog);
   private readonly snack = inject(MatSnackBar);
   private readonly pdf = inject(PdfService);
@@ -356,6 +356,13 @@ export class AppComponent implements OnInit {
   @Input('with-credentials') set withCredentials(value: string | boolean) {
     this.api.setCredentials(value === '' || value === true || value === 'true');
   }
+
+  /** Widget presets (`<wlo-quellen-kacheln fach="…" bildungsstufe="…" suche="…" nur-oer>`), applied
+   *  before the first load like api-base. */
+  @Input('fach') set presetFach(v: string) { this.subject = (v ?? '').trim(); }
+  @Input('bildungsstufe') set presetStufe(v: string) { this.level = (v ?? '').trim(); }
+  @Input('suche') set presetSuche(v: string) { this.q = (v ?? '').trim(); }
+  @Input('nur-oer') set presetOer(v: string | boolean) { this.onlyOer = v === '' || v === true || v === 'true'; }
 
   view: View = 'tile';
   q = '';

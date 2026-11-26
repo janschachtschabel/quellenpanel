@@ -40,3 +40,11 @@ html, body {
   background: #fcfcfc;   // page background (surrounds the framed component)
   color: var(--wlo-text);
 }
+
+// Material Icons ligature class (the font itself is self-hosted via @fontsource, no Google Fonts:
+// CSP-friendly and privacy-friendly, also inside embedding host pages).
+.material-icons {
+  font-family: 'Material Icons'; font-weight: normal; font-style: normal; font-size: 24px; line-height: 1;
+  letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; word-wrap: normal;
+  direction: ltr; font-feature-settings: 'liga'; -webkit-font-smoothing: antialiased;
+}
