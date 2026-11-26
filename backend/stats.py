@@ -141,9 +141,11 @@ def compute_stats_full(recs, meta):
             total_active_fields += r.get("fieldActiveCount", 0)
             for fg in r["fieldGeneration"]:
                 how[_how_bucket(fg.get("how"))] += 1
-    top_crawler = sorted([r for r in recs if r["kind"] == "crawler"],
+    # Named top lists never show a blacklisted (sorted-out) record: it is not a source.
+    listed = [r for r in recs if "BLACKLIST" not in r.get("flags", [])]
+    top_crawler = sorted([r for r in listed if r["kind"] == "crawler"],
                          key=lambda r: -(r.get("contentCount") or 0))[:20]
-    top_content = sorted(recs, key=lambda r: -(r.get("contentCount") or 0))[:20]
+    top_content = sorted(listed, key=lambda r: -(r.get("contentCount") or 0))[:20]
     def lst(c, n=15): return [{"value": k, "count": v} for k, v in c.most_common(n)]
     def pct(x): return round(100 * x / max(1, total), 1)
 

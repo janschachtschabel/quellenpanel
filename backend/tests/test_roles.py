@@ -69,3 +69,42 @@ def test_capabilities_partner(client, monkeypatch):
     caps = client.get("/api/capabilities").json()
     assert caps["role"] == "partner" and caps["tier1Gated"] is True
     assert caps["teamAvailable"] is False and caps["publicOnly"] is False
+
+
+@pytest.mark.parametrize("role", ["team", "partner"])
+def test_public_only_conflicting_role_raises(monkeypatch, role):
+    # Zwischenreview: QE_PUBLIC_ONLY=1 neben QE_ROLE=team/partner darf nicht still öffnen.
+    monkeypatch.setenv("QE_PUBLIC_ONLY", "1")
+    monkeypatch.setenv("QE_ROLE", role)
+    with pytest.raises(ValueError, match="QE_PUBLIC_ONLY"):
+        config.role()
+
+
+def test_public_only_with_public_role_ok(monkeypatch):
+    monkeypatch.setenv("QE_PUBLIC_ONLY", "1")
+    monkeypatch.setenv("QE_ROLE", "public")
+    assert config.role() == "public"
+
+
+def test_partner_ignores_team_cookie(monkeypatch):
+    monkeypatch.setenv("QE_ROLE", "partner")
+    monkeypatch.setattr(config, "TIER1_PW", "p")
+    token = session.issue()
+    assert tiers.max_tier(_req(token), None, None, None) == 0
+
+
+def test_partner_without_pw_warns_on_start(monkeypatch, caplog):
+    from fastapi.testclient import TestClient
+
+    import app as app_module
+    monkeypatch.setenv("QE_ROLE", "partner")
+    monkeypatch.setattr(config, "TIER1_PW", "")
+    with caplog.at_level("WARNING"), TestClient(app_module.app):
+        pass
+    assert "QE_TIER1_PASSWORD" in caplog.text
+
+
+@pytest.mark.parametrize("role", ["partner", "public"])
+def test_auth_route_404_outside_team(client, monkeypatch, role):
+    monkeypatch.setenv("QE_ROLE", role)
+    assert client.post("/api/auth", headers={"X-Team-Password": "test-team-pw"}).status_code == 404

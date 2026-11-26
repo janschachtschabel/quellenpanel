@@ -3,10 +3,13 @@
 Every response below tier 2 is answered from here, so it can only contain what the tier's
 serializer put into the export. Mirrors the record query (app._query_records +
 filtering.filter_records) for the filters available below tier 2; the team-only filters
-(flag, show_blacklist, erschliessung) are ignored, exactly as they are below tier 2 today.
+flag and show_blacklist are ignored, as they are below tier 2 today.
 
-One documented difference: `q` searches the card text the user sees — including the curated
-source supplement description — where the record query searched only the record's own text.
+Documented differences to the record query:
+  q             searches the card text the user sees — including the curated source supplement
+                description — where the record query searched only the record's own text.
+  erschliessung the exact (internal) cataloguing status filter no longer applies below tier 2;
+                the record query applied it at every tier, which let anyone probe internal codes.
 """
 from __future__ import annotations
 
@@ -38,7 +41,8 @@ def _match(it: dict, f: dict, ql: str | None) -> bool:
         return False
     if f.get("oer") is not None and k["oer"] != f["oer"]:
         return False
-    if f.get("min_count") and (c.get("contentCount") or 0) < f["min_count"]:
+    min_count = f.get("min_count", 1)                   # same default as app._query_records
+    if min_count and (c.get("contentCount") or 0) < min_count:
         return False
     if f.get("only_field_profile") and not k["fieldProfile"]:
         return False

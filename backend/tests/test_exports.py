@@ -57,6 +57,16 @@ def test_no_internal_in_export(golden, tier):
     # Tier 1 keeps today's public Steckbrief identity: the node id in the export row (views.flat)
     # is a public edu-sharing render link, as in the tier-1 detail binding. Tier 0 has none of it.
     banned = BANNED_KEYS - {"nodeId"} if tier == 1 else BANNED_KEYS | {"spider", "nodeId"}
+    if tier == 0:
+        # The spider name is public (repository property, shown at tier 1); at tier 0 it may only
+        # appear as the value for the live example contents, k.contents[1].
+        spiders = {r["identity"]["spider"] for r in golden[0] if r["identity"].get("spider")}
+        for it in doc["items"]:
+            c = it["k"]["contents"]
+            assert c is None or c[0] in ("replication_source", "publisher")
+        stripped = {**doc, "items": [{**it, "k": {**it["k"], "contents": None}} for it in doc["items"]]}
+        for kind, val, path in _walk(stripped):
+            assert not (kind == "str" and val in spiders), f"Spider {val!r} unter {path}"
     rows = [it.pop("row") for it in doc["items"] if "row" in it]
     for kind, val, path in _walk(doc):
         if kind == "key":
@@ -127,3 +137,31 @@ def test_validate_rejects_wrong_tier(golden):
         exports.validate(doc, 1)
     with pytest.raises(ValueError):
         exports.validate({"schema": 1, "tier": 0}, 0)
+
+
+@pytest.mark.parametrize("tier", [0, 1])
+def test_blacklisted_names_nowhere_in_export(golden, tier):
+    # Zwischenreview: auch Statistik-Listen (topByContent/topCrawler) nennen keine Blacklist-Quelle.
+    records, _ = golden
+    raw = exports.dumps(exports.build_export(*golden, tier)).decode("utf-8")
+    for r in records:
+        if "BLACKLIST" in r["flags"]:
+            assert r["id"] not in raw and json.dumps(r["name"], ensure_ascii=False) not in raw, r["name"]
+
+
+def test_stats_meta_is_whitelisted(golden):
+    records, meta = golden
+    doc = exports.build_export(records, {**meta, "geheim": "x"}, 1)
+    assert "geheim" not in exports.dumps(doc).decode("utf-8")
+
+
+def test_write_doc_unique_tmp(golden, tmp_path, monkeypatch):
+    # Zwischenreview: parallele Schreiber dürfen sich die Temp-Datei nicht teilen.
+    import os
+    seen = []
+    real = os.replace
+    monkeypatch.setattr(exports.os, "replace", lambda a, b: (seen.append(str(a)), real(a, b)))
+    doc = exports.build_export(*golden, 0)
+    exports.write_doc(doc, tmp_path / "stufe0.json")
+    exports.write_doc(doc, tmp_path / "stufe0.json")
+    assert len(set(seen)) == 2

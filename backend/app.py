@@ -3,8 +3,9 @@
 Tier 0 (end user) is the default and always open; tier 1 (Steckbrief: richer technical metadata)
 is open by default and optionally password-gated; tier 2 (team: internal fields, data-problem
 filters, audit/export) needs the team password. Each request is served at the EFFECTIVE tier
-(see tiers.py) — the smaller of what it asked for and what it is allowed. QE_PUBLIC_ONLY hard-caps
-everyone at tier 0 for the public/embedded deployment.
+(see tiers.py) — the smaller of what it asked for and what it is allowed. The instance role
+(QE_ROLE team/partner/public) caps it; below tier 2 every answer comes from the tier export
+(exports.py / export_query.py), so it can only contain what the tier's serializer emitted.
 
 This module is the thin web layer; logic lives in the domain modules (store, filtering, stats,
 serialize, refresh, wlo_content) and the access policy in tiers.py / config.py / field_policy.py.
@@ -307,7 +308,7 @@ _LOGIN_WINDOW = 300.0     # rolling window (seconds)
 _LOGIN_MAX_FAILS = 8      # wrong attempts allowed per window per client
 
 
-@app.post("/api/auth")
+@app.post("/api/auth", dependencies=_TEAM_ONLY)
 def auth(request: Request, response: Response, x_team_password: str | None = Header(None)):
     """Team login → httpOnly session cookie (so the password is never stored client-side).
     The password is accepted ONLY via the X-Team-Password header, never as a URL query

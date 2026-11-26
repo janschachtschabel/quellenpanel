@@ -11,13 +11,14 @@ Shape (schema 1):
   card/detail  serialize.source(r, tier[, detail=True])
   row          views.flat(r, team=False) — tier 1 only (CSV/JSON export rows)
   k            filter keys: booleans plus the public value for the live example contents
-Keys starting with "_" are runtime caches (see export_query) and never written.
+Top-level keys starting with "_" are runtime caches (see export_query) and never written.
 """
 from __future__ import annotations
 
 import hashlib
 import json
 import os
+import tempfile
 from pathlib import Path
 
 import filtering
@@ -65,15 +66,16 @@ def build_export(records: list[dict], meta: dict, tier: int) -> dict:
         if tier == 1:
             it["row"] = views.flat(r, team=False)
         items.append(it)
+    pub_meta = {k: meta.get(k) for k in _META_KEYS}
     if tier == 0:
         visible = filtering.filter_records(records, None, None, None, None, None, 0, None, False)
-        st = stats.compute_enduser_stats(visible, meta)
+        st = stats.compute_enduser_stats(visible, pub_meta)
     else:
-        st = stats.compute_stats_full(records, meta)
+        st = stats.compute_stats_full(records, pub_meta)
     filters = {**stats.compute_filter_options(records), "erschliessung": []}  # exact codes are internal
     return {
         "schema": SCHEMA, "tier": tier, "generatedAt": meta.get("generatedAt", ""),
-        "meta": {k: meta.get(k) for k in _META_KEYS},
+        "meta": pub_meta,
         "stats": st, "filters": filters, "items": items,
     }
 
@@ -107,9 +109,14 @@ def write_doc(doc: dict, path: Path) -> None:
     """Atomic write of one export document (temp file + os.replace)."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".json.tmp")
-    tmp.write_bytes(dumps(doc))
-    os.replace(tmp, path)
+    fd, tmp = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(fd, "wb") as fh:
+            fh.write(dumps(doc))
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
 
 
 def write_exports(records: list[dict], meta: dict, out_dir: Path) -> dict[int, str]:

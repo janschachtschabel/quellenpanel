@@ -88,9 +88,12 @@ ROLE_MAX_TIER = {"team": 2, "partner": 1, "public": 0}
 def role() -> str:
     """The instance role, read from the environment on every call (tests/deployments switch it)."""
     raw = os.environ.get("QE_ROLE", "").strip().lower()
+    alias = os.environ.get("QE_PUBLIC_ONLY", "").strip().lower() in ("1", "true", "yes", "on")
     if not raw:
-        alias = os.environ.get("QE_PUBLIC_ONLY", "").strip().lower() in ("1", "true", "yes", "on")
         return "public" if alias else "team"
+    if alias and raw != "public":
+        # Never fail open: an old public deployment that gains QE_ROLE=team must not unlock tiers.
+        raise ValueError(f"QE_PUBLIC_ONLY=1 widerspricht QE_ROLE='{raw}'")
     if raw not in ROLES:
         raise ValueError(f"QE_ROLE='{raw}' ungültig (erlaubt: {', '.join(ROLES)})")
     return raw

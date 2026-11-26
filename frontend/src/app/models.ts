@@ -195,8 +195,9 @@ export interface TeamStats {
 /** What the backend allows this client — drives the header tier controls (see /api/capabilities). */
 export interface Capabilities {
   maxTier: number;       // highest tier reachable (0 end user, 1 Steckbrief, 2 team)
-  publicOnly: boolean;   // QE_PUBLIC_ONLY — everything hard-capped at tier 0
+  publicOnly: boolean;   // QE_ROLE=public — everything hard-capped at tier 0
   tier1Gated: boolean;   // tier 1 requires a password
   teamAvailable: boolean;// a team password is configured (tier 2 reachable via login)
   repoUrl: string;       // edu-sharing repo the data refers to (repo-neutral; shown in detail + PDF)
+  role?: 'team' | 'partner' | 'public'; // instance role (QE_ROLE)
 }

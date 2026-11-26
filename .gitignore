@@ -6,6 +6,7 @@
 
 # Live API caches (rebuilt by the fetcher; QE_DATA_DIR/raw in production)
 backend/data/raw/
+backend/data/exports/
 
 # Secrets / local env (never commit — holds QE_TEAM_PASSWORD / QE_TIER1_PASSWORD)
 **/.env

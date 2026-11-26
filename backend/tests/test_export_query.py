@@ -87,3 +87,15 @@ def test_detail_batch_rows_contents(setup):
                    and "BLACKLIST" not in r["flags"])
     assert eq.contents_target(doc, crawler["id"]) == ("replication_source", crawler["identity"]["spider"])
     assert eq.contents_target(doc, "gibts:nicht") is None
+
+
+def test_erschliessung_ignored_below_team_documented(setup):
+    # Bewusste Abweichung: der genaue (interne) Statusfilter wirkt unter Stufe 2 nicht mehr.
+    doc = exports.build_export(*setup, 0)
+    std = [e["id"] for e in eq.query(doc, BASE)]
+    assert [e["id"] for e in eq.query(doc, {**BASE, "erschliessung": "9."})] == std
+
+
+def test_partial_filter_dict_defaults_min_count_1(setup):
+    doc = exports.build_export(*setup, 0)
+    assert [e["id"] for e in eq.query(doc, {})] == [r["id"] for r in app._query_records(0)]
