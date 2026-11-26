@@ -8,9 +8,11 @@ import json
 import shutil
 from pathlib import Path
 
+import pytest
+
 import enduser
+import repo_profile
 import truth
-import truth_loaders
 
 FIX = Path(__file__).parent / "fixtures" / "golden"
 
@@ -19,16 +21,27 @@ def _canon(x) -> str:
     return json.dumps(x, sort_keys=True, ensure_ascii=False)
 
 
+def use_data_dir(monkeypatch, data_dir: Path, profile: str = "wlo") -> None:
+    """Point the app at a data directory (raw/ + crawler.csv + korrekturen.csv) and a profile."""
+    monkeypatch.setenv("QE_DATA_DIR", str(data_dir))
+    monkeypatch.setenv("QE_PROFILE", profile)
+    repo_profile.reset()
+    monkeypatch.setattr(enduser, "_SUPPLEMENTS", None)   # re-read lazily from the new data dir
+    enduser.reload_supplements()
+
+
+@pytest.fixture(autouse=True)
+def _reset_profile():
+    yield
+    repo_profile.reset()
+    enduser.reload_supplements()
+
+
 def build_golden(monkeypatch, tmp_path) -> list[dict]:
-    gap = tmp_path / "quellen-analyse" / "data"
-    gap.mkdir(parents=True)
-    shutil.copy(FIX / "raw" / "replication_publisher_gap.csv", gap / "replication_publisher_gap.csv")
-    monkeypatch.setattr(truth_loaders, "RAW", FIX / "raw")
-    monkeypatch.setattr(truth_loaders, "DATENCRAWLER", FIX / "alt" / "datencrawler.csv")
-    monkeypatch.setattr(truth_loaders, "KORREKTUR", FIX / "alt" / "quellen_korrektur.csv")
-    monkeypatch.setattr(truth_loaders, "ROOT", tmp_path)
-    sup = json.loads((FIX / "alt" / "source_supplements.json").read_text(encoding="utf-8"))
-    monkeypatch.setattr(enduser, "_SUPPLEMENTS", {k: v for k, v in sup.items() if not k.startswith("_")})
+    shutil.copytree(FIX / "raw", tmp_path / "raw")
+    shutil.copy(FIX / "neu" / "crawler.csv", tmp_path / "crawler.csv")
+    shutil.copy(FIX / "neu" / "korrekturen.csv", tmp_path / "korrekturen.csv")
+    use_data_dir(monkeypatch, tmp_path)
     return truth.build()
 
 

@@ -1,10 +1,10 @@
 """Migration der alten Korrekturdateien (Korrekturliste + Supplements) ins Langformat."""
+import csv
 import json
 import subprocess
 import sys
 from pathlib import Path
 
-import truth_loaders
 from korrekturen import KorrekturSet, load_korrekturen
 from tools.migrate_korrekturen import migrate
 
@@ -13,11 +13,24 @@ REPO = Path(__file__).resolve().parents[2]
 SHIFTED = ("blacklist", "whitelist")
 
 
+def _old_loader(path):
+    """Der Korrekturlisten-Loader aus truth_loaders, Stand vor Etappe 1 (Referenz)."""
+    text = Path(path).read_text(encoding="utf-8-sig", errors="replace")
+    sep = ";" if text.count(";") > text.count(",") else ","
+    out = {}
+    for r in csv.DictReader(text.splitlines(), delimiter=sep):
+        nid = (r.get("Node-Id") or "").strip()
+        if nid:
+            out[nid] = {"liste": (r.get("Liste") or "").strip().lower(),
+                        "bezugsquelle": (r.get("Bezugsquelle") or "").strip(),
+                        "spider": (r.get("Spider") or "").strip()}
+    return out
+
+
 def _old_and_new(korr_csv, sup_json, monkeypatch):
     rows, bericht = migrate(korr_csv, sup_json, "2026-11-26")
     new = KorrekturSet(eintraege=rows).als_node_dict()
-    monkeypatch.setattr(truth_loaders, "KORREKTUR", korr_csv)
-    return truth_loaders.load_korrektur(), new, rows, bericht
+    return _old_loader(korr_csv), new, rows, bericht
 
 
 def _assert_equivalent(old, new):

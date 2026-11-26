@@ -8,8 +8,9 @@ import hmac
 import os
 from pathlib import Path
 
+import repo_profile
+
 HERE = Path(__file__).parent
-TRUTH = HERE / "data" / "truth.json"
 FRONTEND = HERE.parent / "frontend"
 
 
@@ -30,6 +31,42 @@ def _load_dotenv(path):
 
 
 _load_dotenv(HERE / ".env")
+
+
+# --- Data paths ---------------------------------------------------------------------------
+# Read on every call (not frozen at import), so a deployment or a test can repoint them via env.
+def data_dir() -> Path:
+    """Writable data directory: truth.json, raw/ caches, and team-maintained crawler.csv /
+    korrekturen.csv (which take precedence over the profile's starting data)."""
+    return Path(os.environ.get("QE_DATA_DIR", "").strip() or HERE / "data")
+
+
+def raw_dir() -> Path:
+    """Live-fetch caches (written by fetcher, read by truth_loaders)."""
+    return data_dir() / "raw"
+
+
+def truth_path() -> Path:
+    return data_dir() / "truth.json"
+
+
+def _curated(name: str) -> Path | None:
+    for p in (data_dir() / name, repo_profile.get().daten_dir / name):
+        if p.is_file():
+            return p
+    return None
+
+
+def crawler_csv_path() -> Path | None:
+    """The crawler table: data dir first (team upload), else the profile's starting copy."""
+    return _curated("crawler.csv")
+
+
+def korrekturen_csv_path() -> Path | None:
+    """The corrections CSV: data dir first (team edits), else the profile's starting copy."""
+    return _curated("korrekturen.csv")
+
+
 # No default password: if QE_TEAM_PASSWORD is unset, TEAM_PW is empty and check_pw
 # always fails (fail closed) — team features are disabled rather than guarded by a
 # known default. Set the variable in .env (dev) or via -e (deploy) to enable them.
@@ -63,8 +100,9 @@ AUTO_REFRESH_HOUR = _auto_refresh_hour()
 # built from these. NOT covered: the bundled data snapshot (truth.json) and the curated
 # blacklists / overlay lists, which reflect their source repository and must be
 # regenerated / adjusted manually when switching repositories.
-REPO_URL = os.environ.get("QE_REPO_URL", "https://redaktion.openeduhub.net").rstrip("/")
-SEARCH_URL = os.environ.get("QE_SEARCH_URL", "https://suche.wirlernenonline.de").rstrip("/")
+# Defaults come from the active repository profile; QE_REPO_URL / QE_SEARCH_URL override them.
+REPO_URL = (os.environ.get("QE_REPO_URL", "").strip() or repo_profile.get().repo_url).rstrip("/")
+SEARCH_URL = (os.environ.get("QE_SEARCH_URL", "").strip() or repo_profile.get().search_url).rstrip("/")
 
 
 def _allowed_origins():

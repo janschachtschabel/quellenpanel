@@ -13,49 +13,25 @@ Principle (per the assignment):
 This file is the ONE place where the separation is maintained.
 """
 
-# --- Crawler base columns from datencrawler.csv ----------------------------
-# Publicly usable profile fields (for data providers/data consumers)
-CRAWLER_PUBLIC_BASE = {
-    "Titel": "titel",
-    "Url": "url",
-    "Bezugsquelle": "bezugsquelle",
-    "Urheber": "urheber",
-    # Legal/AI-usage fields of the SOURCE itself (basis for the AI-usage assessment)
-    "robots.txt": "robotsTxt",
-    "TDM Hinweis ( §44b)": "tdmHinweis",
-    "AGB / Nutzungsbedingungen": "agb",
-    "Lizenz Check": "lizenzCheck",
-    "API Nutzungsbedingungen": "apiNutzung",
-}
+# --- Crawler-table fields (keys) ---------------------------------------------
+# The repository profile maps ITS column names onto these keys ([crawler_tabelle.spalten]);
+# which key is public and which internal is decided HERE, independent of how a repository
+# names its columns.
+# Publicly usable profile fields (for data providers/data consumers), incl. the legal /
+# AI-usage fields of the SOURCE itself (basis for the AI-usage assessment).
+CRAWLER_PUBLIC_KEYS = frozenset({
+    "titel", "url", "bezugsquelle", "urheber",
+    "robotsTxt", "tdmHinweis", "agb", "lizenzCheck", "apiNutzung",
+})
 
-# Internal fields – ONLY for team members (password)
-CRAWLER_INTERNAL_BASE = {
-    "Crawler (Spider)": "spider",
-    "Prio": "prio",
-    "Crawler-Type": "crawlerType",
-    "Zustand": "zustand",                  # exact operational status -> internal
-    "Spider Bemerkungen": "spiderBemerkungen",
-    "Einschätzung KI & Erschließung": "kiEinschaetzung",
-    "Bemerkung/Status": "bemerkungStatus",
-    "Prod letzter Crawl": "prodLetzterCrawl",
-    "Staging letzter Crawl": "stagingLetzterCrawl",
-    "Häufigkeit": "haeufigkeit",
-    "Anzahl Prod": "anzahlProd",
-    "Anzahl Staging": "anzahlStaging",
-    "Quelldatensatz (Prod)": "quelldatensatzProd",
-    "Hinweis zu Quellendatensatz": "hinweisQuelldatensatz",
-    "Export to OER Berlin": "exportOerBerlin",
-    "GitHub": "github",
-    # Contract/agreement status = WLO-internal business info -> INTERNAL only
-    "Vereinb. neu": "Vertrag/Vereinbarung",
-    "Vereinb. alt": "Vereinbarung (alt)",
-}
-
-# Key sets (the policy proper). The repository profile maps its crawler-table column names
-# onto these keys; every key it uses must be listed here, so the public/internal split stays
-# in this file regardless of how a repository names its columns.
-CRAWLER_PUBLIC_KEYS = frozenset(CRAWLER_PUBLIC_BASE.values())
-CRAWLER_INTERNAL_KEYS = frozenset(CRAWLER_INTERNAL_BASE.values())
+# Internal fields – ONLY for team members (password): developer notes, exact operational
+# status, crawl statistics, and contract/agreement status (business info).
+CRAWLER_INTERNAL_KEYS = frozenset({
+    "spider", "prio", "crawlerType", "zustand", "spiderBemerkungen", "kiEinschaetzung",
+    "bemerkungStatus", "prodLetzterCrawl", "stagingLetzterCrawl", "haeufigkeit", "anzahlProd",
+    "anzahlStaging", "quelldatensatzProd", "hinweisQuelldatensatz", "exportOerBerlin", "github",
+    "Vertrag/Vereinbarung", "Vereinbarung (alt)",
+})
 
 # --- Live API fields (Quelldatensatz) --------------------------------------
 # Public

@@ -7,13 +7,11 @@ full Quellensteckbriefe "data truth" join; this module is the gate that keeps pr
 import json
 import logging
 import urllib.parse
-from pathlib import Path
-
 import config
 import field_policy
+from korrekturen import load_korrekturen
 
 log = logging.getLogger("quellenliste-x.enduser")
-_SUPPLEMENTS_PATH = Path(__file__).parent / "data" / "source_supplements.json"
 
 
 def _search_url(name: str) -> str:
@@ -28,21 +26,30 @@ def _search_url(name: str) -> str:
 
 def _load_supplements() -> dict:
     """Curated source-level description + preview for node-less sources whose own metadata is
-    empty (YouTube, Bayerischer Rundfunk, OER Commons and ~30 smaller publishers). Sourced from
-    the old Quellenliste — see data/source_supplements.json. Keyed by lowercased source name.
+    empty (YouTube, Bayerischer Rundfunk, OER Commons and ~30 smaller publishers): the
+    `beschreibung` / `vorschaubild` rows of the corrections CSV, keyed by lowercased source name.
     Fail-soft: a missing or broken file just means those sources fall back to the live
     example-content backfill, so serving never breaks on it."""
     try:
-        raw = json.loads(_SUPPLEMENTS_PATH.read_text(encoding="utf-8"))
-        return {k: v for k, v in raw.items() if not k.startswith("_")}  # drop _provenance
-    except FileNotFoundError:
-        return {}
+        return load_korrekturen(config.korrekturen_csv_path()).supplements()
     except Exception:  # noqa: BLE001 — enhancement only; never 500 a card over a bad data file
-        log.exception("source_supplements.json could not be loaded")
+        log.exception("supplements could not be loaded from the corrections CSV")
         return {}
 
 
-_SUPPLEMENTS = _load_supplements()
+_SUPPLEMENTS: dict | None = None
+
+
+def reload_supplements() -> None:
+    """Re-read the supplements (after the corrections CSV or the data dir changed)."""
+    global _SUPPLEMENTS
+    _SUPPLEMENTS = _load_supplements()
+
+
+def _supplements() -> dict:
+    if _SUPPLEMENTS is None:
+        reload_supplements()
+    return _SUPPLEMENTS or {}
 
 
 def card(r: dict) -> dict:
@@ -52,7 +59,7 @@ def card(r: dict) -> dict:
     # description/preview. Fill those from the curated supplement so tiles/list/detail show
     # source-fitting text + image instead of a random live content. Only EMPTY fields are
     # filled — sources with their own data keep it.
-    sup = _SUPPLEMENTS.get((r.get("name") or "").lower(), {})
+    sup = _supplements().get((r.get("name") or "").lower(), {})
     return {
         "id":                 r["id"],
         "name":               r["name"],
