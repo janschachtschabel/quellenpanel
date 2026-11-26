@@ -26,6 +26,7 @@ import { DetailDialogComponent } from './detail.component';
 import { ImpressumDialogComponent } from './impressum.component';
 import { AuditReportComponent } from './audit-report.component';
 import { TeamLoginComponent } from './team-login.component';
+import { KorrekturenComponent } from './korrekturen.component';
 import { TierService } from './tier.service';
 import { SelectionService } from './selection.service';
 import { PdfService } from './pdf.service';
@@ -33,7 +34,7 @@ import { PRUEF_GROUPS } from './data-problem-filters';
 import { COL_BREAKPOINTS, columnsFromMatcher, pageSizeOptionsFor, roundToRows } from './grid-columns';
 import { I18n } from './i18n.service';
 
-type View = 'tile' | 'list' | 'stats';
+type View = 'tile' | 'list' | 'stats' | 'korrekturen';
 
 /**
  * Page shell + orchestrator: the framed header, the filter controls, the view switch and
@@ -47,7 +48,7 @@ type View = 'tile' | 'list' | 'stats';
     CommonModule, FormsModule, MatIconModule, MatButtonModule, MatButtonToggleModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatCheckboxModule, MatPaginatorModule,
     MatProgressBarModule, MatDialogModule, MatSnackBarModule, StatsComponent, FullStatsComponent,
-    TeamStatsComponent, TilesComponent, ListComponent,
+    TeamStatsComponent, TilesComponent, ListComponent, KorrekturenComponent,
   ],
   template: `
   <div class="host">
@@ -64,6 +65,9 @@ type View = 'tile' | 'list' | 'stats';
           <mat-button-toggle value="tile"><mat-icon>grid_view</mat-icon> {{ i18n.t('view.tiles') }}</mat-button-toggle>
           <mat-button-toggle value="list"><mat-icon>view_list</mat-icon> {{ i18n.t('view.list') }}</mat-button-toggle>
           <mat-button-toggle value="stats"><mat-icon>bar_chart</mat-icon> {{ i18n.t('view.stats') }}</mat-button-toggle>
+          @if (tiers.tier() >= 2) {
+            <mat-button-toggle value="korrekturen"><mat-icon>edit_note</mat-icon> {{ i18n.t('view.korrekturen') }}</mat-button-toggle>
+          }
         </mat-button-toggle-group>
         <mat-button-toggle-group class="tiers" [value]="tiers.tier()" (change)="onTierToggle($event.value)"
           hideSingleSelectionIndicator [attr.aria-label]="i18n.t('tier.aria')">
@@ -83,7 +87,7 @@ type View = 'tile' | 'list' | 'stats';
       </div>
     </header>
 
-    @if (view !== 'stats') {
+    @if (view !== 'stats' && view !== 'korrekturen') {
       <div class="filters">
         <div class="filter-row top">
           <mat-form-field appearance="outline" class="search">
@@ -180,9 +184,11 @@ type View = 'tile' | 'list' | 'stats';
       </div>
     }
 
-    @if (loading && view !== 'stats') { <mat-progress-bar mode="indeterminate"></mat-progress-bar> }
+    @if (loading && view !== 'stats' && view !== 'korrekturen') { <mat-progress-bar mode="indeterminate"></mat-progress-bar> }
 
-    @if (view === 'stats') {
+    @if (view === 'korrekturen' && tiers.tier() >= 2) {
+      <wlo-korrekturen></wlo-korrekturen>
+    } @else if (view === 'stats') {
       <!-- Base stats always shown; higher tiers append their extra swimlanes below (same optics). -->
       <wlo-stats [stats]="stats"></wlo-stats>
       @if (tiers.tier() >= 1) { <wlo-full-stats [stats]="fullStats"></wlo-full-stats> }
@@ -481,6 +487,7 @@ export class AppComponent implements OnInit {
 
   private reload(): void {
     if (this.tiers.tier() < 2) { this.flag = ''; }   // the data-problem filter is tier-2 only
+    if (this.tiers.tier() < 2 && this.view === 'korrekturen') { this.view = 'tile'; }
     if (this.tiers.tier() < 1) { this.sel.clear(); } // multi-select / Sammel-PDF is tier 1+ (Details/Audit)
     if (this.tiers.tier() < 2) { this.erschliessung = ''; } // exact status filter is tier-2 only
     this.page = 1;

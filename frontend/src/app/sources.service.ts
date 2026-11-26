@@ -22,6 +22,11 @@ export class SourcesService {
     if (trimmed) this.base = trimmed.replace(/\/+$/, '');
   }
 
+  /** The current API base ('/api' or the embedded backend's URL). */
+  apiBase(): string {
+    return this.base;
+  }
+
   /** Access tier sent with subsequent list/detail requests (set by TierService). */
   setTier(tier: number): void {
     this.tier = tier;

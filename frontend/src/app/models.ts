@@ -201,3 +201,30 @@ export interface Capabilities {
   repoUrl: string;       // edu-sharing repo the data refers to (repo-neutral; shown in detail + PDF)
   role?: 'team' | 'partner' | 'public'; // instance role (QE_ROLE)
 }
+
+// ---- Etappe 4: team correction management -------------------------------------------------------
+export interface KorrekturFelder {
+  typ: string; schluessel: string; aktion: string; wert: string; kommentar: string;
+}
+export interface Korrektur extends KorrekturFelder {
+  id: number; geaendert_von: string; geaendert_am: string;
+}
+export interface Meldung { zeile: number; text: string; }
+export interface Anwenden { neuBerechnet: boolean; wirktBeimNaechstenAufbau: boolean; }
+export interface KorrekturStand {
+  version: string; eintraege: Korrektur[]; fehler: Meldung[]; warnungen: Meldung[]; anwenden?: Anwenden;
+}
+export interface VerlaufEintrag { zeitpunkt: string; wer: string; vorgang: string; alt: string; neu: string; }
+export type Zuordnung = Partial<Record<'typ' | 'schluessel' | 'aktion' | 'wert' | 'kommentar', string | null>>;
+export interface ImportVorschau {
+  spalten: string[];
+  zuordnung: Zuordnung;
+  anzahl: { neu: number; geaendert: number; unveraendert: number; fehlerhaft: number; entfallen: number; ergebnis: number };
+  vorschau: { neu: KorrekturFelder[]; geaendert: { alt: KorrekturFelder; neu: KorrekturFelder }[];
+              fehlerhaft: Meldung[]; entfallen: KorrekturFelder[] };
+}
+export interface CrawlerVorschau {
+  ok: boolean; zeilen: number; spalten: string[]; fehlendePflicht: string[];
+  spider: { neu: string[]; entfallen: string[]; geaendert: string[]; gleich: number };
+  anwenden?: Anwenden;
+}
