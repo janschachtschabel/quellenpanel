@@ -2,6 +2,9 @@
 
 752 Zeilen geschrieben nach `korrekturen.csv`.
 
+**Nachtrag 2026-11-26:** Auf Jans Entscheidung stehen die 78 Zeilen mit „gemeint wohl blacklist“ in
+`korrekturen.csv` jetzt als `blacklist` (statt `vermerk`). Sie wirken beim nächsten Datenaufbau.
+
 - Zeile 137: Node 80bd5688-c7df-4eb2-9f3c-f259d595af26 doppelt, gilt Zeile 149 (wie bisher)
 - Zeile 101: Node 168c1b50-37b9-4904-a53c-eb1465b17081 doppelt, gilt Zeile 342 (wie bisher)
 - Zeile 346: Node b286b1dc-5373-483a-822e-fca3870ee8dd doppelt, gilt Zeile 438 (wie bisher)

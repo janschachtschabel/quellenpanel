@@ -77,3 +77,14 @@ def test_real_wlo_korrekturen_are_valid():
     assert s.fehler == []
     assert len(s.als_node_dict()) == 440
     assert len(s.supplements()) == 36           # Einträge der bisherigen source_supplements.json
+
+
+def test_shifted_wlo_rows_are_blacklisted():
+    """Jans Entscheidung 2026-11-26: die 78 verrutschten Zeilen der alten Korrekturliste
+    (Wert „blacklist“ in der Spider-Spalte) gelten als blacklist."""
+    bericht = (REPO / "profiles/wlo/daten/migration-bericht.md").read_text(encoding="utf-8")
+    shifted = {line.split("Node ")[1].split(" ")[0] for line in bericht.splitlines()
+               if line.startswith("- Zeile") and "gemeint wohl blacklist" in line}
+    assert len(shifted) == 78
+    nodes = load_korrekturen(REPO / "profiles/wlo/daten/korrekturen.csv").als_node_dict()
+    assert {nid: nodes[nid]["liste"] for nid in shifted} == {nid: "blacklist" for nid in shifted}
