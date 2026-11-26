@@ -10,6 +10,7 @@ from pathlib import Path
 
 import repo_profile
 
+VERSION = "0.3.0"   # backend version (OpenAPI info, /metrics build info)
 HERE = Path(__file__).parent
 FRONTEND = HERE.parent / "frontend"
 

@@ -14,6 +14,7 @@ import csv
 import io
 import logging
 import time
+import urllib.error
 from contextlib import asynccontextmanager
 
 from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, Request, Response
@@ -22,6 +23,7 @@ from fastapi.staticfiles import StaticFiles
 
 import config
 import enduser
+import errors
 import export_query
 import exports as exports_mod
 import export_store
@@ -87,8 +89,9 @@ def _start_from_export(role: str) -> None:
              "geladen" if export_store.current(max(tiers_needed)) else "fehlt")
 
 
-app = FastAPI(title="Quellenpanel", version="0.1.0", lifespan=_lifespan)
-app.add_middleware(obs.TraceMiddleware)  # outermost user middleware: trace + request line
+app = FastAPI(title="Quellenpanel", version=config.VERSION, lifespan=_lifespan)
+errors.install(app)
+app.add_middleware(obs.TraceMiddleware, on_error=errors.internal_error_parts)  # outermost user middleware: trace + request line
 app.include_router(thumb.router)   # /api/thumb — repository preview-image proxy (see thumb.py)
 
 # CORS: PUBLIC (read-only) data is served to ANY origin WITHOUT credentials (wildcard). The team
@@ -122,8 +125,7 @@ async def _http_mw(request: Request, call_next):
     if request.method in ("POST", "PUT", "PATCH"):
         cl = request.headers.get("content-length")
         if cl and cl.isdigit() and int(cl) > _MAX_BODY_BYTES:
-            return JSONResponse({"detail": "Anfrage zu groß."}, status_code=413,
-                                headers=_cors_headers(origin))
+            return errors.response(413, "Anfrage zu groß.", headers=_cors_headers(origin))
     # CORS preflight: the API declares no OPTIONS routes, so answer it here.
     if request.method == "OPTIONS" and origin is not None:
         headers = _cors_headers(origin)
@@ -314,8 +316,16 @@ def source_contents(request: Request, source_id: str, max_items: int = Query(12,
         return {"total": 0, "nodes": []}
     try:
         return wlo_content.fetch_contents(prop, value, max_items, skip)
+    except urllib.error.HTTPError as exc:
+        if exc.code == 429:                 # the repository rate-limits us: pass its wait time on
+            raise errors.UpstreamError(429, "Repository ausgelastet. Bitte später erneut versuchen.",
+                                       errors.parse_retry_after((exc.headers or {}).get("Retry-After"))) from None
+        raise errors.UpstreamError(502, _UPSTREAM_MSG) from None
     except Exception:  # noqa: BLE001 — live API is best-effort; never 500 the detail
-        raise HTTPException(502, "Inhalte des Repositorys derzeit nicht abrufbar") from None
+        raise errors.UpstreamError(502, _UPSTREAM_MSG) from None
+
+
+_UPSTREAM_MSG = "Inhalte des Repositorys derzeit nicht abrufbar"
 
 
 @app.get("/api/sources/{source_id:path}")
@@ -536,5 +546,35 @@ def internal_export(tier: int, if_none_match: str | None = Header(None)):
 # In production serve the built Angular SPA (frontend/dist/browser) at "/". In dev this folder
 # does not exist → use `ng serve` (proxies /api). The web-component build is served the same way.
 _DIST = config.FRONTEND / "dist" / "browser"
+
+# ---- OpenAPI per role: an instance documents only what it serves --------------------------------
+_OPENAPI_DESCRIPTION = (
+    "Quellenpanel beschreibt die Quellen eines edu-sharing-Repositorys. Jede Antwort hängt von der "
+    "Zugangsstufe ab: Stufe 0 (öffentliche Quellenliste), Stufe 1 (Steckbrief mit Details, auf der "
+    "Partner-Instanz per Passwort) und Stufe 2 (internes Team-Audit). Eine Instanz läuft in genau "
+    "einer Rolle (QE_ROLE = public, partner oder team); diese Beschreibung enthält nur die Pfade "
+    "der laufenden Rolle. Health, Readiness und Metriken liegen auf dem internen Port 9090.")
+_openapi_cache: dict[str, dict] = {}
+
+
+def _is_team_only(route) -> bool:
+    return any(getattr(d, "dependency", None) is require_team_role
+               for d in getattr(route, "dependencies", []) or [])
+
+
+def _openapi() -> dict:
+    role = config.role()
+    if role not in _openapi_cache:
+        from fastapi.openapi.utils import get_openapi
+        routes = [r for r in app.routes
+                  if not getattr(r, "path", "").startswith("/internal")
+                  and (role == "team" or not _is_team_only(r))]
+        _openapi_cache[role] = get_openapi(title="Quellenpanel", version=config.VERSION,
+                                           description=_OPENAPI_DESCRIPTION, routes=routes)
+    return _openapi_cache[role]
+
+
+app.openapi = _openapi
+
 if _DIST.is_dir():
     app.mount("/", StaticFiles(directory=str(_DIST), html=True), name="frontend")

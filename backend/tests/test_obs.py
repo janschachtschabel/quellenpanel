@@ -133,8 +133,7 @@ def test_no_secrets_in_logs(client, caplog, monkeypatch):
         client.cookies.set("qe_session", "sess-XYZ")
         client.get("/api/sources?q=Geheimwort", headers=h)
         client.get("/api/gibtsnicht?q=Geheimwort", headers=h)
-        with pytest.raises(RuntimeError):
-            client.get("/api/__test_boom?q=Geheimwort", headers=h)
+        assert client.get("/api/__test_boom?q=Geheimwort", headers=h).status_code == 500  # answered, not raised
         text = caplog.text + " ".join(json.dumps(getattr(r, "fields", {})) for r in caplog.records)
         for secret in ("pw-XYZ", "t1-XYZ", "sess-XYZ", "Geheimwort"):
             assert secret not in text, secret

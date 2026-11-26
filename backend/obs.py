@@ -187,8 +187,11 @@ def _route_of(scope) -> str:
 class TraceMiddleware:
     """Pure ASGI middleware: trace context, response trace headers and one request log line."""
 
-    def __init__(self, app):
+    def __init__(self, app, on_error=None):
         self.app = app
+        # on_error() -> (status, raw headers, body): the answer to an unhandled exception, sent HERE
+        # so it still carries the trace context and headers (ServerErrorMiddleware sits outside).
+        self.on_error = on_error
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
@@ -199,14 +202,14 @@ class TraceMiddleware:
         tid, _parent, smp = b3 if b3 else (new_trace_id(), None, None)
         cid = headers.get("x-client-trace-id")
         cid = cid if cid and _CLIENT_ID_RE.match(cid) else None
-        status = {"code": 500}
+        status = {"code": 500, "started": False}
         extra_headers = [(b"x-b3-traceid", tid.encode())]
         if cid:
             extra_headers.append((b"x-client-trace-id", cid.encode()))
 
         async def _send(message):
             if message["type"] == "http.response.start":
-                status["code"] = message["status"]
+                status["code"], status["started"] = message["status"], True
                 message = {**message, "headers": [*message.get("headers", []), *extra_headers]}
             await send(message)
 
@@ -215,6 +218,13 @@ class TraceMiddleware:
         with trace_scope(tid, sid, smp, cid):
             try:
                 await self.app(scope, receive, _send)
+            except Exception:
+                if status["started"] or self.on_error is None:
+                    raise
+                _log.error("Unbehandelter Fehler", exc_info=True)
+                code, raw_headers, payload = self.on_error()
+                await _send({"type": "http.response.start", "status": code, "headers": raw_headers})
+                await _send({"type": "http.response.body", "body": payload})
             finally:
                 q = (parse_qs(scope.get("query_string", b"").decode("latin-1")).get("q") or [""])[0]
                 fields = {"method": scope.get("method"), "route": _route_of(scope),
