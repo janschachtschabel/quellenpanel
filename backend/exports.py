@@ -103,16 +103,20 @@ def validate(doc: dict, tier: int) -> None:
         raise ValueError("Export: items ist keine Liste")
 
 
+def write_doc(doc: dict, path: Path) -> None:
+    """Atomic write of one export document (temp file + os.replace)."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".json.tmp")
+    tmp.write_bytes(dumps(doc))
+    os.replace(tmp, path)
+
+
 def write_exports(records: list[dict], meta: dict, out_dir: Path) -> dict[int, str]:
     """Write stufe0.json and stufe1.json atomically; return {tier: etag}."""
-    out_dir = Path(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
     tags = {}
     for tier in TIERS:
         doc = build_export(records, meta, tier)
-        path = out_dir / f"stufe{tier}.json"
-        tmp = path.with_suffix(".json.tmp")
-        tmp.write_bytes(dumps(doc))
-        os.replace(tmp, path)
+        write_doc(doc, Path(out_dir) / f"stufe{tier}.json")
         tags[tier] = etag(doc)
     return tags

@@ -134,6 +134,7 @@ type View = 'tile' | 'list' | 'stats';
               @for (l of options?.lrts ?? []; track l) { <mat-option [value]="l">{{ l }}</mat-option> }
             </mat-select>
           </mat-form-field>
+          @if ((options?.erschliessung ?? []).length) {
           <mat-form-field appearance="outline" class="status">
             <mat-icon matPrefix>task</mat-icon>
             <mat-label>{{ i18n.t('filter.status') }}</mat-label>
@@ -142,6 +143,7 @@ type View = 'tile' | 'list' | 'stats';
               @for (e of options?.erschliessung ?? []; track e) { <mat-option [value]="e">{{ e }}</mat-option> }
             </mat-select>
           </mat-form-field>
+          }
           <mat-form-field appearance="outline" class="min">
             <mat-icon matPrefix>filter_9_plus</mat-icon>
             <mat-label>{{ i18n.t('filter.minCount') }}</mat-label>
@@ -470,7 +472,9 @@ export class AppComponent implements OnInit {
   private reload(): void {
     if (this.tiers.tier() < 2) { this.flag = ''; }   // the data-problem filter is tier-2 only
     if (this.tiers.tier() < 1) { this.sel.clear(); } // multi-select / Sammel-PDF is tier 1+ (Details/Audit)
+    if (this.tiers.tier() < 2) { this.erschliessung = ''; } // exact status filter is tier-2 only
     this.page = 1;
+    this.api.filterOptions().subscribe((o) => (this.options = o));   // options depend on the tier
     this.load();
     if (this.view === 'stats') { this.loadStats(); }   // stats shape depends on the tier
   }

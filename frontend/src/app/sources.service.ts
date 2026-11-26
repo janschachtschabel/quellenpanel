@@ -84,8 +84,10 @@ export class SourcesService {
     return obs;
   }
 
+  /** Filter options of the current tier (the exact cataloguing status list is team-only). */
   filterOptions(): Observable<FilterOptions> {
-    return this.http.get<FilterOptions>(`${this.base}/meta/filters`);
+    const params = new HttpParams().set('tier', String(this.tier));
+    return this.http.get<FilterOptions>(`${this.base}/meta/filters`, { params });
   }
 
   /** Tier-0 end-user statistics overview. */

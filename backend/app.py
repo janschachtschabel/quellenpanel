@@ -21,6 +21,9 @@ from fastapi.staticfiles import StaticFiles
 
 import config
 import enduser
+import export_query
+import exports as exports_mod
+import export_store
 import filtering
 import protokoll
 import ratelimit
@@ -51,6 +54,7 @@ async def _lifespan(_app: FastAPI):
         log.warning("Rolle partner ohne QE_TIER1_PASSWORD: Stufe 1 (Details, Steckbrief) bleibt gesperrt")
     _load()
     log.info("Quellenpanel: %d records loaded", len(_DATA["records"]))
+    _rebuild_exports()
     refresh.start_scheduler(config.AUTO_REFRESH_HOUR)  # optional nightly refresh (daemon; no-op if unset)
     yield
 
@@ -111,6 +115,28 @@ async def _http_mw(request: Request, call_next):
     return resp
 
 
+def _rebuild_exports() -> None:
+    """Team: tier-0/1 exports from the merged records (memory + $QE_DATA_DIR/exports/)."""
+    export_store.rebuild_from_records(_DATA["records"], _DATA["meta"], config.data_dir() / "exports")
+
+
+def _export(tier: int) -> dict:
+    """The export every response below tier 2 is answered from."""
+    doc = export_store.current(tier)
+    if doc is None:
+        raise HTTPException(503, "Daten werden geladen")
+    return doc
+
+
+def require_team_role() -> None:
+    """Team-only routes do not exist on partner/public instances (404, not 403)."""
+    if config.role() != "team":
+        raise HTTPException(404, "Not Found")
+
+
+_TEAM_ONLY = [Depends(require_team_role)]
+
+
 @app.get("/api/health")
 def health():
     return {"status": "ok", "records": len(_DATA["records"])}
@@ -132,8 +158,10 @@ def capabilities(request: Request, x_team_password: str | None = Header(None),
 
 
 @app.get("/api/meta/filters")
-def filter_options():
-    return stats_mod.compute_filter_options(_DATA["records"])
+def filter_options(tier: int = Depends(tiers.effective_tier)):
+    if tier >= 2:
+        return stats_mod.compute_filter_options(_DATA["records"])
+    return _export(tier)["filters"]
 
 
 def _filters(
@@ -196,6 +224,8 @@ def sources(
     page: int = Query(1, ge=1),
     page_size: int = Query(24, ge=1, le=200),
 ):
+    if tier < 2:
+        return export_query.page(_export(tier), f, page, page_size)
     if tier >= 2 and not f["flag"] and not f["show_blacklist"]:
         # Default Audit view: fetch the hidden-REVEALED set ONCE (same filters, incl. lrt), then
         # split it into the visible list and the filter-scoped hidden breakdown — so we never run
@@ -231,15 +261,20 @@ def source_contents(request: Request, source_id: str, max_items: int = Query(12,
     the replication-source property (the spider), other sources by the publisher property."""
     if not ratelimit.fetch_rate_ok(request):
         raise HTTPException(429, "Zu viele Anfragen. Bitte kurz warten.")
-    r = _DATA["byId"].get(source_id)
-    if not r:
-        raise HTTPException(404, "Quelle nicht gefunden")
-    idn = r.get("identity") or {}
     f = repo_profile.get().felder
-    if r.get("kind") == "crawler" and idn.get("spider"):
-        prop, value = f["replication_source"], idn["spider"]
-    else:
-        prop, value = f["publisher"], idn.get("bezugsquelle") or r.get("name") or ""
+    r = _DATA["byId"].get(source_id)
+    if r:                                   # team instance: full record (incl. hidden ones)
+        idn = r.get("identity") or {}
+        if r.get("kind") == "crawler" and idn.get("spider"):
+            prop, value = f["replication_source"], idn["spider"]
+        else:
+            prop, value = f["publisher"], idn.get("bezugsquelle") or r.get("name") or ""
+    else:                                   # partner/public: only the export knows the source
+        doc = _export(0)
+        if source_id not in export_query.index(doc):
+            raise HTTPException(404, "Quelle nicht gefunden")
+        target = export_query.contents_target(doc, source_id)
+        prop, value = (f[target[0]], target[1]) if target else ("", "")
     if not value:
         return {"total": 0, "nodes": []}
     try:
@@ -250,6 +285,11 @@ def source_contents(request: Request, source_id: str, max_items: int = Query(12,
 
 @app.get("/api/sources/{source_id:path}")
 def source_detail(source_id: str, tier: int = Depends(tiers.effective_tier)):
+    if tier < 2:
+        d = export_query.detail(_export(tier), source_id)
+        if d is None:
+            raise HTTPException(404, "Quelle nicht gefunden")
+        return d
     r = _DATA["byId"].get(source_id)
     if not r:
         raise HTTPException(404, "Quelle nicht gefunden")
@@ -321,22 +361,17 @@ def auth_status(request: Request):
 # ---------------------------------------------------------------------------
 # Statistics (tiered): end-user figures (0) · extended public (1) · data problems (2, team)
 # ---------------------------------------------------------------------------
-def _visible_records():
-    """Default end-user visible set (blacklist + secondary datasets hidden)."""
-    return filtering.filter_records(_DATA["records"], None, None, None, None, None, 0, None, False)
-
-
 @app.get("/api/stats")
 def stats(tier: int = Depends(tiers.effective_tier)):
     """Statistics OVERVIEW: end-user figures (tier 0) or the full extended view (tier >= 1).
     The team's data-problem addendum is a separate, team-gated endpoint (/api/stats/team), so the
     team stats view is "full overview + problem section", mirroring the Quellensteckbriefe app."""
-    if tier >= 1:
+    if tier >= 2:
         return stats_mod.compute_stats_full(_DATA["records"], _DATA["meta"])
-    return stats_mod.compute_enduser_stats(_visible_records(), _DATA["meta"])
+    return _export(tier)["stats"]
 
 
-@app.get("/api/stats/team")
+@app.get("/api/stats/team", dependencies=_TEAM_ONLY)
 def stats_team(team: bool = Depends(tiers.is_team)):
     """Team-only data-problem / origin / spider / fill-level analysis, appended to the overview in
     the Audit tier. Fail-closed: no team login -> 403 (never leaks the problem breakdown)."""
@@ -348,12 +383,18 @@ def stats_team(team: bool = Depends(tiers.is_team)):
 # ---------------------------------------------------------------------------
 # Export — leak-safe flat view of the visible set; a data-work feature (tier 1+).
 # ---------------------------------------------------------------------------
+def _export_rows(tier: int, f: dict) -> list[dict]:
+    """Flat rows: tier 1 from the export, tier 2 (team) from the records with every flag."""
+    if tier < 2:
+        return export_query.rows(_export(tier), f)
+    return [views.flat(r, team=True) for r in _query_records(tier, **f)]
+
+
 @app.get("/api/export.json")
 def export_json(tier: int = Depends(tiers.effective_tier), f: dict = Depends(_filters)):
     if tier < 1:
         raise HTTPException(403, "Export ab Detailmodus.")
-    team = tier >= 2
-    rows = [views.flat(r, team=team) for r in _query_records(tier, **f)]
+    rows = _export_rows(tier, f)
     return JSONResponse(rows, headers={"Content-Disposition": "attachment; filename=quellen_export.json"})
 
 
@@ -361,12 +402,11 @@ def export_json(tier: int = Depends(tiers.effective_tier), f: dict = Depends(_fi
 def export_csv(tier: int = Depends(tiers.effective_tier), f: dict = Depends(_filters)):
     if tier < 1:
         raise HTTPException(403, "Export ab Detailmodus.")
-    team = tier >= 2
     buf = io.StringIO()
     w = csv.DictWriter(buf, fieldnames=views.EXPORT_COLS, delimiter=";", extrasaction="ignore")
     w.writeheader()
-    for r in _query_records(tier, **f):
-        w.writerow(views.flat(r, team=team))
+    for row in _export_rows(tier, f):
+        w.writerow(row)
     return StreamingResponse(iter(["﻿" + buf.getvalue()]), media_type="text/csv; charset=utf-8",
                              headers={"Content-Disposition": "attachment; filename=quellen_export.csv"})
 
@@ -374,7 +414,7 @@ def export_csv(tier: int = Depends(tiers.effective_tier), f: dict = Depends(_fil
 # ---------------------------------------------------------------------------
 # Team only: data-problem protocol, multi-source PDF data, live refresh, reload.
 # ---------------------------------------------------------------------------
-@app.get("/api/protokoll.md")
+@app.get("/api/protokoll.md", dependencies=_TEAM_ONLY)
 def protokoll_md(team: bool = Depends(tiers.is_team)):
     if not team:
         raise HTTPException(403, "Nur intern (Team-Login nötig).")
@@ -383,7 +423,7 @@ def protokoll_md(team: bool = Depends(tiers.is_team)):
                     headers={"Content-Disposition": "attachment; filename=fehler-protokoll.md"})
 
 
-@app.get("/api/protokoll.json")
+@app.get("/api/protokoll.json", dependencies=_TEAM_ONLY)
 def protokoll_json(team: bool = Depends(tiers.is_team)):
     """Machine-readable data-problem protocol (uncapped) — for consumption by other applications."""
     if not team:
@@ -392,7 +432,7 @@ def protokoll_json(team: bool = Depends(tiers.is_team)):
     return JSONResponse(data, headers={"Content-Disposition": "attachment; filename=fehler-protokoll.json"})
 
 
-@app.get("/api/protokoll.csv")
+@app.get("/api/protokoll.csv", dependencies=_TEAM_ONLY)
 def protokoll_csv(team: bool = Depends(tiers.is_team)):
     """The protocol as FLAT rows (one line per category × case) — the spreadsheet-friendly shape."""
     if not team:
@@ -414,6 +454,8 @@ def protokoll_csv(team: bool = Depends(tiers.is_team)):
 @app.post("/api/sources/batch")
 def sources_batch(ids: list[str] = Body(..., embed=True), tier: int = Depends(tiers.effective_tier)):
     """Several records at the granted tier — feeds the client-side multi-source PDF export."""
+    if tier < 2:
+        return {"items": export_query.batch(_export(tier), ids)}
     out = []
     for i in ids[:100]:
         r = _DATA["byId"].get(i)
@@ -422,7 +464,7 @@ def sources_batch(ids: list[str] = Body(..., embed=True), tier: int = Depends(ti
     return {"items": out}
 
 
-@app.post("/jobs/refresh")
+@app.post("/jobs/refresh", dependencies=_TEAM_ONLY)
 def jobs_refresh(team: bool = Depends(tiers.is_team)):
     if not team:
         raise HTTPException(403, "Team-Login erforderlich.")
@@ -434,13 +476,26 @@ def jobs_latest():
     return refresh.status()
 
 
-@app.post("/api/admin/reload")
+@app.post("/api/admin/reload", dependencies=_TEAM_ONLY)
 def admin_reload(team: bool = Depends(tiers.is_team)):
     if not team:
         raise HTTPException(403, "Nur intern.")
     _load()
     enduser.reload_supplements()
+    _rebuild_exports()
     return {"ok": True, "meta": _DATA["meta"]}
+
+
+@app.get("/internal/exports/stufe{tier}.json", dependencies=_TEAM_ONLY)
+def internal_export(tier: int, if_none_match: str | None = Header(None)):
+    """Team: the tier export for the partner/public instances (conditional GET via ETag)."""
+    if tier not in (0, 1):
+        raise HTTPException(404, "Not Found")
+    doc = _export(tier)
+    tag = export_store.etag(tier)
+    if if_none_match and if_none_match == tag:
+        return Response(status_code=304, headers={"ETag": tag})
+    return Response(exports_mod.dumps(doc), media_type="application/json", headers={"ETag": tag})
 
 
 # In production serve the built Angular SPA (frontend/dist/browser) at "/". In dev this folder

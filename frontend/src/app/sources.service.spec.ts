@@ -91,3 +91,24 @@ describe('SourcesService.cardPreview', () => {
     expect(result).toBe('');
   });
 });
+
+describe('SourcesService.filterOptions', () => {
+  let service: SourcesService;
+  let httpMock: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    service = TestBed.inject(SourcesService);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => httpMock.verify());
+
+  it('sends the current tier, so the team gets the full status list', () => {
+    service.setTier(2);
+    service.filterOptions().subscribe();
+    httpMock.expectOne('/api/meta/filters?tier=2').flush({});
+  });
+});
