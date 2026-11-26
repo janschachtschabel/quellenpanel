@@ -41,6 +41,17 @@ export class SourcesService {
     return this.creds;
   }
 
+  /** Tier-1 (partner) password, held in memory only and sent as X-Tier1-Password on API calls. */
+  private tier1Pw = '';
+
+  setTier1Password(pw: string): void {
+    this.tier1Pw = pw.trim();
+  }
+
+  tier1Password(): string {
+    return this.tier1Pw;
+  }
+
   sources(query: Record<string, string | number | boolean>): Observable<SourcesPage> {
     let params = new HttpParams();
     for (const [key, value] of Object.entries(query)) {

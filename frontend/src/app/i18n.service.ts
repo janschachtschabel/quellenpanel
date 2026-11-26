@@ -101,6 +101,7 @@ const DICT: Record<string, { de: string; en: string }> = {
   'team.login.password':  { de: 'Passwort', en: 'Password' },
   'team.login.submit':    { de: 'Anmelden', en: 'Sign in' },
   'team.login.error':     { de: 'Falsches Passwort.', en: 'Wrong password.' },
+  'tier1.login.title':    { de: 'Details freischalten', en: 'Unlock details' },
   'detail.field.ki':          { de: 'KI-Nutzung & Recht', en: 'AI usage & law' },
   'detail.ki.hint':           { de: 'Rechts-/Nutzungshinweise der Quelle selbst — Basis der KI-Nutzungs-Einschätzung.', en: 'The source\'s own legal / usage notes — the basis of the AI-usage assessment.' },
   'detail.field.fieldgen':    { de: 'Metadaten-Erzeugung (Crawler-Provenienz)', en: 'Metadata generation (crawler provenance)' },

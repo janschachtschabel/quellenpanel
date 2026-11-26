@@ -216,3 +216,51 @@ def test_partner_without_source_builds_from_truth(export_files, monkeypatch, cap
 
 def test_export_source_doc_is_valid_json(export_files):
     assert json.loads((export_files / "stufe0.json").read_text(encoding="utf-8"))["tier"] == 0
+
+
+# --- Abschlussreview Etappe 2 ---------------------------------------------------------------
+def test_partner_health_503_when_tier0_missing(export_files, monkeypatch):
+    # Health darf erst „bereit“ melden, wenn ALLE Stufen der Rolle geladen sind.
+    (export_files / "stufe0.json").unlink()
+    monkeypatch.setenv("QE_ROLE", "partner")
+    with TestClient(app_module.app) as c:
+        assert export_store.current(1) is not None and export_store.current(0) is None
+        assert c.get("/api/health").status_code == 503
+
+
+def test_index_built_on_publish_readers_do_not_mutate(export_files):
+    export_store.reset()
+    assert export_store.load_remote(0)
+    doc = export_store.current(0)
+    keys_before = set(doc)
+    export_query.index(doc)
+    export_query.detail(doc, doc["items"][0]["id"])
+    assert set(doc) == keys_before, "Leser dürfen das veröffentlichte Dokument nicht verändern"
+
+
+def test_poll_loop_survives_errors(monkeypatch):
+    calls = []
+
+    def boom(t):
+        calls.append(t)
+        if len(calls) == 1:
+            raise RuntimeError("kaputt")
+        raise SystemExit  # ends the loop for the test
+
+    monkeypatch.setattr(export_store, "load_remote", boom)
+    monkeypatch.setattr(export_store.time, "sleep", lambda s: None)
+    with pytest.raises(SystemExit):
+        export_store._poll_loop((0,), 1)
+    assert calls == [0, 0]
+
+
+@pytest.mark.parametrize("bad_items", [[{"id": "x"}], ["kein-objekt"], [{"id": 1, "card": {}, "detail": {}, "k": {}}]])
+def test_malformed_items_rejected_keep_last_good(export_files, bad_items):
+    export_store.reset()
+    assert export_store.load_remote(0)
+    good = export_store.current(0)
+    doc = json.loads((export_files / "stufe0.json").read_text(encoding="utf-8"))
+    doc["items"] = bad_items
+    (export_files / "stufe0.json").write_text(json.dumps(doc), encoding="utf-8")
+    assert export_store.load_remote(0) is False
+    assert export_store.current(0) is good

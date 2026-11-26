@@ -172,10 +172,10 @@ def health():
     role = config.role()
     if role == "team":
         return {"status": "ok", "records": len(_DATA["records"])}
-    doc = export_store.current(config.ROLE_MAX_TIER[role])
-    if doc is None:
+    docs = [export_store.current(t) for t in _role_tiers(role)]
+    if any(d is None for d in docs):        # ready only with EVERY tier of the role (0 carries most traffic)
         return JSONResponse({"status": "starting", "role": role}, status_code=503)
-    return {"status": "ok", "records": len(doc["items"]), "role": role}
+    return {"status": "ok", "records": len(docs[0]["items"]), "role": role}
 
 
 @app.get("/api/capabilities")

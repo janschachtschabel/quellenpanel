@@ -68,8 +68,12 @@ type View = 'tile' | 'list' | 'stats';
         <mat-button-toggle-group class="tiers" [value]="tiers.tier()" (change)="onTierToggle($event.value)"
           hideSingleSelectionIndicator [attr.aria-label]="i18n.t('tier.aria')">
           <mat-button-toggle [value]="0"><mat-icon>visibility</mat-icon> {{ i18n.t('tier.base') }}</mat-button-toggle>
-          <mat-button-toggle [value]="1"><mat-icon>list_alt</mat-icon> {{ i18n.t('tier.details') }}</mat-button-toggle>
-          <mat-button-toggle [value]="2"><mat-icon>lock</mat-icon> {{ i18n.t('tier.audit') }}</mat-button-toggle>
+          @if (!tiers.publicOnly()) {
+            <mat-button-toggle [value]="1"><mat-icon>list_alt</mat-icon> {{ i18n.t('tier.details') }}</mat-button-toggle>
+          }
+          @if (tiers.role() === 'team') {
+            <mat-button-toggle [value]="2"><mat-icon>lock</mat-icon> {{ i18n.t('tier.audit') }}</mat-button-toggle>
+          }
         </mat-button-toggle-group>
         <mat-button-toggle-group class="lang" [value]="i18n.lang()" (change)="i18n.set($event.value)"
           hideSingleSelectionIndicator [attr.aria-label]="i18n.t('aria.lang')">
@@ -460,6 +464,12 @@ export class AppComponent implements OnInit {
    *  needs a team login when not yet authenticated; if it is cancelled, the `[value]` binding
    *  snaps the toggle back to the active tier. */
   onTierToggle(t: number): void {
+    if (t === 1 && this.tiers.maxTier() < 1) {
+      // Partner instance: details need the tier-1 password (sent as a header from then on).
+      this.dialog.open(TeamLoginComponent, { width: '360px', autoFocus: false, data: { mode: 'tier1' } })
+        .afterClosed().subscribe((ok) => { if (ok) this.reload(); });
+      return;
+    }
     if (t === 2 && this.tiers.maxTier() < 2) {
       this.dialog.open(TeamLoginComponent, { width: '360px', autoFocus: false })
         .afterClosed().subscribe((ok) => { if (ok) this.reload(); });

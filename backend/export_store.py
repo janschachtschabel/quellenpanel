@@ -18,6 +18,7 @@ import urllib.request
 from pathlib import Path
 
 import config
+import export_query
 import exports
 
 log = logging.getLogger("quellenpanel.export")
@@ -25,6 +26,7 @@ log = logging.getLogger("quellenpanel.export")
 TMP_DIR = Path(tempfile.gettempdir())
 _TIMEOUT = 20
 _LOCK = threading.Lock()
+_POLLING = False
 _DOCS: dict[int, dict | None] = {0: None, 1: None}
 _TAGS: dict[int, str | None] = {0: None, 1: None}
 
@@ -41,6 +43,7 @@ def set_doc(tier: int, doc: dict) -> None:
     """Validate and swap in a new export (readers see either the old or the new document)."""
     exports.validate(doc, tier)
     tag = exports.etag(doc)
+    export_query.index(doc)       # build the id index BEFORE publishing: readers never mutate a doc
     with _LOCK:
         _DOCS[tier] = doc
         _TAGS[tier] = tag
@@ -119,16 +122,22 @@ def load_tmp(tier: int) -> bool:
 
 def start_polling(tiers: tuple[int, ...], minutes: int) -> None:
     """Re-fetch the exports every `minutes` in a daemon thread (0 = off)."""
-    if minutes <= 0:
+    global _POLLING
+    if minutes <= 0 or _POLLING:
         return
+    _POLLING = True
+    threading.Thread(target=_poll_loop, args=(tiers, minutes), name="export-poll", daemon=True).start()
 
-    def loop():
-        while True:
-            time.sleep(minutes * 60)
-            for t in tiers:
+
+def _poll_loop(tiers: tuple[int, ...], minutes: int) -> None:
+    """Never dies on an error: a failed round is logged and retried at the next interval."""
+    while True:
+        time.sleep(minutes * 60)
+        for t in tiers:
+            try:
                 load_remote(t)
-
-    threading.Thread(target=loop, name="export-poll", daemon=True).start()
+            except Exception:  # noqa: BLE001
+                log.exception("Export-Abruf Stufe %d fehlgeschlagen", t)
 
 
 def reset() -> None:

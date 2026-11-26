@@ -21,6 +21,7 @@ export class TierService {
   readonly teamAvailable = signal(false);
   readonly publicOnly = signal(false);
   readonly repoUrl = signal('');        // edu-sharing repo the data refers to (for detail + PDF)
+  readonly role = signal<'team' | 'partner' | 'public'>('team');   // instance role (QE_ROLE)
 
   /** Fetch what the backend allows; drop the active tier if it is no longer permitted. */
   loadCapabilities(): void {
@@ -30,6 +31,7 @@ export class TierService {
       this.teamAvailable.set(c.teamAvailable);
       this.publicOnly.set(c.publicOnly);
       this.repoUrl.set(c.repoUrl || '');
+      this.role.set(c.role ?? 'team');
       if (this.tier() > c.maxTier) this.setTier(c.maxTier);
     });
   }
@@ -37,6 +39,22 @@ export class TierService {
   setTier(t: number): void {
     this.tier.set(t);
     this.api.setTier(t);
+  }
+
+  /** Unlock tier 1 with the partner password: kept only if the backend then grants tier 1. */
+  tier1Login(pw: string): Observable<boolean> {
+    this.api.setTier1Password(pw);
+    return this.api.capabilities().pipe(
+      map((c) => c.maxTier >= 1),
+      tap((ok) => {
+        if (ok) {
+          this.maxTier.set(Math.max(this.maxTier(), 1));
+          this.setTier(1);
+        } else {
+          this.api.setTier1Password('');
+        }
+      }),
+    );
   }
 
   /** Log in with the team password; on success the session cookie unlocks tier 2. */

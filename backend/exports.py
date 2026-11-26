@@ -103,6 +103,13 @@ def validate(doc: dict, tier: int) -> None:
         raise ValueError(f"Export der Stufe {doc['tier']} statt {tier}")
     if not isinstance(doc["items"], list):
         raise ValueError("Export: items ist keine Liste")
+    for name in ("meta", "stats", "filters"):
+        if not isinstance(doc[name], dict):
+            raise ValueError(f"Export: {name} ist kein Objekt")
+    for i, it in enumerate(doc["items"]):
+        if not (isinstance(it, dict) and isinstance(it.get("id"), str)
+                and all(isinstance(it.get(k), dict) for k in ("card", "detail", "k"))):
+            raise ValueError(f"Export: Eintrag {i} unvollständig")
 
 
 def write_doc(doc: dict, path: Path) -> None:

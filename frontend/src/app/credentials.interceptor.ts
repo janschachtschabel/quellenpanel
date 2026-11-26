@@ -13,5 +13,10 @@ import { SourcesService } from './sources.service';
  * the browser would block such a response. Only enable it on an origin the backend trusts via
  * QE_ALLOWED_ORIGINS, which then receives an origin-specific, credentialed CORS grant.
  */
-export const credentialsInterceptor: HttpInterceptorFn = (req, next) =>
-  inject(SourcesService).useCredentials() ? next(req.clone({ withCredentials: true })) : next(req);
+export const credentialsInterceptor: HttpInterceptorFn = (req, next) => {
+  const api = inject(SourcesService);
+  const pw = api.tier1Password();
+  // The tier-1 (partner) password travels as a header — never in the URL, so it stays out of logs.
+  const withPw = pw ? req.clone({ setHeaders: { 'X-Tier1-Password': pw } }) : req;
+  return next(api.useCredentials() ? withPw.clone({ withCredentials: true }) : withPw);
+};
