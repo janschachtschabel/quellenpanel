@@ -20,7 +20,7 @@ from dataclasses import asdict, astuple
 from pathlib import Path
 
 import config
-from korrekturen import Korrektur, _check, load_korrekturen, write_korrekturen
+from korrekturen import Korrektur, KorrekturSet, _check, decode, load_korrekturen, parse_korrekturen, write_korrekturen
 
 VERLAUF_HEADER = ("Zeitpunkt", "Wer", "Vorgang", "Alt", "Neu")
 _FELDER = ("typ", "schluessel", "aktion", "wert", "kommentar")
@@ -57,10 +57,16 @@ def lock() -> threading.RLock:
     return _LOCK
 
 
+def _parse(data: bytes) -> KorrekturSet:
+    return parse_korrekturen(decode(data)) if data else KorrekturSet()
+
+
 def lesen() -> dict:
+    """Entries and version from ONE read of the file (ids are positions, so they must match)."""
     path = _quelle()
-    s = load_korrekturen(path)
-    return {"version": _version(path),
+    data = path.read_bytes() if path and path.is_file() else b""
+    s = _parse(data)
+    return {"version": hashlib.sha256(data).hexdigest()[:16],
             "eintraege": [{"id": i, **asdict(k)} for i, k in enumerate(s.eintraege)],
             "fehler": [{"zeile": m.zeile, "text": m.text} for m in s.fehler],
             "warnungen": [{"zeile": m.zeile, "text": m.text} for m in s.warnungen]}
@@ -68,6 +74,10 @@ def lesen() -> dict:
 
 def bestand() -> list[Korrektur]:
     return load_korrekturen(_quelle()).eintraege
+
+
+def _roh_ungueltig() -> list[tuple[str, ...]]:
+    return load_korrekturen(_quelle()).roh_ungueltig
 
 
 def _wer(wer: str) -> str:
@@ -126,10 +136,10 @@ def sichern(path: Path, stamm: str) -> Path | None:
     return ziel
 
 
-def _schreiben(eintraege: list[Korrektur]) -> None:
+def _schreiben(eintraege: list[Korrektur], roh: list[tuple[str, ...]] = ()) -> None:
     ziel = store_path()
     ziel.parent.mkdir(parents=True, exist_ok=True)
-    write_korrekturen(ziel, eintraege)
+    write_korrekturen(ziel, eintraege, roh)
 
 
 def _aendern_mit(version: str, wer: str, vorgang: str, fn) -> dict:
@@ -137,9 +147,9 @@ def _aendern_mit(version: str, wer: str, vorgang: str, fn) -> dict:
     with _LOCK:
         if version != _version(_quelle()):
             raise VersionKonflikt("Die Korrekturen wurden inzwischen geändert.")
-        eintraege = bestand()
+        eintraege, roh = bestand(), _roh_ungueltig()
         alt, neu = fn(eintraege, wer)
-        _schreiben(eintraege)
+        _schreiben(eintraege, roh)          # invalid rows stay as they were (listed, never dropped)
         verlauf_schreiben(wer, vorgang, _zeile(alt), _zeile(neu))
         return lesen()
 
@@ -175,8 +185,9 @@ def loeschen(id_: int, wer: str, version: str) -> dict:
 
 
 def ersetzen_alle(eintraege: list[Korrektur], wer: str, version: str, vorgang: str,
-                  sicherung: bool) -> dict:
-    """Write the whole list (import). Logs counts, not rows, to the history."""
+                  sicherung: bool, roh_behalten: bool = False) -> dict:
+    """Write the whole list (import). Logs counts, not rows, to the history. `roh_behalten`
+    keeps the invalid rows of the current file (import mode "ergaenzen")."""
     wer = _wer(wer)
     with _LOCK:
         if version != _version(_quelle()):
@@ -184,7 +195,7 @@ def ersetzen_alle(eintraege: list[Korrektur], wer: str, version: str, vorgang: s
         vorher = len(bestand())
         if sicherung:
             sichern(_quelle(), "korrekturen")
-        _schreiben(list(eintraege))
+        _schreiben(list(eintraege), _roh_ungueltig() if roh_behalten else [])
         verlauf_schreiben(wer, vorgang, f"{vorher} Zeilen", f"{len(eintraege)} Zeilen")
         return lesen()
 

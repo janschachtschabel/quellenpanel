@@ -97,7 +97,7 @@ import { Anwenden, Korrektur, KorrekturFelder, KorrekturStand, VerlaufEintrag } 
       }
     </mat-tab>
     <mat-tab [label]="i18n.t('korr.tab.import')">
-      <wlo-korrektur-import [version]="stand()?.version ?? ''" (uebernommen)="uebernehmen($event)"></wlo-korrektur-import>
+      <wlo-korrektur-import [version]="stand()?.version ?? ''" (uebernommen)="uebernehmen($event)" (konflikt)="laden()"></wlo-korrektur-import>
     </mat-tab>
     <mat-tab [label]="i18n.t('korr.tab.crawler')">
       <wlo-crawler-upload></wlo-crawler-upload>

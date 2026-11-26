@@ -82,6 +82,9 @@ uvicorn app:app --port 8080 --reload        # → http://localhost:8080 (API onl
 python serve.py                             # as in the container: 8080 + internal port 9090
 ```
 
+With `ng serve` (proxy on :4200) the team area's write calls need `QE_ALLOWED_ORIGINS=http://localhost:4200`:
+the proxy rewrites the Host header, and writes with a foreign `Origin` are refused (CSRF guard).
+
 Operations (ports, probes, metrics, alerts, logs/tracing, first start, secrets): see
 [`docs/betrieb.md`](docs/betrieb.md).
 

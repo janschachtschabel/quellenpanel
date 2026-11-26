@@ -15,6 +15,7 @@ import bootstrap
 import enduser
 import export_store
 import fetcher
+import korrektur_store
 import obs
 import store
 import truth
@@ -31,11 +32,13 @@ def _run_refresh():
                     startedAt=time.strftime("%Y-%m-%d %H:%M:%S"), finishedAt=None)
         fetcher.refresh_all(lambda p, m: _JOB.update(percent=int(p), message=m))
         _JOB.update(percent=96, message="Datenwahrheit neu bauen …")
-        meta = truth.main()                 # builds data/truth.json
-        store.load()                        # reload in memory
-        enduser.reload_supplements()        # same corrections CSV: source supplements
-        export_store.rebuild_from_records(store._DATA["records"], store._DATA["meta"],
-                                          config.data_dir() / "exports")
+        # Same lock as the team's correction saves (anwenden): never two merges at once.
+        with korrektur_store.lock():
+            meta = truth.main()                 # builds data/truth.json
+            store.load()                        # reload in memory
+            enduser.reload_supplements()        # same corrections CSV: source supplements
+            export_store.rebuild_from_records(store._DATA["records"], store._DATA["meta"],
+                                              config.data_dir() / "exports")
         _JOB.update(status="done", percent=100, message="Fertig.",
                     meta=meta, finishedAt=time.strftime("%Y-%m-%d %H:%M:%S"))
         bootstrap.write_status(_JOB)

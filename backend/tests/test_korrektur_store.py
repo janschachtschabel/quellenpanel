@@ -105,3 +105,30 @@ def test_verlauf_newest_first(daten):
     h = ks.verlauf()
     assert [e["wer"] for e in h[:2]] == ["B", "A"]
     assert set(h[0]) == {"zeitpunkt", "wer", "vorgang", "alt", "neu"}
+
+
+def test_edit_keeps_invalid_rows(daten):
+    """Review-Befund: ungültige Zeilen bleiben beim Speichern erhalten (nur gelistet, nie gelöscht)."""
+    (daten / "korrekturen.csv").write_text(
+        "Typ;Schlüssel;Aktion;Wert;Kommentar;Geändert von;Geändert am\n"
+        f"node;{NODE};whitelist;;;;\nnode;kaputt;blacklist;;bitte prüfen;JS;2026-11-01\n", encoding="utf-8")
+    stand = ks.anlegen({"typ": "bezugsquelle", "schluessel": "YouTube", "aktion": "beschreibung",
+                        "wert": "x"}, "JS", ks.lesen()["version"])
+    assert "node;kaputt;blacklist;;bitte prüfen;JS;2026-11-01" in (daten / "korrekturen.csv").read_text(encoding="utf-8-sig")
+    assert len(stand["fehler"]) == 1 and len(stand["eintraege"]) == 2
+
+
+def test_lesen_version_matches_entries(daten, monkeypatch):
+    """Review-Befund: Einträge und Version stammen aus demselben Dateistand."""
+    write_korrekturen(daten / "korrekturen.csv", [Korrektur("node", NODE, "whitelist")])
+    real = ks._parse
+
+    def racing(data):
+        s = real(data)
+        write_korrekturen(daten / "korrekturen.csv", [])        # concurrent delete in between
+        return s
+    monkeypatch.setattr(ks, "_parse", racing)
+    stand = ks.lesen()
+    monkeypatch.setattr(ks, "_parse", real)
+    with pytest.raises(ks.VersionKonflikt):
+        ks.loeschen(0, "JS", stand["version"])

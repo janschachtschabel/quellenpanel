@@ -492,7 +492,6 @@ export class DetailDialogComponent implements OnInit {
     return groups;
   }
 
-  /** Export THIS source as a single-source Steckbrief PDF (tier 1+), via the shared PdfService. */
   /** Team: start a correction for this source (blacklist / description) in the correction dialog. */
   korrektur(aktion: 'blacklist' | 'beschreibung'): void {
     const vorlage = korrekturAusSteckbrief(aktion, {
@@ -510,6 +509,7 @@ export class DetailDialogComponent implements OnInit {
       });
   }
 
+  /** Export THIS source as a single-source Steckbrief PDF (tier 1+), via the shared PdfService. */
   async exportPdf(): Promise<void> {
     if (this.pdfBusy()) return;
     this.pdfBusy.set(true);

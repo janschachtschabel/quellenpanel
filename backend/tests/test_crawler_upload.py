@@ -67,3 +67,13 @@ def test_ersetzen_refuses_invalid(daten):
     with pytest.raises(cu.UploadFehler):
         cu.ersetzen(_csv(["A;x\n"], head="Titel;Spider\n"), "JS")
     assert (tmp / "crawler.csv").read_bytes() == alt and calls == []
+
+
+def test_cp1252_upload_keeps_umlaut_columns(daten):
+    """Review-Befund: Excel-CSV (cp1252) wird als UTF-8 gespeichert, Spalten mit Umlaut bleiben lesbar."""
+    import truth_loaders
+    tmp, _ = daten
+    data = ("Titel;Crawler (Spider);Quelldatensatz (Prod);Häufigkeit\nA;spider_a;;wöchentlich\n").encode("cp1252")
+    cu.ersetzen(data, "JS")
+    prof = truth_loaders.load_crawler_profiles()["spider_a"]
+    assert "wöchentlich" in str(prof)

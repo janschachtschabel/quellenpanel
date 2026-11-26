@@ -94,9 +94,11 @@ def ersetzen(data: bytes, wer: str) -> dict:
         ziel = config.data_dir() / "crawler.csv"
         ziel.parent.mkdir(parents=True, exist_ok=True)
         tmp = ziel.with_suffix(".csv.tmp")
-        tmp.write_bytes(data)
+        # Always stored as UTF-8 with BOM: Excel's "CSV (Trennzeichen-getrennt)" is cp1252 and the
+        # merge reads UTF-8, so umlaut columns (Häufigkeit …) would otherwise get lost.
+        tmp.write_bytes(b"\xef\xbb\xbf" + _text(data).encode("utf-8"))
         os.replace(tmp, ziel)
         korrektur_store.verlauf_schreiben(wer, "crawler_ersetzen", f"{vorher} Zeilen",
                                           f"{res['zeilen']} Zeilen")
-        res["anwenden"] = anwenden.nach_aenderung()
+    res["anwenden"] = anwenden.sicher()
     return res

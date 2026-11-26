@@ -35,3 +35,13 @@ def nach_aenderung() -> dict:
                                               config.data_dir() / "exports")
         _LOG.info("korrektur angewendet", extra={"neu_berechnet": neu})
         return {"neuBerechnet": neu, "wirktBeimNaechstenAufbau": not neu}
+
+
+def sicher() -> dict:
+    """nach_aenderung() for callers whose change is already saved: a failing recompute is logged
+    and reported as "effective at the next data build", never as a failed save."""
+    try:
+        return nach_aenderung()
+    except Exception:  # noqa: BLE001
+        _LOG.exception("anwenden nach Änderung fehlgeschlagen")
+        return {"neuBerechnet": False, "wirktBeimNaechstenAufbau": True, "fehler": True}

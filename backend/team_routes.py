@@ -61,7 +61,7 @@ def _fehler(fn, *args):
 
 
 def _mit_anwenden(stand: dict) -> dict:
-    return {**stand, "anwenden": anwenden.nach_aenderung()}
+    return {**stand, "anwenden": anwenden.sicher()}
 
 
 async def _body(request: Request) -> bytes:
@@ -158,7 +158,8 @@ async def import_uebernehmen(request: Request, format: str = Query(...), modus: 
     def run():
         _, v, _ = _vorschau(data, format, modus, request, korrektur_store._wer(wer))
         stand = korrektur_store.ersetzen_alle(v["ergebnis"], wer, version, f"import_{modus}",
-                                              sicherung=modus == "ersetzen")
+                                              sicherung=modus == "ersetzen",
+                                              roh_behalten=modus == "ergaenzen")
         return _mit_anwenden(stand)
     return await run_in_threadpool(_fehler, run)
 

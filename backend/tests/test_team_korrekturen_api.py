@@ -152,3 +152,17 @@ def test_team_routes_work_while_data_builds(team, monkeypatch):
     monkeypatch.setitem(app_module._DATA, "records", [])
     assert team.get("/api/sources").status_code == 503
     assert team.get("/api/team/korrekturen").status_code == 200
+
+
+def test_failed_apply_still_returns_saved_state(team, monkeypatch):
+    """Review-Befund: Schlägt das Anwenden fehl, ist die Änderung trotzdem gespeichert und die Antwort sagt das."""
+    import anwenden
+
+    def boom():
+        raise RuntimeError("raw kaputt")
+    monkeypatch.setattr(anwenden, "nach_aenderung", boom)
+    r = team.post("/api/team/korrekturen", json={
+        "korrektur": {"typ": "node", "schluessel": NODE, "aktion": "blacklist"}, "wer": "JS",
+        "version": _version(team)})
+    assert r.status_code == 200
+    assert r.json()["anwenden"] == {"neuBerechnet": False, "wirktBeimNaechstenAufbau": True, "fehler": True}

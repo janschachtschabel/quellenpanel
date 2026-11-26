@@ -56,7 +56,9 @@ export class KorrekturenService {
 
   private raw(zuordnung: Zuordnung | null): HttpHeaders {
     let h = new HttpHeaders({ 'Content-Type': 'application/octet-stream' });
-    if (zuordnung) h = h.set('X-Zuordnung', JSON.stringify(zuordnung));
+    // Header values must be Latin-1; escape everything outside ASCII as \uXXXX (still valid JSON).
+    if (zuordnung) h = h.set('X-Zuordnung', JSON.stringify(zuordnung)
+      .replace(/[\u007f-\uffff]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0')));
     return h;
   }
 

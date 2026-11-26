@@ -77,6 +77,15 @@ describe('KorrekturenService', () => {
     imp.flush({});
   });
 
+  it('keeps the mapping header ASCII-only (column names with dashes or quotes)', () => {
+    svc.importVorschau(new Blob(['x']), 'csv', 'ergaenzen', { kommentar: 'Kommentar – „intern“' }).subscribe();
+    const req = http.expectOne(r => r.url === '/api/team/korrekturen/import/vorschau');
+    const h = req.request.headers.get('X-Zuordnung')!;
+    expect(/^[\x20-\x7e]*$/.test(h)).toBe(true);
+    expect(JSON.parse(h)).toEqual({ kommentar: 'Kommentar – „intern“' });
+    req.flush({});
+  });
+
   it('uploads the crawler table', () => {
     svc.setWer('JS');
     const blob = new Blob(['x']);

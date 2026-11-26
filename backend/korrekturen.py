@@ -52,6 +52,8 @@ class KorrekturSet:
     eintraege: list[Korrektur] = field(default_factory=list)
     fehler: list[Meldung] = field(default_factory=list)
     warnungen: list[Meldung] = field(default_factory=list)
+    # raw cells (HEADER order) of the invalid rows, so a save writes them back unchanged
+    roh_ungueltig: list[tuple[str, ...]] = field(default_factory=list)
 
     def als_node_dict(self) -> dict[str, dict[str, str]]:
         """Shape of the former correction-list loader: {nodeId: {liste, bezugsquelle, spider}}."""
@@ -115,11 +117,22 @@ def _read_text(path: Path) -> str:
         return raw.decode("cp1252", errors="replace")
 
 
+def decode(raw: bytes) -> str:
+    """UTF-8 (BOM optional); falls back to cp1252 (Excel's plain CSV)."""
+    try:
+        return raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return raw.decode("cp1252", errors="replace")
+
+
 def load_korrekturen(path: Path | None) -> KorrekturSet:
-    result = KorrekturSet()
     if path is None or not Path(path).is_file():
-        return result
-    text = _read_text(path)
+        return KorrekturSet()
+    return parse_korrekturen(_read_text(path))
+
+
+def parse_korrekturen(text: str) -> KorrekturSet:
+    result = KorrekturSet()
     first = text.split("\n", 1)[0]
     if not first.strip():
         return result
@@ -149,6 +162,7 @@ def load_korrekturen(path: Path | None) -> KorrekturSet:
         reason = _check(k)
         if reason:
             result.fehler.append(Meldung(zeile, reason))
+            result.roh_ungueltig.append(tuple(cell(name) for name in HEADER))
             continue
         if k.typ == "node" and k.aktion in ("blacklist", "whitelist"):
             prev = last_list.get(k.schluessel)
@@ -160,14 +174,18 @@ def load_korrekturen(path: Path | None) -> KorrekturSet:
     return result
 
 
-def write_korrekturen(path: Path, eintraege: Iterable[Korrektur]) -> None:
-    """Atomic write (temp file + os.replace): UTF-8 with BOM, ';', CRLF."""
+def write_korrekturen(path: Path, eintraege: Iterable[Korrektur],
+                      roh: Iterable[tuple[str, ...]] = ()) -> None:
+    """Atomic write (temp file + os.replace): UTF-8 with BOM, ';', CRLF. `roh`: raw rows (invalid
+    rows kept as they were) appended after the valid ones."""
     path = Path(path)
     buf = io.StringIO()
     w = csv.writer(buf, delimiter=";", lineterminator="\r\n")
     w.writerow(HEADER)
     for k in eintraege:
         w.writerow(astuple(k))
+    for cells in roh:
+        w.writerow(cells)
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_bytes(b"\xef\xbb\xbf" + buf.getvalue().encode("utf-8"))
     os.replace(tmp, path)

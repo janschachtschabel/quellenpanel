@@ -73,6 +73,8 @@ const ZIELFELDER = ['typ', 'schluessel', 'aktion', 'wert', 'kommentar'] as const
 export class KorrekturImportComponent {
   @Input() version = '';
   @Output() uebernommen = new EventEmitter<KorrekturStand>();
+  /** 409: the corrections changed meanwhile — the parent reloads to get the current version. */
+  @Output() konflikt = new EventEmitter<void>();
   readonly i18n = inject(I18n);
   private readonly svc = inject(KorrekturenService);
   readonly felder = ZIELFELDER;
@@ -122,7 +124,11 @@ export class KorrekturImportComponent {
     this.busy.set(true);
     this.svc.importieren(this.file, this.format, this.modus, this.manuell ? this.zuordnung : null, this.version).subscribe({
       next: s => { this.busy.set(false); this.vorschau.set(null); this.uebernommen.emit(s); },
-      error: e => { this.busy.set(false); this.fehler.set(fehlertext(e)); },
+      error: e => {
+        this.busy.set(false);
+        this.fehler.set(fehlertext(e));
+        if ((e as { status?: number })?.status === 409) this.konflikt.emit();
+      },
     });
   }
 }

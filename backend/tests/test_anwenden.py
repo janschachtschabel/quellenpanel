@@ -55,3 +55,21 @@ def test_with_raw_caches_rebuilds_truth_and_memory(daten):
     assert "BLACKLIST" in neu["flags"]
     assert (daten / "exports" / "stufe0.json").is_file()
     assert all(r["id"] != rec["id"] for r in export_store.current(0)["items"])
+
+
+def test_refresh_rebuild_holds_the_correction_lock(monkeypatch):
+    """Review-Befund: Rebuild und Anwenden laufen nie gleichzeitig (gemeinsame Sperre)."""
+    import refresh
+    import fetcher
+    import truth
+    held = []
+    monkeypatch.setattr(fetcher, "refresh_all", lambda cb: None)
+
+    def fake_main():
+        held.append(ks.lock()._is_owned())
+        raise RuntimeError("stop")
+    monkeypatch.setattr(truth, "main", fake_main)
+    monkeypatch.setattr(refresh.bootstrap, "write_status", lambda job: None)
+    refresh._run_refresh()
+    refresh._JOB.update(status="idle")
+    assert held == [True]
