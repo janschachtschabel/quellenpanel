@@ -76,11 +76,33 @@ TEAM_PW = os.environ.get("QE_TEAM_PASSWORD", "").strip()
 # Set QE_TIER1_PASSWORD to gate it behind a lighter, separate password (below the team password).
 TIER1_PW = os.environ.get("QE_TIER1_PASSWORD", "").strip()
 
-# Hard public lock: when truthy, the app serves ONLY tier 0 (end-user) and the tier 1/2 routes
-# refuse regardless of any password — for the embedded / public deployment, so internal data is
-# unreachable even if an auth check were wrong.
-PUBLIC_ONLY = os.environ.get("QE_PUBLIC_ONLY", "").strip().lower() in ("1", "true", "yes", "on")
+# Role of this instance (one image, three deployments). The role caps the access tier:
+#   team     tier 2 — builds truth.json + the per-tier exports (internal only)
+#   partner  tier 1 — serves only the tier-0/1 exports; tier 1 needs QE_TIER1_PASSWORD (fail-closed)
+#   public   tier 0 — serves only the tier-0 export (embeddable)
+# QE_PUBLIC_ONLY=1 is the transitional alias for QE_ROLE=public.
+ROLES = ("team", "partner", "public")
+ROLE_MAX_TIER = {"team": 2, "partner": 1, "public": 0}
 
+
+def role() -> str:
+    """The instance role, read from the environment on every call (tests/deployments switch it)."""
+    raw = os.environ.get("QE_ROLE", "").strip().lower()
+    if not raw:
+        alias = os.environ.get("QE_PUBLIC_ONLY", "").strip().lower() in ("1", "true", "yes", "on")
+        return "public" if alias else "team"
+    if raw not in ROLES:
+        raise ValueError(f"QE_ROLE='{raw}' ungültig (erlaubt: {', '.join(ROLES)})")
+    return raw
+
+
+def public_only() -> bool:
+    """Hard public lock: only tier 0 is served, whatever password is sent."""
+    return role() == "public"
+
+
+# Kept for compatibility (read once at import); code paths use public_only()/role().
+PUBLIC_ONLY = public_only()
 
 
 def _auto_refresh_hour():

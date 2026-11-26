@@ -7,8 +7,9 @@ Three serialization tiers over the same record:
   2  team        — internal fields + all data-problem flags + audit/export. Team password.
 
 A request asks for a tier (?tier=); this module returns the EFFECTIVE tier = the smaller of the
-requested tier and what the caller is allowed. QE_PUBLIC_ONLY hard-caps everyone at tier 0, so a
-public / embedded deployment cannot serve tier 1/2 data even if an auth check were wrong.
+requested tier and what the caller is allowed. The instance role (config.role()) caps it:
+team 2, partner 1, public 0 — so a public / embedded deployment cannot serve tier 1/2 data even if
+an auth check were wrong. On a partner instance tier 1 always needs QE_TIER1_PASSWORD.
 """
 from fastapi import Header, Query, Request
 
@@ -20,12 +21,19 @@ def max_tier(request: Request, team_pw: str | None, team_header: str | None,
              tier1_header: str | None) -> int:
     """Highest tier the caller may access. Team (cookie or password) wins; otherwise tier 1 if
     it is open or the tier-1 password matches; otherwise tier 0."""
-    if config.PUBLIC_ONLY:
+    role = config.role()
+    cap = config.ROLE_MAX_TIER[role]
+    if cap == 0:
         return 0
-    if session.valid(request.cookies.get(session.COOKIE)) or config.check_pw(team_pw, team_header):
+    if role == "team" and (session.valid(request.cookies.get(session.COOKIE))
+                           or config.check_pw(team_pw, team_header)):
         return 2
+    if role == "partner":
+        # Fail-closed: without a configured partner password tier 1 stays shut on this instance.
+        ok = bool(config.TIER1_PW) and config.check_tier1_pw(None, tier1_header)
+        return 1 if ok else 0
     if config.check_tier1_pw(None, tier1_header):  # True when tier 1 is open OR the pw matches
-        return 1
+        return min(1, cap)
     return 0
 
 
@@ -42,6 +50,6 @@ def effective_tier(
 
 def is_team(request: Request, x_team_password: str | None = Header(None)) -> bool:
     """Team authorization for write/export/audit routes (session cookie or team password header)."""
-    if config.PUBLIC_ONLY:
+    if config.role() != "team":
         return False
     return session.valid(request.cookies.get(session.COOKIE)) or config.check_pw(None, x_team_password)

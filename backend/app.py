@@ -46,6 +46,9 @@ async def _lifespan(_app: FastAPI):
     # has already installed handlers, so an embedding server keeps full control of its logging.
     if not logging.getLogger().handlers:
         logging.basicConfig(level=logging.INFO)
+    role = config.role()                  # fail fast on an invalid QE_ROLE
+    if role == "partner" and not config.TIER1_PW:
+        log.warning("Rolle partner ohne QE_TIER1_PASSWORD: Stufe 1 (Details, Steckbrief) bleibt gesperrt")
     _load()
     log.info("Quellenpanel: %d records loaded", len(_DATA["records"]))
     refresh.start_scheduler(config.AUTO_REFRESH_HOUR)  # optional nightly refresh (daemon; no-op if unset)
@@ -120,9 +123,10 @@ def capabilities(request: Request, x_team_password: str | None = Header(None),
     whether team login is possible at all (drives the header tier controls)."""
     return {
         "maxTier": tiers.max_tier(request, None, x_team_password, x_tier1_password),
-        "publicOnly": config.PUBLIC_ONLY,
-        "tier1Gated": bool(config.TIER1_PW),
-        "teamAvailable": bool(config.TEAM_PW) and not config.PUBLIC_ONLY,
+        "role": config.role(),
+        "publicOnly": config.public_only(),
+        "tier1Gated": bool(config.TIER1_PW) or config.role() == "partner",
+        "teamAvailable": bool(config.TEAM_PW) and config.role() == "team",
         "repoUrl": config.REPO_URL,   # which edu-sharing repo the data refers to (repo-neutral)
     }
 
@@ -276,7 +280,7 @@ def auth(request: Request, response: Response, x_team_password: str | None = Hea
     if len(fails) >= _LOGIN_MAX_FAILS:
         _LOGIN_FAILS[ip] = fails
         raise HTTPException(429, "Zu viele Fehlversuche. Bitte später erneut versuchen.")
-    if config.PUBLIC_ONLY or not config.check_pw(None, x_team_password):
+    if config.role() != "team" or not config.check_pw(None, x_team_password):
         fails.append(now)
         _LOGIN_FAILS[ip] = fails
         raise HTTPException(403, "Falsches Passwort.")
