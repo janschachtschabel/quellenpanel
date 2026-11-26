@@ -32,9 +32,12 @@ def build(fix: Path) -> list[dict]:
     return truth.build()
 
 
+def dump(o) -> str:
+    return json.dumps(o, sort_keys=True, indent=1, ensure_ascii=False)
+
+
 def main(fix: Path) -> None:
     records = build(fix)
-    dump = lambda o: json.dumps(o, sort_keys=True, indent=1, ensure_ascii=False)
     (fix / "expected_records.json").write_text(dump(records), encoding="utf-8")
     (fix / "expected_cards.json").write_text(dump([enduser.card(r) for r in records]), encoding="utf-8")
 
