@@ -113,6 +113,18 @@ def role() -> str:
     return raw
 
 
+def frame_ancestors() -> str:
+    """CSP frame-ancestors for the /embed/* pages: QE_FRAME_ANCESTORS (space-separated sources),
+    default '*' (public widgets embeddable anywhere); the internal team instance only 'self'."""
+    raw = os.environ.get("QE_FRAME_ANCESTORS", "").strip()
+    if raw:
+        # one header value: keep only plain source tokens (no ';', quotes only around keywords)
+        tokens = [t for t in raw.split() if all(c not in t for c in ";,\r\n") and len(t) < 200]
+        if tokens:
+            return " ".join(tokens)
+    return "'self'" if role() == "team" else "*"
+
+
 def public_only() -> bool:
     """Hard public lock: only tier 0 is served, whatever password is sent."""
     return role() == "public"

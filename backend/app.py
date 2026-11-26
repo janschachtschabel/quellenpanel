@@ -23,6 +23,7 @@ from fastapi.staticfiles import StaticFiles
 
 import config
 import bootstrap
+import embed
 import enduser
 import errors
 import export_query
@@ -431,6 +432,18 @@ def stats(tier: int = Depends(tiers.effective_tier)):
     return _export(tier)["stats"]
 
 
+@app.get("/api/kennzahl")
+def kennzahl(f: dict = Depends(_filters)):
+    """Public key figure for widgets (always tier 0): number of sources and their contents."""
+    items = export_query.query(_export(0), f)
+    return {"quellen": len(items), "inhalte": sum(int(it["card"].get("contentCount") or 0) for it in items)}
+
+
+@app.get("/embed/{name}", include_in_schema=False)
+def embed_page(name: str, request: Request):
+    return embed.seite(name, dict(request.query_params))
+
+
 @app.get("/api/stats/team", dependencies=_TEAM_ONLY)
 def stats_team(team: bool = Depends(tiers.is_team)):
     """Team-only data-problem / origin / spider / fill-level analysis, appended to the overview in
@@ -585,6 +598,10 @@ def _openapi() -> dict:
 
 
 app.openapi = _openapi
+
+_WIDGETS = config.FRONTEND / "dist-widgets"
+if _WIDGETS.is_dir():
+    app.mount("/widgets", StaticFiles(directory=str(_WIDGETS)), name="widgets")
 
 if _DIST.is_dir():
     app.mount("/", StaticFiles(directory=str(_DIST), html=True), name="frontend")
