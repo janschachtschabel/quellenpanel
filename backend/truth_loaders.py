@@ -8,6 +8,7 @@ profile, so this module carries no repository-specific constants.
 from __future__ import annotations
 import csv
 import json
+import logging
 import re
 import sys
 
@@ -23,6 +24,9 @@ from truth_text import (
     p1,
     pA,
 )
+
+
+log = logging.getLogger("truth")
 
 
 # ---------------------------------------------------------------------------
@@ -198,7 +202,9 @@ def load_bq_previews():
 
 def load_korrektur():
     """{nodeId: {liste, bezugsquelle, spider}} from the long-format corrections CSV."""
-    return load_korrekturen(config.korrekturen_csv_path()).als_node_dict()
+    ks = load_korrekturen(config.korrekturen_csv_path())
+    ks.melden(log)
+    return ks.als_node_dict()
 
 
 def load_spider_top_publisher():

@@ -50,8 +50,9 @@ def filter_records(recs, q, kind, oer, subject, level, min_count, has_node, only
         _sp = str(r["identity"].get("spider", "")).strip()
         if exclude_wlo and _sp in repo_profile.get().migration_spiders:
             continue
+        _mq = repo_profile.get().migration_quelle
         if wlo_migration and not (
-                str((r.get("internal") or {}).get("replicationsource", "")) == repo_profile.get().migration_quelle
+                (_mq and str((r.get("internal") or {}).get("replicationsource", "")) == _mq)
                 or _sp in repo_profile.get().migration_spiders):
             continue
         if oer is not None and ("OER" in r.get("flags", [])) != oer:

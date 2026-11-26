@@ -10,6 +10,7 @@ import logging
 import threading
 import time
 
+import enduser
 import fetcher
 import store
 import truth
@@ -27,6 +28,7 @@ def _run_refresh():
         _JOB.update(percent=96, message="Datenwahrheit neu bauen …")
         meta = truth.main()                 # builds data/truth.json
         store.load()                        # reload in memory
+        enduser.reload_supplements()        # same corrections CSV: source supplements
         _JOB.update(status="done", percent=100, message="Fertig.",
                     meta=meta, finishedAt=time.strftime("%Y-%m-%d %H:%M:%S"))
     except Exception:                        # noqa: BLE001

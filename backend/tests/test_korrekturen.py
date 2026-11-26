@@ -67,3 +67,43 @@ def test_missing_file_is_empty(tmp_path):
     for s in (load_korrekturen(tmp_path / "fehlt.csv"), load_korrekturen(None)):
         assert s.eintraege == [] and s.fehler == [] and s.warnungen == []
     assert KorrekturSet(eintraege=[], fehler=[], warnungen=[]).als_node_dict() == {}
+
+
+def test_multiline_value_survives_roundtrip_with_line_numbers(tmp_path):
+    # Review-Befund: mehrzeilige Werte (Beschreibungen mit Absätzen) gingen beim Lesen verloren,
+    # und Zeilennummern zählten Datensätze statt physischer Zeilen.
+    rows = [K("bezugsquelle", "BR", "beschreibung", "zu Erwachsenen.\n\nBesonders", "", "", "")]
+    p = tmp_path / "k.csv"
+    write_korrekturen(p, rows)
+    with p.open("ab") as fh:
+        fh.write(f"node;{NID};löschen;;;;\r\n".encode())          # physische Zeile 5
+    s = load_korrekturen(p)
+    assert s.eintraege == rows
+    assert [m.zeile for m in s.fehler] == [5]
+
+
+def test_excel_cp1252_is_read(tmp_path):
+    # Excel „CSV (Trennzeichen-getrennt)“ auf deutschem Windows schreibt cp1252.
+    p = tmp_path / "k.csv"
+    p.write_bytes(("\r\n".join([HEAD, f"node;{NID};bezugsquelle_setzen;Bücherhallen;;;"]) + "\r\n")
+                  .encode("cp1252"))
+    s = load_korrekturen(p)
+    assert s.fehler == []
+    assert s.eintraege[0].wert == "Bücherhallen"
+
+
+def test_missing_header_column_is_one_error(tmp_path):
+    p = _write(tmp_path / "k.csv", ["Typ;Key;Aktion", f"node;{NID};whitelist", f"node;{NID};blacklist"])
+    s = load_korrekturen(p)
+    assert s.eintraege == []
+    assert len(s.fehler) == 1 and s.fehler[0].zeile == 1 and "Schlüssel" in s.fehler[0].text
+
+
+def test_problems_are_logged(tmp_path, monkeypatch, caplog):
+    # Review-Befund: fehler/warnungen verschwanden still im Merge.
+    import truth_loaders
+    _write(tmp_path / "korrekturen.csv", [HEAD, f"node;{NID};löschen;;;;"])
+    monkeypatch.setenv("QE_DATA_DIR", str(tmp_path))
+    with caplog.at_level("WARNING"):
+        truth_loaders.load_korrektur()
+    assert "Zeile 2" in caplog.text and "löschen" in caplog.text

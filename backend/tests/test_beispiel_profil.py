@@ -44,3 +44,15 @@ def test_build_with_foreign_profile(beispiel):
     assert museum["contentCount"] == 12
     assert "NICHT_PUBLIZIERT" not in museum["flags"]
     assert any(r["id"] == "bq:bibliothek" for r in records)
+
+
+def test_empty_migration_quelle_matches_nothing(beispiel):
+    # Review-Befund: migration_quelle = "" galt für jeden Datensatz ohne replicationsource.
+    import filtering
+    import stats_team
+    records = truth.build()
+    hits = filtering.filter_records(records, None, None, None, None, None, 0, None, False,
+                                    wlo_migration=True)
+    assert hits == []
+    stats = stats_team.compute_stats_team(records, {"withNode": 2})
+    assert stats["spider"]["ausWloAltmigration_replicationsource"] == 0

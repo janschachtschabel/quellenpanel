@@ -20,6 +20,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 import config
+import enduser
 import filtering
 import protokoll
 import ratelimit
@@ -434,6 +435,7 @@ def admin_reload(team: bool = Depends(tiers.is_team)):
     if not team:
         raise HTTPException(403, "Nur intern.")
     _load()
+    enduser.reload_supplements()
     return {"ok": True, "meta": _DATA["meta"]}
 
 

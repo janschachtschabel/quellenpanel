@@ -67,7 +67,7 @@ def compute_stats_team(recs, meta):
         intr = r.get("internal", {})
         g = str(intr.get("general_identifier", "")); rs = str(intr.get("replicationsource", ""))
         if g and "spider" in g.lower(): gi += 1
-        if rs == migration_quelle: wlo_migr += 1
+        if migration_quelle and rs == migration_quelle: wlo_migr += 1
         if g and rs: both_fields += 1
         # Spider binding broken down (general_identifier vs. replicationsource)
         g2 = g.strip(); rs2 = rs.strip()

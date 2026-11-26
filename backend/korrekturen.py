@@ -68,6 +68,15 @@ class KorrekturSet:
                 entry["spider"] = k.wert
         return out
 
+    def melden(self, log, max_n: int = 10) -> None:
+        """Log row errors and warnings (count + the first few), so bad edits are visible."""
+        for art, items, level in (("Fehler", self.fehler, log.warning),
+                                  ("Warnungen", self.warnungen, log.info)):
+            if items:
+                level("korrekturen.csv: %d %s", len(items), art)
+                for m in items[:max_n]:
+                    level("  Zeile %d: %s", m.zeile, m.text)
+
     def supplements(self) -> dict[str, dict[str, str]]:
         """{lowercased source name: {description, previewUrl}} — only fields that are set."""
         out: dict[str, dict[str, str]] = {}
@@ -94,20 +103,40 @@ def _check(k: Korrektur) -> str:
     return ""
 
 
+_PFLICHT = ("Typ", "Schlüssel", "Aktion")
+
+
+def _read_text(path: Path) -> str:
+    """UTF-8 (BOM optional); falls back to cp1252 for Excel's plain 'CSV (Trennzeichen-getrennt)'."""
+    raw = Path(path).read_bytes()
+    try:
+        return raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return raw.decode("cp1252", errors="replace")
+
+
 def load_korrekturen(path: Path | None) -> KorrekturSet:
     result = KorrekturSet()
     if path is None or not Path(path).is_file():
         return result
-    text = Path(path).read_text(encoding="utf-8-sig", errors="replace")
-    lines = text.splitlines()
-    if not lines:
+    text = _read_text(path)
+    first = text.split("\n", 1)[0]
+    if not first.strip():
         return result
-    sep = ";" if lines[0].count(";") >= lines[0].count(",") else ","
-    reader = csv.reader(lines, delimiter=sep)
+    sep = ";" if first.count(";") >= first.count(",") else ","
+    # Parse the whole text (not splitlines()), so quoted values may span lines (descriptions
+    # with paragraphs); reader.line_num gives the physical line for messages.
+    reader = csv.reader(io.StringIO(text, newline=""), delimiter=sep)
     head = [_norm(c) for c in next(reader)]
     pos = {name: head.index(_norm(name)) if _norm(name) in head else None for name in HEADER}
+    missing = [name for name in _PFLICHT if pos[name] is None]
+    if missing:
+        result.fehler.append(Meldung(1, f"Kopfzeile unvollständig: {', '.join(missing)} fehlt"))
+        return result
     last_list: dict[str, tuple[str, int]] = {}
-    for zeile, cells in enumerate(reader, start=2):
+    start = reader.line_num
+    for cells in reader:
+        zeile, start = start + 1, reader.line_num
         if not any(c.strip() for c in cells):
             continue
 

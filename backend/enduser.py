@@ -31,7 +31,9 @@ def _load_supplements() -> dict:
     Fail-soft: a missing or broken file just means those sources fall back to the live
     example-content backfill, so serving never breaks on it."""
     try:
-        return load_korrekturen(config.korrekturen_csv_path()).supplements()
+        ks = load_korrekturen(config.korrekturen_csv_path())
+        ks.melden(log)
+        return ks.supplements()
     except Exception:  # noqa: BLE001 — enhancement only; never 500 a card over a bad data file
         log.exception("supplements could not be loaded from the corrections CSV")
         return {}
