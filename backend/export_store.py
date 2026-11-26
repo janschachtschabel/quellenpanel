@@ -20,6 +20,7 @@ from pathlib import Path
 import config
 import export_query
 import exports
+import obs
 
 log = logging.getLogger("quellenpanel.export")
 
@@ -71,7 +72,7 @@ def _tmp_path(tier: int) -> Path:
 def _fetch(src: str, tier: int) -> bytes | None:
     """Raw bytes of the source; None when an HTTP source answers 304 Not Modified."""
     if src.startswith(("http://", "https://")):
-        req = urllib.request.Request(src, headers={"Accept": "application/json"})
+        req = urllib.request.Request(src, headers={"Accept": "application/json", **obs.outgoing_headers()})
         tag = etag(tier)
         if tag and current(tier) is not None:
             req.add_header("If-None-Match", tag)

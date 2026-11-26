@@ -37,6 +37,7 @@ import stats_team as stats_team_mod
 import thumb
 import tiers
 import views
+import obs
 import wlo_content
 from store import _DATA, family_count, load as _load, related_sources
 
@@ -45,11 +46,8 @@ log = logging.getLogger("quellenpanel")
 
 @asynccontextmanager
 async def _lifespan(_app: FastAPI):
-    # Configure logging here (not at import) so importing the app never reconfigures the
-    # root logger of a host process / ASGI server that embeds it. Skip it entirely when the host
-    # has already installed handlers, so an embedding server keeps full control of its logging.
-    if not logging.getLogger().handlers:
-        logging.basicConfig(level=logging.INFO)
+    # Configure logging here (not at import): JSON lines on stdout per Diensteleitfaden.
+    obs.setup_logging()
     role = config.role()                  # fail fast on an invalid QE_ROLE
     if role == "partner" and not config.TIER1_PW:
         log.warning("Rolle partner ohne QE_TIER1_PASSWORD: Stufe 1 (Details, Steckbrief) bleibt gesperrt")
@@ -90,6 +88,7 @@ def _start_from_export(role: str) -> None:
 
 
 app = FastAPI(title="Quellenpanel", version="0.1.0", lifespan=_lifespan)
+app.add_middleware(obs.TraceMiddleware)  # outermost user middleware: trace + request line
 app.include_router(thumb.router)   # /api/thumb — repository preview-image proxy (see thumb.py)
 
 # CORS: PUBLIC (read-only) data is served to ANY origin WITHOUT credentials (wildcard). The team

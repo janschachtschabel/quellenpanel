@@ -24,6 +24,7 @@ import unicodedata
 import requests
 
 import config
+import obs
 import repo_profile
 
 
@@ -55,7 +56,7 @@ def _facet(prop: str) -> tuple[dict, int]:
     (pagination.total of the ngsearchword=* query = total WLO prod inventory)."""
     body = {"criteria": [{"property": "ngsearchword", "values": ["*"]}],
             "facetLimit": 100_000, "facetMinCount": 1, "facets": [{"property": prop}]}
-    r = requests.post(f"{ngsearch_url()}?contentType=ALL&maxItems=1&skipCount=0", json=body, headers=H, timeout=TIMEOUT)
+    r = requests.post(f"{ngsearch_url()}?contentType=ALL&maxItems=1&skipCount=0", json=body, headers={**H, **obs.outgoing_headers()}, timeout=TIMEOUT)
     r.raise_for_status()
     d = r.json()
     groups = d.get("facets", [])
@@ -71,7 +72,7 @@ def _fetch_quellen(progress) -> list:
                   f"&propertyFilter=-all-&sortProperties=sys%3Anode-uuid&sortAscending=true")
         prof = repo_profile.get()
         body = {"criteria": [{"property": prof.quelle_property, "values": list(prof.quelle_werte)}]}
-        r = requests.post(f"{ngsearch_url()}?{params}", json=body, headers=H, timeout=TIMEOUT)
+        r = requests.post(f"{ngsearch_url()}?{params}", json=body, headers={**H, **obs.outgoing_headers()}, timeout=TIMEOUT)
         r.raise_for_status()
         d = r.json()
         if total is None:
@@ -120,7 +121,7 @@ def _fetch_extra_nodes(existing_ids: set, progress) -> list:
     out = []
     for k, nid in enumerate(ids, 1):
         try:
-            r = requests.get(node_metadata_url(nid), headers=H, timeout=TIMEOUT)
+            r = requests.get(node_metadata_url(nid), headers={**H, **obs.outgoing_headers()}, timeout=TIMEOUT)
             if r.status_code == 200:
                 n = r.json().get("node")
                 if n:
@@ -142,7 +143,7 @@ def _spider_top_publisher(spiders: dict, progress) -> None:
             body = {"criteria": [{"property": f["replication_source"], "values": [sp]}],
                     "facetLimit": 100_000, "facetMinCount": 1,
                     "facets": [{"property": f["publisher"]}]}
-            r = requests.post(f"{ngsearch_url()}?contentType=ALL&maxItems=1&skipCount=0", json=body, headers=H, timeout=TIMEOUT)
+            r = requests.post(f"{ngsearch_url()}?contentType=ALL&maxItems=1&skipCount=0", json=body, headers={**H, **obs.outgoing_headers()}, timeout=TIMEOUT)
             if r.status_code == 200:
                 groups = r.json().get("facets", [])
                 vals = sorted(groups[0].get("values", []) if groups else [],
@@ -159,7 +160,7 @@ def _spider_top_publisher(spiders: dict, progress) -> None:
 
 
 def _vocab() -> None:
-    d = requests.get(repo_profile.get().vocab_sources_url, timeout=TIMEOUT).json()
+    d = requests.get(repo_profile.get().vocab_sources_url, headers=obs.outgoing_headers(), timeout=TIMEOUT).json()
     (config.raw_dir() / "vocab_sources.json").write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
 
 
@@ -184,7 +185,7 @@ def enrich_bq_previews(bq_facet: dict, quelle_publishers: set, progress,
         try:
             body = {"criteria": [{"property": publisher, "values": [bq]}]}
             r = requests.post(f"{ngsearch_url()}?contentType=FILES&maxItems=1&skipCount=0&propertyFilter=-all-",
-                              json=body, headers=H, timeout=TIMEOUT)
+                              json=body, headers={**H, **obs.outgoing_headers()}, timeout=TIMEOUT)
             if r.status_code == 200:
                 nodes = r.json().get("nodes", [])
                 pv = ((nodes[0].get("preview") or {}).get("url") if nodes else "") or ""

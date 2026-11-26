@@ -9,6 +9,7 @@ import json
 import urllib.request
 
 import config
+import obs
 import repo_profile
 
 # Built from the configurable repository base (config.REPO_URL) and the profile's metadata set,
@@ -43,7 +44,8 @@ def fetch_contents(prop: str, value: str, max_items: int = 12, skip: int = 0) ->
     }).encode("utf-8")
     req = urllib.request.Request(
         _ngsearch(max_items, skip), data=body,
-        headers={"Content-Type": "application/json", "Accept": "application/json"},
+        headers={"Content-Type": "application/json", "Accept": "application/json",
+                 **obs.outgoing_headers()},
     )
     with urllib.request.urlopen(req, timeout=20) as resp:  # noqa: S310 — fixed https host
         data = json.load(resp)

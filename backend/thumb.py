@@ -11,6 +11,7 @@ import requests
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 
 import config
+import obs
 import ratelimit
 
 router = APIRouter()
@@ -40,7 +41,8 @@ def thumb(request: Request, url: str = Query(..., description="Preview URL on th
             # Do NOT follow redirects: the host allow-list above only validated the INITIAL url, so a
             # 3xx from the allowed host (open redirect / user-controlled render link) could otherwise
             # bounce the server-side fetch to an internal address (SSRF). Any redirect is refused.
-            rr = requests.get(url, timeout=8, stream=True, allow_redirects=False)
+            rr = requests.get(url, timeout=8, stream=True, allow_redirects=False,
+                              headers=obs.outgoing_headers())
             if 300 <= rr.status_code < 400:
                 raise HTTPException(502, "Vorschau nicht abrufbar.")
             rr.raise_for_status()
