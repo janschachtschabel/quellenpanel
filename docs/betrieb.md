@@ -32,6 +32,10 @@ Fehlern den letzten gültigen Stand, auch als Kopie in `/tmp`.
 - **Readiness:** `/ready` ist 200, sobald die Daten der Rolle im Speicher sind (Team: Datensätze;
   sonst alle Exporte der Rolle). Zusätzlich meldet `source.ok`, ob Repository bzw. Export-Quelle
   erreichbar sind. Diese Prüfung läuft höchstens alle 30 s und ändert den Status-Code nicht.
+  Im Helm-Chart nutzt die **Team-Instanz** `/health` als Readiness-Probe: Der einzelne Team-Pod
+  bleibt so auch ohne Daten im Service, damit Nutzer die JSON-Antwort „Daten werden aufgebaut“
+  sehen und das Team sich anmelden und „Daten aktualisieren“ auslösen kann. Partner und Öffentlich
+  nutzen `/ready`.
 - **SIGTERM:** `serve.py` beendet beide Server; der Lifespan läuft zu Ende. Läuft gerade ein Rebuild,
   steht danach `status: "abgebrochen"` in `status.json`. Endet ein Server unerwartet (Port belegt,
   Start fehlgeschlagen), endet der Prozess mit Exit-Code ≠ 0.
@@ -40,12 +44,18 @@ Fehlern den letzten gültigen Stand, auch als Kopie in `/tmp`.
 
 - Die Daten sind **nicht im Image** (`.dockerignore`: `truth.json`, `raw/`, `exports/`,
   `profiles/*/daten/`).
-- **Erststart Team mit leerem Volume:** Fehlende `crawler.csv`, `korrekturen.csv`, `truth.json`
-  werden von `QE_SEED_URL` geladen (vorhandene Dateien werden nie überschrieben). Fehlt `truth.json`
+- **Erststart Team mit leerem Volume:** Seed, Laden und Aufbau laufen im Hintergrund; die Ports
+  antworten sofort. Fehlende `crawler.csv`, `korrekturen.csv`, `truth.json` werden von
+  `QE_SEED_URL` geladen (vorhandene Dateien werden nie überschrieben; HTML-Seiten und eine
+  `truth.json` ohne `meta`/`records` werden verworfen; Zeitlimit 5 min). Eine vorhandene, aber
+  kaputte `truth.json` wird nach `truth.json.kaputt-<zeit>` verschoben, dann startet der Aufbau. Fehlt `truth.json`
   danach noch, startet der Datenaufbau im Hintergrund. Bis er fertig ist, antworten alle Datenrouten
   mit 503 `{"error": "service_unavailable", "message": "Daten werden aufgebaut", "retryAfter": 60}`
   und `Retry-After: 60`. `/health` ist 200 (`data.state = building`), `/ready` 503. Schlägt der Aufbau
-  fehl, bleibt der Status unter `/health` → `rebuild.last` lesbar.
+  fehl, bleibt der Status unter `/health` → `rebuild.last` lesbar. **Wiederherstellung:** Ursache
+  beheben (Netz, `QE_SEED_URL`), dann als Team anmelden und „Daten aktualisieren“ drücken, oder den
+  Pod neu starten. Ohne Eingriff versucht es erst der nächste nächtliche Lauf; nach 6 h ohne Daten
+  meldet `QuellenpanelNoData`.
 - **Nächtlicher Rebuild im Team-Pod** (`QE_AUTO_REFRESH_HOUR`, z. B. `3`): Er läuft dort, weil nur
   dieser Pod das RWO-Volume eingebunden hat. Ein separater CronJob bräuchte ein RWX-Volume oder
   einen zweiten Weg zu den Daten; der Rebuild nutzt dieselbe Sperre wie der Knopf
@@ -72,6 +82,7 @@ Dazu die Prozess-Metriken von `prometheus_client`.
 | Alarm | Bedingung | Rolle |
 |---|---|---|
 | `QuellenpanelRebuildStale` | `quellenpanel_data_age_seconds > 26 h` (15 min) | team |
+| `QuellenpanelNoData` | seit 6 h überhaupt keine Daten (erster Aufbau fehlgeschlagen) | team |
 | `QuellenpanelHigh5xx` | mehr als 5 % 5xx über 10 min | alle |
 | `QuellenpanelExportFetchFailing` | 30 min nur fehlgeschlagene Export-Abrufe | partner, public |
 

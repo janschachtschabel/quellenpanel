@@ -24,6 +24,15 @@ spec:
       annotations:
         summary: "Quellenpanel-Daten älter als 26 Stunden"
         description: "Der nächtliche Datenaufbau ist ausgeblieben oder fehlgeschlagen (Status: GET /health auf Port 9090)."
+    - alert: QuellenpanelNoData
+      # No data at all (age NaN, or no scrape): the first build has not finished or failed.
+      expr: absent(quellenpanel_data_age_seconds{job="{{ $job }}"} >= 0)
+      for: 6h
+      labels:
+        severity: warning
+      annotations:
+        summary: "Quellenpanel-Team hat seit 6 Stunden keine Daten"
+        description: "Erster Datenaufbau läuft noch oder ist fehlgeschlagen: GET /health auf Port 9090 (rebuild.last), dann „Daten aktualisieren“ oder QE_SEED_URL prüfen."
     {{- else }}
     - alert: QuellenpanelExportFetchFailing
       expr: |

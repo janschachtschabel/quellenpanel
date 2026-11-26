@@ -9,6 +9,11 @@ groups:
     for: 15m
     labels:
       severity: warning
+  - alert: QuellenpanelNoData
+    expr: absent(quellenpanel_data_age_seconds{job="quellenpanel-team-internal"} >= 0)
+    for: 6h
+    labels:
+      severity: warning
   - alert: QuellenpanelExportFetchFailing
     expr: |
       sum(increase(quellenpanel_export_fetch_total{job="quellenpanel-public-internal",result="error"}[30m])) > 0

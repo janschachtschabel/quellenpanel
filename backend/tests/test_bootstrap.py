@@ -31,6 +31,15 @@ def _wait_job_end(timeout=5.0):
     raise AssertionError("Job endet nicht")
 
 
+def _wait_bootstrap(timeout=10.0):
+    end = time.monotonic() + timeout
+    while time.monotonic() < end:
+        if not bootstrap.loading():
+            return
+        time.sleep(0.05)
+    raise AssertionError("Bootstrap endet nicht")
+
+
 @pytest.fixture
 def empty_data(tmp_path, monkeypatch):
     monkeypatch.setenv("QE_DATA_DIR", str(tmp_path))
@@ -39,6 +48,7 @@ def empty_data(tmp_path, monkeypatch):
     internal_app._SOURCE.update(ok=True, at=time.monotonic() + 3600, checkedAt="x")  # no network
     refresh._JOB.update(status="idle")
     yield tmp_path
+    _wait_bootstrap()
     _wait_job_end()
     refresh._JOB.update(status="idle")
     internal_app._SOURCE.update(ok=None, at=None, checkedAt=None)
@@ -58,6 +68,7 @@ def test_first_start_building(empty_data, monkeypatch):
             h = internal.get("/health")
             assert h.status_code == 200 and h.json()["data"]["state"] == "building"
             assert internal.get("/ready").status_code == 503
+            _wait_bootstrap()
             assert bootstrap.read_status()["status"] == "running"
             gate.set()
             _wait_job_end()
@@ -76,6 +87,7 @@ def test_first_start_failure_status_readable(empty_data, monkeypatch):
     monkeypatch.setattr(fetcher, "refresh_all", boom)
     internal = TestClient(internal_app.app)
     with TestClient(app_module.app) as c:
+        _wait_bootstrap()
         _wait_job_end()
         h = internal.get("/health").json()
         assert h["rebuild"]["last"]["status"] == "error"
@@ -89,6 +101,7 @@ def test_status_written_on_shutdown_during_rebuild(empty_data, monkeypatch):
     monkeypatch.setattr(fetcher, "refresh_all", lambda cb: gate.wait(5))
     try:
         with TestClient(app_module.app):
+            _wait_bootstrap()
             assert refresh.status()["status"] == "running"
         assert bootstrap.read_status()["status"] == "abgebrochen"
     finally:
@@ -146,7 +159,8 @@ def test_seed_then_ready(monkeypatch, tmp_path):
     payload = FIXTURE_TRUTH.read_bytes()
     monkeypatch.setattr(bootstrap.urllib.request, "urlopen",
                         lambda req, timeout=None: _Resp(payload if req.full_url.endswith("truth.json") else b"x"))
-    assert bootstrap.start_team() == "ready"
+    assert bootstrap.start_team() == "building"          # seed runs off the event loop
+    _wait_bootstrap()
     assert export_store.current(0) is not None
 
 
@@ -162,3 +176,47 @@ def test_vercel_removed():
     assert not (ROOT / "backend" / "api").exists()
     assert "vercel" not in (ROOT / "README.md").read_text(encoding="utf-8").lower()
     assert config.seed_url() == "" or isinstance(config.seed_url(), str)
+
+
+# --- Abschlussreview Etappe 3 ----------------------------------------------------------------
+def test_slow_seed_does_not_block_startup(empty_data, monkeypatch):
+    monkeypatch.setenv("QE_SEED_URL", "https://seed.example")
+    gate = threading.Event()
+    monkeypatch.setattr(bootstrap, "seed", lambda d: gate.wait(5) and [])
+    monkeypatch.setattr(fetcher, "refresh_all", lambda cb: None)
+    internal = TestClient(internal_app.app)
+    t0 = time.monotonic()
+    try:
+        with TestClient(app_module.app) as c:
+            assert time.monotonic() - t0 < 3                   # lifespan did not wait for the seed
+            assert c.get("/api/sources").status_code == 503
+            assert internal.get("/health").json()["data"]["state"] == "building"
+            gate.set()
+            _wait_bootstrap()
+    finally:
+        gate.set()
+
+
+def test_seed_rejects_html_and_bad_truth(monkeypatch, tmp_path):
+    monkeypatch.setenv("QE_SEED_URL", "https://seed.example")
+    bodies = {"crawler.csv": b"<!DOCTYPE html><html>login</html>", "korrekturen.csv": b"a,b\n1,2\n",
+              "truth.json": b'{"kein": "truth"}'}
+    monkeypatch.setattr(bootstrap.urllib.request, "urlopen",
+                        lambda req, timeout=None: _Resp(bodies[req.full_url.rsplit("/", 1)[1]]))
+    assert bootstrap.seed(tmp_path) == ["korrekturen.csv"]
+    assert not (tmp_path / "crawler.csv").exists() and not (tmp_path / "truth.json").exists()
+
+
+def test_broken_local_truth_falls_back_to_building(empty_data, monkeypatch):
+    (empty_data / "truth.json").write_text("<html>kaputt", encoding="utf-8")
+    gate = threading.Event()
+    monkeypatch.setattr(fetcher, "refresh_all", lambda cb: gate.wait(5))
+    internal = TestClient(internal_app.app)
+    try:
+        with TestClient(app_module.app) as c:                  # no crash loop
+            _wait_bootstrap()
+            assert c.get("/api/sources").status_code == 503
+            assert internal.get("/health").json()["data"]["state"] == "building"
+            assert list(empty_data.glob("truth.json.kaputt-*"))
+    finally:
+        gate.set()

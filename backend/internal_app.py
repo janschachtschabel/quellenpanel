@@ -82,7 +82,7 @@ def data_ready() -> bool:
 def _data_state() -> str:
     if data_ready():
         return "ready"
-    if config.role() == "team" and refresh.status().get("status") == "running":
+    if config.role() == "team" and (bootstrap.loading() or refresh.status().get("status") == "running"):
         return "building"
     return "missing"
 

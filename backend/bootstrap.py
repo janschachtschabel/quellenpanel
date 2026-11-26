@@ -13,6 +13,8 @@ import json
 import logging
 import os
 import tempfile
+import threading
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -26,8 +28,35 @@ log = logging.getLogger("quellenpanel.bootstrap")
 
 SEED_FILES = ("crawler.csv", "korrekturen.csv", "truth.json")
 _OPTIONAL = {"truth.json"}
-_TIMEOUT = 60
+_TIMEOUT = 30                 # per socket operation
+_SEED_DEADLINE = 300          # whole seed step; later files are skipped once it has passed
 _MAX_BYTES = 200 * 1024 * 1024
+_LOADING = threading.Event()  # set while the background bootstrap (seed / load) runs
+
+
+def loading() -> bool:
+    return _LOADING.is_set()
+
+
+def _valid(name: str, data: bytes) -> bool:
+    """Reject what a misconfigured seed URL typically returns (HTML login/blob pages, wrong JSON)."""
+    if name.endswith(".json"):
+        try:
+            d = json.loads(data)
+        except ValueError:
+            return False
+        return isinstance(d, dict) and isinstance(d.get("records"), list) and isinstance(d.get("meta"), dict)
+    head = data[:2048].lstrip().lower()
+    if head.startswith(b"<") or b"<html" in head:
+        return False
+    try:
+        data[:65536].decode("utf-8")
+    except UnicodeDecodeError:
+        try:
+            data[:65536].decode("cp1252")
+        except UnicodeDecodeError:
+            return False
+    return True
 
 
 def _atomic_write(path: Path, data: bytes) -> None:
@@ -48,9 +77,13 @@ def seed(data_dir: Path) -> list[str]:
     if not base:
         return []
     loaded = []
+    deadline = time.monotonic() + _SEED_DEADLINE
     for name in SEED_FILES:
         target = Path(data_dir) / name
         if target.exists():
+            continue
+        if time.monotonic() > deadline:
+            log.warning("Seed: Zeitlimit erreicht, %s übersprungen", name)
             continue
         url = f"{base.rstrip('/')}/{name}"
         req = urllib.request.Request(url, headers=obs.outgoing_headers())
@@ -67,6 +100,9 @@ def seed(data_dir: Path) -> list[str]:
         except (OSError, ValueError) as exc:
             log.warning("Seed %s nicht geladen (%s)", name, exc)
             continue
+        if not _valid(name, data):
+            log.warning("Seed %s verworfen: Inhalt passt nicht (HTML-Seite oder falsches Format?)", name)
+            continue
         _atomic_write(target, data)
         loaded.append(name)
     if loaded:
@@ -81,16 +117,45 @@ def load_and_publish() -> None:
                                       config.data_dir() / "exports")
 
 
-def start_team() -> str:
-    import refresh                      # late: refresh imports this module for its status file
-
-    if not config.truth_path().is_file():
-        seed(config.data_dir())
-    if config.truth_path().is_file():
+def _try_load() -> bool:
+    """Load truth.json if present; a broken file is moved aside (no crash loop), returning False."""
+    path = config.truth_path()
+    if not path.is_file():
+        return False
+    try:
         load_and_publish()
+        return True
+    except Exception:  # noqa: BLE001 — a bad file must not keep the pod from starting
+        aside = path.with_name(f"truth.json.kaputt-{time.strftime('%Y%m%d-%H%M%S')}")
+        log.exception("truth.json nicht ladbar, verschoben nach %s; Datenaufbau startet", aside.name)
+        try:
+            os.replace(path, aside)
+        except OSError:
+            log.warning("truth.json konnte nicht verschoben werden", exc_info=True)
+        return False
+
+
+def _background() -> None:
+    import refresh                      # late: refresh imports this module for its status file
+    try:
+        if not config.truth_path().is_file():
+            seed(config.data_dir())
+        if not _try_load():
+            log.warning("Keine ladbare truth.json: Datenaufbau startet, API antwortet bis dahin 503")
+            refresh.start()
+    except Exception:  # noqa: BLE001
+        log.exception("Bootstrap fehlgeschlagen")
+    finally:
+        _LOADING.clear()
+
+
+def start_team() -> str:
+    """"ready" when a local truth.json loads right away; otherwise "building": seed, load or the
+    rebuild run in a background thread, so the event loop (and port 9090) answer meanwhile."""
+    if config.truth_path().is_file() and _try_load():
         return "ready"
-    log.warning("Keine truth.json im Datenverzeichnis: Datenaufbau startet, API antwortet bis dahin 503")
-    refresh.start()
+    _LOADING.set()
+    threading.Thread(target=_background, name="bootstrap", daemon=True).start()
     return "building"
 
 

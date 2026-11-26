@@ -23,7 +23,8 @@ and `config.sessionSecret`.
 
 - **Two ports:** `http` 8080 (Service `quellenpanel-<role>`, behind the ingress) and `internal` 9090
   (Service `quellenpanel-<role>-internal`, never behind an ingress): `/health` (liveness and startup
-  probe), `/ready` (readiness probe), `/metrics`, `/internal/exports/…` (team only).
+  probe; readiness for the team, so its single pod stays reachable while it builds), `/ready`
+  (readiness for partner/public), `/metrics`, `/internal/exports/…` (team only).
 - **Restricted security context:** non-root uid 10001, read-only root filesystem, no privilege
   escalation, all capabilities dropped, seccomp `RuntimeDefault`. Writes go to `/tmp` (emptyDir) and
   `/data` (PVC for the team, emptyDir otherwise).
@@ -37,7 +38,7 @@ and `config.sessionSecret`.
   (ingress-nginx does by default, `use-forwarded-headers: false`).
 - **Optional:** `networkPolicy.enabled` (9090 only from quellenpanel pods and the monitoring
   namespace), `metrics.serviceMonitor.enabled`, `metrics.prometheusRule.enabled` with the alerts
-  `QuellenpanelRebuildStale` (team data older than 26 h), `QuellenpanelHigh5xx` (more than 5 % 5xx
+  `QuellenpanelRebuildStale` (team data older than 26 h), `QuellenpanelNoData` (no data for 6 h), `QuellenpanelHigh5xx` (more than 5 % 5xx
   over 10 min) and `QuellenpanelExportFetchFailing` (partner/public: only failed fetches for 30 min).
 
 ## Checks

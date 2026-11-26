@@ -77,9 +77,12 @@ spec:
           timeoutSeconds: {{ .timeoutSeconds }}
         {{- end }}
         {{- with .Values.readinessProbe }}
+        # Team: /health, so the single team pod stays in its Service while it builds its data (users
+        # get the JSON 503 "Daten werden aufgebaut", the team can log in and start a rebuild).
+        # Partner/public: /ready, so a replica without its export receives no traffic.
         readinessProbe:
           httpGet:
-            path: /ready
+            path: {{ if eq $.Values.config.role "team" }}/health{{ else }}/ready{{ end }}
             port: internal
           failureThreshold: {{ .failureThreshold }}
           initialDelaySeconds: {{ .initialDelaySeconds }}

@@ -60,7 +60,7 @@ def test_templates_hardened_and_two_ports():
     assert "readOnlyRootFilesystem: true" in dep
     assert "containerPort: 9090" in dep and "containerPort: 8080" in dep
     assert re.search(r'eq \.Values\.config\.role "team".*?Recreate', dep, re.S)
-    for probe, path in (("livenessProbe", "/health"), ("readinessProbe", "/ready"), ("startupProbe", "/health")):
+    for probe, path in (("livenessProbe", "/health"), ("startupProbe", "/health")):
         assert re.search(probe + r":\s*\n\s*httpGet:\s*\n\s*path: " + re.escape(path) + r"\s*\n\s*port: internal", dep), probe
     assert "seccompProfile" in dep and "RuntimeDefault" in dep
     for name in ("pvc.yaml", "networkpolicy.yaml", "servicemonitor.yaml", "prometheusrule.yaml"):
@@ -74,3 +74,17 @@ def test_alert_rules_present():
     for alert in ("QuellenpanelRebuildStale", "QuellenpanelHigh5xx", "QuellenpanelExportFetchFailing"):
         assert alert in rules
     assert (CHART / "tests" / "rules-test.yaml").is_file()
+
+
+def test_team_readiness_keeps_pod_reachable_while_building():
+    # A team without data must stay in its Service, or nobody can reach login/refresh/503 answer.
+    dep = (CHART / "templates" / "deployment.yaml").read_text(encoding="utf-8")
+    assert re.search(r'readinessProbe:\s*\n\s*httpGet:\s*\n\s*path: \{\{ if eq \$\.Values\.config\.role "team" \}\}/health'
+                     r'\{\{ else \}\}/ready\{\{ end \}\}', dep)
+
+
+def test_no_data_alert():
+    rules = (CHART / "templates" / "prometheusrule.yaml").read_text(encoding="utf-8")
+    assert "QuellenpanelNoData" in rules
+    assert "QuellenpanelNoData" in (CHART / "tests" / "rules.yaml").read_text(encoding="utf-8")
+    assert "QuellenpanelNoData" in (CHART / "tests" / "rules-test.yaml").read_text(encoding="utf-8")
