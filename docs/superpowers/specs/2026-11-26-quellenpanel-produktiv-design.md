@@ -1,6 +1,6 @@
 # Quellenpanel produktionsreif machen – Design
 
-Stand: 26.11.2026 · Auftraggeber: Jan · Status: Entwurf zur Freigabe
+Stand: 26.11.2026 · Auftraggeber: Jan · Status: freigegeben von Jan am 26.11.2026
 
 ## 1. Absicht
 
