@@ -23,6 +23,7 @@ import config
 import filtering
 import protokoll
 import ratelimit
+import repo_profile
 import refresh
 import serialize
 import session
@@ -222,17 +223,18 @@ def sources(
 def source_contents(request: Request, source_id: str, max_items: int = Query(12, ge=1, le=50),
                     skip: int = Query(0, ge=0)):
     """Live example content of a source (NGSearch) — public, all tiers. Crawlers are matched by
-    ccm:replicationsource (the spider), other sources by ccm:oeh_publisher_combined."""
+    the replication-source property (the spider), other sources by the publisher property."""
     if not ratelimit.fetch_rate_ok(request):
         raise HTTPException(429, "Zu viele Anfragen. Bitte kurz warten.")
     r = _DATA["byId"].get(source_id)
     if not r:
         raise HTTPException(404, "Quelle nicht gefunden")
     idn = r.get("identity") or {}
+    f = repo_profile.get().felder
     if r.get("kind") == "crawler" and idn.get("spider"):
-        prop, value = "ccm:replicationsource", idn["spider"]
+        prop, value = f["replication_source"], idn["spider"]
     else:
-        prop, value = "ccm:oeh_publisher_combined", idn.get("bezugsquelle") or r.get("name") or ""
+        prop, value = f["publisher"], idn.get("bezugsquelle") or r.get("name") or ""
     if not value:
         return {"total": 0, "nodes": []}
     try:
