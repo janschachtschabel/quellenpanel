@@ -84,6 +84,13 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
 - Paginator auf Deutsch und Englisch („1–25 von 3.721“).
 - `docker-compose.build.yml` im Wurzelverzeichnis startet eine Team-Instanz mit Volume (Entwicklung).
 
+### Behoben (Kacheln)
+
+- Schmale Vorschaubilder und die Inhaltszahl saßen auf einzelnen Kacheln eingerückt: Die Klickfläche
+  der Kachel nimmt jetzt die volle Breite ein.
+- Die Metadaten der Kachel (Inhaltstyp, Fach, Bildungsstufe) stehen wieder als Zeilen mit Symbol und
+  linksbündigem Wert wie vor dem Umbau; leere Zeilen entfallen, die Beschriftung bleibt für Screenreader.
+
 ### Hinzugefügt (Server mit Traefik)
 
 - `docker-compose.yml` im Hauptordner für einen Docker-Server mit vorhandenem Traefik-Proxy. Standard

@@ -52,10 +52,19 @@ import { I18n } from './i18n.service';
           </button></h3>
           <div class="meta-area">
             @if (s.description) { <p class="desc">{{ s.description }}</p> }
+            <!-- Metadata as icon lines (as before the redesign): icon + values, left-aligned, one line
+                 each; the label stays for screen readers. Empty lines are left out,
+                 the block keeps the height of three lines so the option bar lines up. -->
             <dl class="rows">
-              <div class="row"><dt class="label">{{ i18n.t('filter.lrt') }}</dt><dd class="value">{{ s.contentTypes.slice(0, 3).join(', ') || '–' }}</dd></div>
-              <div class="row"><dt class="label">{{ i18n.t('filter.subject') }}</dt><dd class="value">{{ s.subjects.slice(0, 4).join(', ') || '–' }}</dd></div>
-              <div class="row"><dt class="label">{{ i18n.t('filter.level') }}</dt><dd class="value">{{ s.educationalContext.slice(0, 4).join(', ') || '–' }}</dd></div>
+              @if (s.contentTypes.length) {
+                <div class="row"><dt class="label"><mat-icon aria-hidden="true">description</mat-icon><span class="sr">{{ i18n.t('filter.lrt') }}</span></dt><dd class="value">{{ s.contentTypes.slice(0, 3).join(', ') }}</dd></div>
+              }
+              @if (s.subjects.length) {
+                <div class="row"><dt class="label"><mat-icon aria-hidden="true">menu_book</mat-icon><span class="sr">{{ i18n.t('filter.subject') }}</span></dt><dd class="value">{{ s.subjects.slice(0, 4).join(', ') }}</dd></div>
+              }
+              @if (s.educationalContext.length) {
+                <div class="row"><dt class="label"><mat-icon aria-hidden="true">school</mat-icon><span class="sr">{{ i18n.t('filter.level') }}</span></dt><dd class="value">{{ s.educationalContext.slice(0, 4).join(', ') }}</dd></div>
+              }
             </dl>
           </div>
           <!-- 5 option bar: quality (left), field profile and source bindings (right) -->
@@ -118,6 +127,7 @@ import { I18n } from './i18n.service';
     .h { margin: 0; font: inherit; }
     .open {
       all: unset; box-sizing: border-box; display: flex; flex-direction: column; cursor: pointer; min-width: 0;
+      width: 100%;   /* a button shrinks to its content: without this narrow previews sat off-centre */
       font: inherit; color: var(--textMain); text-align: left;
     }
     /* Stretched click area: from below the header bar to above the option bar. */
@@ -144,7 +154,7 @@ import { I18n } from './i18n.service';
     .desc { margin: 0; }
     .rows { margin: 0; }
     .row dt { margin: 0; }
-    .row dd { margin: 0 0 0 auto; }
+    .row dd { margin: 0; }
     /* Title: left-aligned, at most two lines (limitLineCount(2, 1.4)), space for two lines reserved. */
     .name {
       font-size: 16px; font-weight: 600; line-height: 1.4; min-height: 2.8em; color: var(--textMain);
@@ -154,11 +164,13 @@ import { I18n } from './i18n.service';
       font-size: 13px; line-height: 1.4; color: var(--textLight);
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
     }
-    /* Metadata rows: label left (85 %, --textLight), value right (max one line here). */
-    .rows { display: flex; flex-direction: column; margin-top: auto; padding-top: 5px; }
-    .row { display: flex; align-items: baseline; gap: 10px; min-height: 2em; font-size: 14px; min-width: 0; }
-    .label { flex-shrink: 0; font-size: 85%; color: var(--textLight); }
-    .value { margin-left: auto; text-align: right; color: var(--textMain); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    /* Metadata lines: icon + values, left-aligned, one line each; room for three lines reserved. */
+    .rows { display: flex; flex-direction: column; gap: 6px; margin-top: auto; padding-top: 6px; min-height: calc(3 * 20px + 2 * 6px); }
+    .row { display: flex; align-items: center; gap: 8px; min-height: 20px; font-size: 13px; min-width: 0; }
+    .label { flex-shrink: 0; display: inline-flex; color: var(--textMediumLight); }
+    .label mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .value { color: var(--textMain); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    .sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
     .foot {
       display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 15px;
