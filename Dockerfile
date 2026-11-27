@@ -14,7 +14,7 @@
 #                      (embedded widget on another origin); needs HTTPS. Empty = same-origin only
 
 # ---- Stage 1: build the Angular SPA -> dist/browser ----
-FROM node:22-slim@sha256:be979e5523c76fa4d5ca4ebd3099078f220aa47ec39c48ad5b5df9314debd6eb AS frontend
+FROM node:26-slim@sha256:abe7e5a82b61a8ef67b315b85497c9e65173387ccf2f4a029248184b8e020be5 AS frontend
 WORKDIR /build
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci

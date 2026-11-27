@@ -20,7 +20,7 @@ Stufen 1 und 2 gar nicht erst im Speicher.
 
 ## Installation
 
-**Lokal ausprobieren** (Python 3.12, Node 22):
+**Lokal ausprobieren** (Python 3.12, Node 22 oder 26):
 
 ```bash
 cd frontend && npm ci && npm run build && npm run build:element && npm run build:widgets && cd ..
