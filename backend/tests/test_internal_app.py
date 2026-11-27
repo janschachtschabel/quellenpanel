@@ -149,6 +149,8 @@ def test_serve_builds_two_servers(monkeypatch):
     assert public.access_log is False and private.access_log is False
     assert public.lifespan == "on" and private.lifespan == "off"
     assert public.proxy_headers is False and private.server_header is False
+    # Leitfaden: running requests get time to finish after SIGTERM (Helm grace period is longer).
+    assert public.timeout_graceful_shutdown == serve.GRACEFUL_SECONDS == 20
 
 
 # --- Zwischenreview Etappe 3 ----------------------------------------------------------------

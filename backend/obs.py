@@ -14,6 +14,7 @@ from __future__ import annotations
 import contextlib
 import contextvars
 import hashlib
+import hmac
 import json
 import logging
 import os
@@ -180,11 +181,23 @@ def outgoing_headers() -> dict[str, str]:
     return h
 
 
+# Per-process key: a plain hash of a short search term could be reversed with a word list.
+_PSEUDONYM_KEY = secrets.token_bytes(32)
+
+_METHODS = frozenset({"GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"})
+
+
 def pseudonym(value: str) -> str:
-    """Stable, non-reversible tag for a search term (first 12 hex of SHA-256); '' stays ''."""
+    """Stable within a process, not reversible: first 12 hex of HMAC-SHA256; '' stays ''."""
     if not value:
         return ""
-    return hashlib.sha256(value.encode("utf-8")).hexdigest()[:12]
+    return hmac.new(_PSEUDONYM_KEY, value.encode("utf-8"), hashlib.sha256).hexdigest()[:12]
+
+
+def method_label(method: str | None) -> str:
+    """Bounded label for logs and metrics: known HTTP methods, everything else is OTHER."""
+    m = (method or "").upper()
+    return m if m in _METHODS else "OTHER"
 
 
 def _route_of(scope) -> str:
@@ -241,7 +254,7 @@ class TraceMiddleware:
                 await _send({"type": "http.response.body", "body": payload})
             finally:
                 q = (parse_qs(scope.get("query_string", b"").decode("latin-1")).get("q") or [""])[0]
-                fields = {"method": scope.get("method"), "route": _route_of(scope),
+                fields = {"method": method_label(scope.get("method")), "route": _route_of(scope),
                           "status": status["code"],
                           "duration_ms": round((time.perf_counter() - start) * 1000, 1)}
                 if q.strip():

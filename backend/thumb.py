@@ -11,6 +11,7 @@ import requests
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 
 import config
+import errors
 import obs
 import ratelimit
 
@@ -18,7 +19,6 @@ router = APIRouter()
 
 _CACHE: dict[str, tuple[bytes, str]] = {}
 _CACHE_BYTES = 0                       # running total of cached image bytes
-_CACHE_MAX_BYTES = 128 * 1024 * 1024   # total cache budget (thousands of real previews; bounds memory)
 _REPO_HOST = (urlparse(config.REPO_URL).hostname or "").lower()
 _MAX_BYTES = 5 * 1024 * 1024           # hard cap per preview image (5 MB)
 
@@ -26,7 +26,7 @@ _MAX_BYTES = 5 * 1024 * 1024           # hard cap per preview image (5 MB)
 @router.get("/api/thumb")
 def thumb(request: Request, url: str = Query(..., description="Preview URL on the configured repository host")):
     if not ratelimit.fetch_rate_ok(request):
-        raise HTTPException(429, "Zu viele Anfragen. Bitte kurz warten.")
+        raise errors.UpstreamError(429, "Zu viele Anfragen. Bitte kurz warten.", int(ratelimit.FETCH_WINDOW))
     parts = urlparse(url)
     host = (parts.hostname or "").lower()
     # HTTPS only, and only the EXACT configured repository host (or a sub-domain of it) — repo-neutral,
@@ -44,6 +44,11 @@ def thumb(request: Request, url: str = Query(..., description="Preview URL on th
             rr = requests.get(url, timeout=8, stream=True, allow_redirects=False,
                               headers=obs.outgoing_headers())
             if 300 <= rr.status_code < 400:
+                raise HTTPException(502, "Vorschau nicht abrufbar.")
+            if rr.status_code == 429:       # the repository rate-limits us: pass its wait time on
+                raise errors.UpstreamError(429, "Repository ausgelastet. Bitte später erneut versuchen.",
+                                           errors.parse_retry_after(rr.headers.get("Retry-After")))
+            if 400 <= rr.status_code < 500:  # refused for good (gone, forbidden): no retry hint
                 raise HTTPException(502, "Vorschau nicht abrufbar.")
             rr.raise_for_status()
             ct = rr.headers.get("Content-Type", "image/jpeg")
@@ -63,14 +68,14 @@ def thumb(request: Request, url: str = Query(..., description="Preview URL on th
             content = bytes(buf)
         except HTTPException:
             raise
-        except Exception:
-            raise HTTPException(502, "Vorschau nicht abrufbar.") from None
+        except Exception:                   # network failure or 5xx: may heal, so say when to retry
+            raise errors.UpstreamError(502, "Vorschau nicht abrufbar.") from None
         finally:
             if rr is not None:
                 rr.close()
         cached = (content, ct)
         global _CACHE_BYTES
-        if _CACHE_BYTES + len(content) <= _CACHE_MAX_BYTES:
+        if _CACHE_BYTES + len(content) <= config.thumb_cache_bytes():   # QE_THUMB_CACHE_MB
             _CACHE[url] = cached
             _CACHE_BYTES += len(content)
     content, ct = cached

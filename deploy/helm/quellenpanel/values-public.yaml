@@ -4,6 +4,8 @@ config:
   role: public
   exportSource: http://quellenpanel-team-internal:9090/internal/exports/stufe{tier}.json
 replicaCount: 2
+networkPolicy:
+  enabled: true
 ingress:
   hosts:
   - quellen.example.de

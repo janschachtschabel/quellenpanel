@@ -23,9 +23,9 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
   antworten Partner und Öffentlich mit 503. Ohne `QE_ROLE` läuft eine Instanz als `team`
   (lokale Entwicklung); im Betrieb die Rolle immer setzen und die Team-Instanz hinter VPN/SSO legen. `QE_PUBLIC_ONLY=1` gilt nur noch als Übergangsname für
   `QE_ROLE=public`.
-- **Zweiter Port 9090** für `/health`, `/ready`, `/metrics` und die Exporte. Nie veröffentlichen;
-  Probes zeigen dorthin. Der alte Healthcheck auf `8080/api/health` funktioniert weiter, ist aber
-  keine Readiness.
+- **Zweiter Port 9090** für `/health`, `/ready`, `/metrics` und die Exporte. Nie veröffentlichen.
+  Liveness und Startup fragen `9090/health`, die Readiness `8080/api/health` (ohne Abhängigkeiten,
+  immer 200; `status: starting`, solange Daten fehlen). `/ready` dient nur dem Monitoring.
 - **Image-Tag `latest` entfällt.** Images heißen nach der Version (`1.0.0`, `1.0`) oder nach
   Branch und Commit. Deployments auf einen Versions-Tag umstellen.
 - **Port-Variable:** `PORT` entfällt, jetzt `QE_PORT` (8080) und `QE_INTERNAL_PORT` (9090);
@@ -34,7 +34,8 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
   jedem Neustart). `QE_TEAM_PASSWORD` und `QE_TIER1_PASSWORD` bleiben; ohne
   `QE_TIER1_PASSWORD` ist Stufe 1 auf dem Partner zu (fail-closed).
 - **Neue Variablen:** `QE_PROFILE` und `QE_PROFILES_DIR` (Repository-Profil, Standard `wlo`),
-  `QE_FRAME_ANCESTORS` (wer die iframe-Widgets einbetten darf), `TRUST_PROXY` (Client-IP aus
+  `QE_FRAME_ANCESTORS` (wer die iframe-Widgets einbetten darf; Helm `config.frameAncestors`),
+  `QE_THUMB_CACHE_MB` (Zwischenspeicher der Vorschaubilder, Standard 16 MiB statt fest 128 MiB), `TRUST_PROXY` (Client-IP aus
   `X-Forwarded-For`, nur hinter einem Proxy, der den Header überschreibt), `LOG_FORMAT`
   (`json`/`text`) und `LOG_LEVEL`. Unverändert: `QE_REPO_URL`, `QE_SEARCH_URL`,
   `QE_ALLOWED_ORIGINS`, `QE_AUTO_REFRESH_HOUR`, `QE_RENAME_UNREP_BQ` (Umbenennung nicht

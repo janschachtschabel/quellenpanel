@@ -126,3 +126,25 @@ def test_uebergabe_nennt_team_isolation_als_betriebsschritt():
     assert "VPN/SSO" in text and "networkPolicy.enabled" in text
     betrieb = (ROOT / "docs/betrieb.md").read_text(encoding="utf-8")
     assert "ohne `qe_role`" in betrieb.lower()
+
+
+def test_gitlab_prueft_version_tag_und_chart_wie_github():
+    import yaml as _yaml
+    gl = _yaml.safe_load((ROOT / ".gitlab-ci.yml").read_text(encoding="utf-8"))
+    script = "\n".join(gl["version check"]["script"])
+    assert "pyproject.toml" in script and "Chart.yaml" in script and "package.json" in script
+    assert "CI_COMMIT_TAG" in script                      # tag = "v" + version
+    helm = gl["helm lint"]
+    assert helm["image"]["name"] == "alpine/helm:3.19.0"
+    assert all(f"values-{r}.yaml" in "\n".join(helm["script"]) for r in ("team", "partner", "public"))
+    assert gl[".helm_base"]["image"]["name"] != "alpine/helm:latest"
+
+
+def test_github_workflows_lesen_nur_und_dependabot_ist_an():
+    import yaml as _yaml
+    for wf in ("ci.yml", "docker-publish.yml"):
+        doc = _yaml.safe_load((ROOT / ".github/workflows" / wf).read_text(encoding="utf-8"))
+        assert doc.get("permissions") == {"contents": "read"}, wf
+    dep = _yaml.safe_load((ROOT / ".github/dependabot.yml").read_text(encoding="utf-8"))
+    ecos = {(u["package-ecosystem"], u["directory"]) for u in dep["updates"]}
+    assert {("pip", "/backend"), ("npm", "/frontend"), ("github-actions", "/"), ("docker", "/")} <= ecos

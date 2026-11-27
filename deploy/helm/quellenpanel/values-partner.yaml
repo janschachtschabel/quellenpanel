@@ -4,6 +4,8 @@
 config:
   role: partner
   exportSource: http://quellenpanel-team-internal:9090/internal/exports/stufe{tier}.json
+networkPolicy:
+  enabled: true
 ingress:
   hosts:
   - steckbrief.example.de

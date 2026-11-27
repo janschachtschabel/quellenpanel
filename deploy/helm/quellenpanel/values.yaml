@@ -134,6 +134,10 @@ config:
   autoRefreshHour: ""
   ## @param config.allowedOrigins Comma-separated origins allowed a credentialed cross-origin team login (embedded widget). Empty ⇒ same-origin only
   allowedOrigins: ""
+  ## @param config.frameAncestors Who may embed the iframe widgets (/embed/…), space-separated CSP sources, e.g. "https://wirlernenonline.de". Empty ⇒ anywhere (team: 'self')
+  frameAncestors: ""
+  ## @param config.thumbCacheMB Memory budget of the preview-image cache in MiB (0 = off); counts toward the memory limit
+  thumbCacheMB: 16
   ## @param config.trustProxy Take the client IP from X-Forwarded-For (rightmost entry). Only behind an ingress that OVERWRITES the header (ingress-nginx default)
   trustProxy: true
   ## @param config.repoUrl edu-sharing repository base — all live queries + the thumbnail proxy
@@ -164,10 +168,14 @@ persistence:
 
 ## @section Network policy
 networkPolicy:
-  ## @param networkPolicy.enabled Restrict ingress: 8080 from anywhere, 9090 only from quellenpanel pods and the monitoring namespace
+  ## @param networkPolicy.enabled Restrict traffic: in 8080 (see ingressNamespace), 9090 only from quellenpanel pods and monitoring; out DNS, HTTPS 443, partner/public also team:9090
   enabled: false
   ## @param networkPolicy.monitoringNamespace Namespace of Prometheus (allowed to scrape 9090)
   monitoringNamespace: monitoring
+  ## @param networkPolicy.ingressNamespace Namespace of the ingress controller; if set, only it reaches 8080 (empty = from anywhere)
+  ingressNamespace: ""
+  ## @param networkPolicy.extraEgress Additional egress rules (NetworkPolicy egress entries), e.g. an HTTP export source on another port
+  extraEgress: []
 
 ########################################################################################################################
 
@@ -219,8 +227,10 @@ securityContext:
 
 ########################################################################################################################
 
-## @param terminationGracePeriod Grace period for termination in seconds
+## @param terminationGracePeriod Grace period for termination in seconds (> preStopSleepSeconds + 20 s uvicorn)
 terminationGracePeriod: 30
+## @param preStopSleepSeconds Pause before SIGTERM so the pod leaves the Service first (0 = off)
+preStopSleepSeconds: 5
 
 startupProbe:
   ## @param startupProbe.failureThreshold Failure threshold for startupProbe (liveness of the process only; data may still be building)

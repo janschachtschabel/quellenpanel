@@ -11,6 +11,8 @@ data:
   LOG_LEVEL: {{ .Values.log.level | quote }}
   TRUST_PROXY: {{ ternary "1" "" .Values.config.trustProxy | quote }}
   QE_ALLOWED_ORIGINS: {{ .Values.config.allowedOrigins | quote }}
+  QE_FRAME_ANCESTORS: {{ .Values.config.frameAncestors | quote }}
+  QE_THUMB_CACHE_MB: {{ .Values.config.thumbCacheMB | quote }}
   {{- if eq .Values.config.role "team" }}
   QE_SEED_URL: {{ .Values.config.seedUrl | quote }}
   QE_AUTO_REFRESH_HOUR: {{ .Values.config.autoRefreshHour | quote }}

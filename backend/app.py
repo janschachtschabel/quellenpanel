@@ -178,7 +178,7 @@ def _export(tier: int) -> dict:
     """The export every response below tier 2 is answered from."""
     doc = export_store.current(tier)
     if doc is None:
-        raise HTTPException(503, "Daten werden geladen")
+        raise errors.UpstreamError(503, "Daten werden geladen", 60)
     return doc
 
 
@@ -191,8 +191,10 @@ def health():
     if role == "team":
         return {"status": "ok", "records": len(_DATA["records"])}
     docs = [export_store.current(t) for t in _role_tiers(role)]
-    if any(d is None for d in docs):        # ready only with EVERY tier of the role (0 carries most traffic)
-        return JSONResponse({"status": "starting", "role": role}, status_code=503)
+    # "ok" only with EVERY tier of the role (0 carries most traffic). Always 200: this is the readiness
+    # probe, which must not depend on the export (Leitfaden); data routes answer 503 + Retry-After.
+    if any(d is None for d in docs):
+        return {"status": "starting", "role": role}
     return {"status": "ok", "records": len(docs[0]["items"]), "role": role}
 
 
@@ -324,7 +326,7 @@ def source_contents(request: Request, source_id: str, max_items: int = Query(12,
     """Live example content of a source (NGSearch) — public, all tiers. Crawlers are matched by
     the replication-source property (the spider), other sources by the publisher property."""
     if not ratelimit.fetch_rate_ok(request):
-        raise HTTPException(429, "Zu viele Anfragen. Bitte kurz warten.")
+        raise errors.UpstreamError(429, "Zu viele Anfragen. Bitte kurz warten.", int(ratelimit.FETCH_WINDOW))
     f = repo_profile.get().felder
     r = _DATA["byId"].get(source_id)
     if r:                                   # team instance: full record (incl. hidden ones)
@@ -347,6 +349,8 @@ def source_contents(request: Request, source_id: str, max_items: int = Query(12,
         if exc.code == 429:                 # the repository rate-limits us: pass its wait time on
             raise errors.UpstreamError(429, "Repository ausgelastet. Bitte später erneut versuchen.",
                                        errors.parse_retry_after((exc.headers or {}).get("Retry-After"))) from None
+        if 400 <= exc.code < 500:           # our request was refused: waiting will not help
+            raise HTTPException(502, _UPSTREAM_MSG) from None
         raise errors.UpstreamError(502, _UPSTREAM_MSG) from None
     except Exception:  # noqa: BLE001 — live API is best-effort; never 500 the detail
         raise errors.UpstreamError(502, _UPSTREAM_MSG) from None
@@ -391,7 +395,8 @@ def auth(request: Request, response: Response, x_team_password: str | None = Hea
     fails = [t for t in _LOGIN_FAILS.get(ip, []) if now - t < _LOGIN_WINDOW]
     if len(fails) >= _LOGIN_MAX_FAILS:
         _LOGIN_FAILS[ip] = fails
-        raise HTTPException(429, "Zu viele Fehlversuche. Bitte später erneut versuchen.")
+        retry = max(1, int(_LOGIN_WINDOW - (now - fails[0])) + 1)
+        raise errors.UpstreamError(429, "Zu viele Fehlversuche. Bitte später erneut versuchen.", retry)
     if config.role() != "team" or not config.check_pw(None, x_team_password):
         fails.append(now)
         _LOGIN_FAILS[ip] = fails

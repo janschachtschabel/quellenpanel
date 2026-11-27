@@ -142,6 +142,12 @@ def export_poll_minutes() -> int:
     return int(raw) if raw.isdigit() else 10
 
 
+def thumb_cache_bytes() -> int:
+    """Memory budget of the preview-image cache (QE_THUMB_CACHE_MB, default 16, 0 = off)."""
+    raw = os.environ.get("QE_THUMB_CACHE_MB", "").strip()
+    return (int(raw) if raw.isdigit() else 16) * 1024 * 1024
+
+
 def seed_url() -> str:
     """QE_SEED_URL: base URL holding crawler.csv, korrekturen.csv and optionally truth.json."""
     return os.environ.get("QE_SEED_URL", "").strip()

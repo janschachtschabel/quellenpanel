@@ -77,18 +77,26 @@ spec:
           timeoutSeconds: {{ .timeoutSeconds }}
         {{- end }}
         {{- with .Values.readinessProbe }}
-        # Team: /health, so the single team pod stays in its Service while it builds its data (users
-        # get the JSON 503 "Daten werden aufgebaut", the team can log in and start a rebuild).
-        # Partner/public: /ready, so a replica without its export receives no traffic.
+        # Leitfaden: readiness without dependencies, on the PUBLIC port, so a pod with a broken API
+        # listener leaves the rotation. A pod without data stays in its Service and answers the data
+        # routes with JSON 503 + Retry-After (the team can still log in and start a rebuild).
         readinessProbe:
           httpGet:
-            path: {{ if eq $.Values.config.role "team" }}/health{{ else }}/ready{{ end }}
-            port: internal
+            path: /api/health
+            port: http
           failureThreshold: {{ .failureThreshold }}
           initialDelaySeconds: {{ .initialDelaySeconds }}
           periodSeconds: {{ .periodSeconds }}
           successThreshold: {{ .successThreshold }}
           timeoutSeconds: {{ .timeoutSeconds }}
+        {{- end }}
+        # Clean shutdown: the pause lets the endpoints controller take the pod out of the Service
+        # before SIGTERM; uvicorn then gives running requests 20 s (serve.GRACEFUL_SECONDS).
+        {{- if .Values.preStopSleepSeconds }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "{{ .Values.preStopSleepSeconds }}"]
         {{- end }}
         {{- with .Values.resources }}
         resources: {{ toYaml . | nindent 10 }}

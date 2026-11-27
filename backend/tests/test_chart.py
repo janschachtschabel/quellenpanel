@@ -76,11 +76,20 @@ def test_alert_rules_present():
     assert (CHART / "tests" / "rules-test.yaml").is_file()
 
 
-def test_team_readiness_keeps_pod_reachable_while_building():
-    # A team without data must stay in its Service, or nobody can reach login/refresh/503 answer.
+def test_readiness_has_no_dependencies_and_checks_public_listener():
+    # Leitfaden: readiness without dependencies (never /ready), on the public port, so a pod with a
+    # broken API listener leaves the rotation while a pod without data still answers 503 + Retry-After.
     dep = (CHART / "templates" / "deployment.yaml").read_text(encoding="utf-8")
-    assert re.search(r'readinessProbe:\s*\n\s*httpGet:\s*\n\s*path: \{\{ if eq \$\.Values\.config\.role "team" \}\}/health'
-                     r'\{\{ else \}\}/ready\{\{ end \}\}', dep)
+    assert re.search(r'readinessProbe:\s*\n\s*httpGet:\s*\n\s*path: /api/health\s*\n\s*port: http', dep)
+    assert "/ready" not in dep
+
+
+def test_clean_shutdown_prestop_and_grace():
+    import serve
+    dep = (CHART / "templates" / "deployment.yaml").read_text(encoding="utf-8")
+    v = yaml.safe_load((CHART / "values.yaml").read_text(encoding="utf-8"))
+    assert "preStop" in dep and "preStopSleepSeconds" in dep
+    assert v["terminationGracePeriod"] > v["preStopSleepSeconds"] + serve.GRACEFUL_SECONDS
 
 
 def test_no_data_alert():
@@ -109,3 +118,25 @@ def test_values_resources_match_messung():
         zellen = [z.strip().strip("`") for z in zeile.group(1).split("|")[:4]]
         assert zellen == [str(v["requests"]["cpu"]), str(v["requests"]["memory"]),
                           str(v["limits"]["cpu"]), str(v["limits"]["memory"])], rolle
+
+
+def test_networkpolicy_restricts_egress_and_optionally_ingress_source():
+    # Leitfaden: Netzwerkpartner benennen und Verkehr in beide Richtungen begrenzen.
+    np = (CHART / "templates" / "networkpolicy.yaml").read_text(encoding="utf-8")
+    assert "- Egress" in np
+    assert "port: 53" in np and "port: 443" in np                      # DNS, repository/vocabs over HTTPS
+    assert 'ne .Values.config.role "team"' in np and "port: 9090" in np  # partner/public → team exports
+    assert "ingressNamespace" in np and "extraEgress" in np
+    v = yaml.safe_load((CHART / "values.yaml").read_text(encoding="utf-8"))["networkPolicy"]
+    assert v["ingressNamespace"] == "" and v["extraEgress"] == []
+    for role in ("team", "partner", "public"):
+        rv = yaml.safe_load((CHART / f"values-{role}.yaml").read_text(encoding="utf-8"))
+        assert rv["networkPolicy"]["enabled"] is True, role
+
+
+def test_configmap_sets_thumb_cache_and_frame_ancestors():
+    cm = (CHART / "templates" / "configmap-env.yaml").read_text(encoding="utf-8")
+    assert "QE_THUMB_CACHE_MB: {{ .Values.config.thumbCacheMB | quote }}" in cm
+    assert "QE_FRAME_ANCESTORS: {{ .Values.config.frameAncestors | quote }}" in cm
+    v = yaml.safe_load((CHART / "values.yaml").read_text(encoding="utf-8"))["config"]
+    assert v["thumbCacheMB"] == 16 and v["frameAncestors"] == ""

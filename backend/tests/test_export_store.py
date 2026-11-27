@@ -187,13 +187,17 @@ def test_partner_app_has_tier1_with_password(export_files, monkeypatch):
         assert "ki" in c.get(f"/api/sources/{sid}?tier=1", headers={"X-Tier1-Password": "p"}).json()
 
 
-def test_public_health_503_without_export(export_files, monkeypatch):
+def test_public_without_export_stays_reachable_and_says_retry(export_files, monkeypatch):
+    # Leitfaden: readiness without dependencies. The pod stays in rotation and answers the data
+    # routes with 503 + Retry-After instead of vanishing from the Service.
     monkeypatch.setenv("QE_ROLE", "public")
     monkeypatch.setenv("QE_EXPORT_SOURCE", str(export_files / "fehlt-stufe{tier}.json"))
     with TestClient(app_module.app) as c:
         r = c.get("/api/health")
-        assert r.status_code == 503 and r.json()["status"] == "starting"
-        assert c.get("/api/sources").status_code == 503
+        assert r.status_code == 200 and r.json()["status"] == "starting"
+        s = c.get("/api/sources")
+        assert s.status_code == 503
+        assert s.headers["Retry-After"] == "60" and s.json()["retryAfter"] == 60
 
 
 def test_partner_without_source_builds_from_truth(export_files, monkeypatch, caplog):
@@ -211,13 +215,14 @@ def test_export_source_doc_is_valid_json(export_files):
 
 
 # --- Abschlussreview Etappe 2 ---------------------------------------------------------------
-def test_partner_health_503_when_tier0_missing(export_files, monkeypatch):
-    # Health darf erst „bereit“ melden, wenn ALLE Stufen der Rolle geladen sind.
+def test_partner_health_starting_when_tier0_missing(export_files, monkeypatch):
+    # Health meldet erst „ok“, wenn ALLE Stufen der Rolle geladen sind (sonst „starting“, Status 200).
     (export_files / "stufe0.json").unlink()
     monkeypatch.setenv("QE_ROLE", "partner")
     with TestClient(app_module.app) as c:
         assert export_store.current(1) is not None and export_store.current(0) is None
-        assert c.get("/api/health").status_code == 503
+        r = c.get("/api/health")
+        assert r.status_code == 200 and r.json()["status"] == "starting"
 
 
 def test_index_built_on_publish_readers_do_not_mutate(export_files):

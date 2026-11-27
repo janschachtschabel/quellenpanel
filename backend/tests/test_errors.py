@@ -106,3 +106,110 @@ def test_openapi_per_role(client, monkeypatch):
         assert team_only not in paths, team_only
     assert "/api/sources" in paths
     assert not any(p.startswith("/internal") for p in paths)
+
+
+def test_upstream_4xx_is_not_retryable(client, monkeypatch):
+    # A 4xx from the repository will not heal by waiting: 502 without a retry hint.
+    def bad(*a, **k):
+        raise urllib.error.HTTPError("https://x", 400, "Bad Request", {}, None)
+
+    monkeypatch.setattr(wlo_content, "fetch_contents", bad)
+    r = client.get(f"/api/sources/{_crawler_id()}/contents")
+    assert r.status_code == 502
+    assert "Retry-After" not in r.headers and "retryAfter" not in r.json()
+
+
+def test_upstream_5xx_is_retryable(client, monkeypatch):
+    def down(*a, **k):
+        raise urllib.error.HTTPError("https://x", 503, "Unavailable", {}, None)
+
+    monkeypatch.setattr(wlo_content, "fetch_contents", down)
+    r = client.get(f"/api/sources/{_crawler_id()}/contents")
+    assert r.status_code == 502 and r.headers["Retry-After"] == "30"
+
+
+def test_own_rate_limit_sends_retry_after(client, monkeypatch):
+    import ratelimit
+    ratelimit.FETCH_HITS.clear()
+    monkeypatch.setattr(ratelimit, "FETCH_MAX", 0)
+    try:
+        for path in (f"/api/sources/{_crawler_id()}/contents", "/api/thumb?url=https://evil.example/x.jpg"):
+            r = client.get(path)
+            assert r.status_code == 429, path
+            assert int(r.headers["Retry-After"]) > 0 and r.json()["retryAfter"] > 0
+    finally:
+        ratelimit.FETCH_HITS.clear()
+
+
+def test_login_throttle_sends_retry_after(client):
+    app_module._LOGIN_FAILS.clear()
+    try:
+        for _ in range(8):
+            client.post("/api/auth", headers={"X-Team-Password": "falsch"})
+        r = client.post("/api/auth", headers={"X-Team-Password": "falsch"})
+        assert r.status_code == 429 and int(r.headers["Retry-After"]) > 0
+    finally:
+        app_module._LOGIN_FAILS.clear()
+
+
+def test_thumb_upstream_errors_follow_error_classes(client, monkeypatch):
+    import config
+    import thumb
+
+    class R:
+        def __init__(self, code, headers=None):
+            self.status_code, self.headers = code, headers or {}
+
+        def raise_for_status(self):
+            import requests
+            if self.status_code >= 400:
+                raise requests.HTTPError(response=self)
+
+        def close(self):
+            pass
+
+    url = f"/api/thumb?url={config.REPO_URL}/edu-sharing/p.jpg"
+    for code, retry in ((404, None), (503, "30"), (429, "90")):
+        monkeypatch.setattr(thumb.requests, "get",
+                            lambda *a, _c=code, **k: R(_c, {"Retry-After": "90"} if _c == 429 else {}))
+        r = client.get(url)
+        assert r.status_code == (429 if code == 429 else 502), code
+        assert r.headers.get("Retry-After") == retry, code
+    monkeypatch.setattr(thumb.requests, "get", lambda *a, **k: (_ for _ in ()).throw(OSError("down")))
+    r = client.get(url)
+    assert r.status_code == 502 and r.headers["Retry-After"] == "30"
+
+
+def test_thumb_cache_budget_from_env(monkeypatch):
+    import config
+    monkeypatch.delenv("QE_THUMB_CACHE_MB", raising=False)
+    assert config.thumb_cache_bytes() == 16 * 1024 * 1024     # fits the small public/partner pods
+    monkeypatch.setenv("QE_THUMB_CACHE_MB", "64")
+    assert config.thumb_cache_bytes() == 64 * 1024 * 1024
+    monkeypatch.setenv("QE_THUMB_CACHE_MB", "0")
+    assert config.thumb_cache_bytes() == 0                    # 0 switches the cache off
+    monkeypatch.setenv("QE_THUMB_CACHE_MB", "viel")
+    assert config.thumb_cache_bytes() == 16 * 1024 * 1024
+
+
+def test_thumb_respects_cache_budget(client, monkeypatch):
+    import config
+    import thumb
+
+    class R:
+        status_code, headers = 200, {"Content-Type": "image/png"}
+
+        def raise_for_status(self):
+            pass
+
+        def iter_content(self, n):
+            yield b"x" * 100
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(thumb.requests, "get", lambda *a, **k: R())
+    monkeypatch.setenv("QE_THUMB_CACHE_MB", "0")
+    thumb._CACHE.clear()
+    assert client.get(f"/api/thumb?url={config.REPO_URL}/edu-sharing/q.png").status_code == 200
+    assert thumb._CACHE == {}

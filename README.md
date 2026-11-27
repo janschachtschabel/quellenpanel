@@ -181,6 +181,7 @@ App (`/?kopf=aus&ansicht=liste`). Alle Elemente, Attribute und Farben:
 | `QE_AUTO_REFRESH_HOUR` | leer (aus) | Team: Stunde des nächtlichen Abgleichs |
 | `QE_ALLOWED_ORIGINS` | leer | Origins für Team-Login aus eingebetteten Seiten |
 | `QE_FRAME_ANCESTORS` | `*` (Team: `'self'`) | wer die iframe-Widgets einbetten darf |
+| `QE_THUMB_CACHE_MB` | `16` | Zwischenspeicher für Vorschaubilder in MiB (`0` = aus) |
 | `QE_REPO_URL`, `QE_SEARCH_URL` | aus dem Profil | Repository und Suche |
 | `QE_PROFILE`, `QE_PROFILES_DIR` | `wlo`, `profiles/` | Repository-Profil |
 | `QE_DATA_DIR` | `backend/data` (Image: `/data`) | Datenverzeichnis |

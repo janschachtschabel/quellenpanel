@@ -33,16 +33,23 @@ Fehlern den letzten gültigen Stand, auch als Kopie in `/tmp`.
 - **Liveness/Startup:** `/health` ist 200, solange der Prozess lebt. Der Body zeigt Rolle, Version,
   Datenstand (`data.state` = `ready` / `building` / `missing`, `generatedAt`, `ageSeconds`) und den
   Rebuild (`rebuild`, mit `rebuild.last` aus `$QE_DATA_DIR/status.json`).
-- **Readiness:** `/ready` ist 200, sobald die Daten der Rolle im Speicher sind (Team: Datensätze;
-  sonst alle Exporte der Rolle). Zusätzlich meldet `source.ok`, ob Repository bzw. Export-Quelle
-  erreichbar sind. Diese Prüfung läuft höchstens alle 30 s und ändert den Status-Code nicht.
-  Im Helm-Chart nutzt die **Team-Instanz** `/health` als Readiness-Probe: Der einzelne Team-Pod
-  bleibt so auch ohne Daten im Service, damit Nutzer die JSON-Antwort „Daten werden aufgebaut“
-  sehen und das Team sich anmelden und „Daten aktualisieren“ auslösen kann. Partner und Öffentlich
-  nutzen `/ready`.
-- **SIGTERM:** `serve.py` beendet beide Server; der Lifespan läuft zu Ende. Läuft gerade ein Rebuild,
-  steht danach `status: "abgebrochen"` in `status.json`. Endet ein Server unerwartet (Port belegt,
-  Start fehlgeschlagen), endet der Prozess mit Exit-Code ≠ 0.
+- **Readiness-Probe (alle Rollen):** `GET /api/health` auf dem öffentlichen Port 8080. Sie hängt an
+  nichts außer dem eigenen Prozess (Leitfaden: Readiness ohne Abhängigkeiten) und ist immer 200;
+  `status` ist `ok` oder, solange Daten oder Exporte fehlen, `starting`. Ein Pod mit kaputtem
+  öffentlichem Listener fällt so aus der Rotation. Ein Pod ohne Daten bleibt im Service und antwortet
+  auf Datenrouten mit 503 und `Retry-After` (Team: „Daten werden aufgebaut“, `Retry-After: 60`;
+  Partner/Öffentlich ohne Export: „Daten werden geladen“, `Retry-After: 60`), statt zu verschwinden.
+- **`/ready` (nur Monitoring):** 200, sobald die Daten der Rolle im Speicher sind (Team: Datensätze;
+  sonst alle Exporte der Rolle), sonst 503. `source.ok` meldet, ob Repository bzw. Export-Quelle
+  erreichbar sind; diese Prüfung läuft höchstens alle 30 s. `/ready` ist bewusst **keine**
+  Kubernetes-Probe.
+- **Sauberes Beenden:** Kubernetes ruft zuerst den `preStop`-Haken (`sleep 5`, Wert
+  `preStopSleepSeconds`), damit der Pod aus dem Service genommen ist, bevor SIGTERM kommt. Dann
+  beendet `serve.py` beide Server: neue Verbindungen werden abgelehnt, laufende Anfragen haben 20 s
+  (`timeout_graceful_shutdown`), danach läuft der Lifespan zu Ende. `terminationGracePeriod` (30 s)
+  liegt darüber. Läuft gerade ein Rebuild, steht danach `status: "abgebrochen"` in `status.json`.
+  Endet ein Server unerwartet (Port belegt, Start fehlgeschlagen), endet der Prozess mit Exit-Code ≠ 0.
+  Compose wartet beim Stoppen 10 s (Docker-Standard); `stop_grace_period` kann das verlängern.
 
 ## Erststart, Seed, Daten-Updates
 
@@ -55,7 +62,7 @@ Fehlern den letzten gültigen Stand, auch als Kopie in `/tmp`.
   kaputte `truth.json` wird nach `truth.json.kaputt-<zeit>` verschoben, dann startet der Aufbau. Fehlt `truth.json`
   danach noch, startet der Datenaufbau im Hintergrund. Bis er fertig ist, antworten alle Datenrouten
   mit 503 `{"error": "service_unavailable", "message": "Daten werden aufgebaut", "retryAfter": 60}`
-  und `Retry-After: 60`. `/health` ist 200 (`data.state = building`), `/ready` 503. Schlägt der Aufbau
+  und `Retry-After: 60`. `/health` und `/api/health` sind 200 (`data.state = building` bzw. `status: starting`), `/ready` 503. Schlägt der Aufbau
   fehl, bleibt der Status unter `/health` → `rebuild.last` lesbar. **Wiederherstellung:** Ursache
   beheben (Netz, `QE_SEED_URL`), dann als Team anmelden und „Daten aktualisieren“ drücken, oder den
   Pod neu starten. Ohne Eingriff versucht es erst der nächste nächtliche Lauf; nach 6 h ohne Daten
@@ -129,7 +136,7 @@ Regeln sind mit `promtool test rules deploy/helm/quellenpanel/tests/rules-test.y
   schaltet auf Klartext, `LOG_LEVEL` (Standard `INFO`) regelt die Menge.
 - **Eine Zeile je Anfrage** (`message: "request"`): `method`, `route` (Routenvorlage, z. B.
   `/api/sources/{source_id:path}`; unbekannte Pfade `<unmatched>`, statische Dateien `<static>`),
-  `status`, `duration_ms`, bei Suchanfragen `q_pseudonym` (die ersten 12 Hex-Zeichen von SHA-256).
+  `status`, `duration_ms`, bei Suchanfragen `q_pseudonym` (die ersten 12 Hex-Zeichen eines HMAC-SHA256 mit einem Schlüssel je Prozess: innerhalb eines Laufs vergleichbar, nicht per Wortliste umkehrbar).
   Der uvicorn-Access-Log ist aus.
 - **Nie im Log:** Passwort-Header, Session-Cookie, Pfade mit IDs, Query-Strings, Suchbegriffe im
   Klartext. Ein Test prüft das auch für 404 und 500.
@@ -156,6 +163,7 @@ Regeln sind mit `promtool test rules deploy/helm/quellenpanel/tests/rules-test.y
 | `QE_REPO_URL`, `QE_SEARCH_URL` | alle | | Repository und öffentliche Suche (Links); Standard aus dem Profil |
 | `QE_PROFILE`, `QE_PROFILES_DIR` | alle | | Repository-Profil (Standard `wlo`) und sein Verzeichnis (Standard `profiles/`) |
 | `QE_FRAME_ANCESTORS` | alle | | wer die iframe-Widgets (`/embed/…`) einbetten darf; leer = überall, auf dem Team nur `'self'` |
+| `QE_THUMB_CACHE_MB` | alle | | Speicher für zwischengespeicherte Vorschaubilder (PDF-Export) in MiB, Standard 16, `0` = aus; zählt zum Speicherlimit |
 | `QE_PUBLIC_ONLY` | | | Übergangsname: `1` entspricht `QE_ROLE=public` |
 | `QE_RENAME_UNREP_BQ` | team | | `0` schaltet die Umbenennung nicht repräsentierter Bezugsquellen beim Datenaufbau ab |
 | `QE_DATA_DIR` | alle | | Datenverzeichnis (Image: `/data`) |

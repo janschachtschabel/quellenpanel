@@ -196,3 +196,23 @@ def test_413_and_preflight_carry_trace(client, caplog):
     p = client.options("/api/sources", headers={"Origin": "https://x.example"})
     assert p.status_code == 204 and "X-B3-TraceId" in p.headers
     assert len(_request_lines(caplog)) == 2
+
+
+def test_pseudonym_is_keyed_not_plain_sha256():
+    import hashlib
+    # A plain hash of a short search term can be reversed by trying a word list.
+    assert obs.pseudonym("Geheimwort") != hashlib.sha256(b"Geheimwort").hexdigest()[:12]
+
+
+def test_method_label_is_bounded():
+    assert obs.method_label("GET") == "GET"
+    assert obs.method_label("delete") == "DELETE"
+    assert obs.method_label("FOOBAR") == "OTHER"
+    assert obs.method_label(None) == "OTHER"
+
+
+def test_unknown_method_does_not_create_new_metric_series(client):
+    client.request("XYZZY", "/api/health")
+    labels = {s.labels.get("method") for m in obs.REGISTRY.collect() if m.name == "http_requests"
+              for s in m.samples}
+    assert "XYZZY" not in labels

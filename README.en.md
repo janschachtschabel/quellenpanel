@@ -182,6 +182,7 @@ view, `hintergrund` = background, `farbe` = colour; `aus` = off). The same works
 | `QE_AUTO_REFRESH_HOUR` | empty (off) | team: hour of the nightly refresh |
 | `QE_ALLOWED_ORIGINS` | empty | origins allowed a team login from embedded pages |
 | `QE_FRAME_ANCESTORS` | `*` (team: `'self'`) | who may embed the iframe widgets |
+| `QE_THUMB_CACHE_MB` | `16` | preview image cache in MiB (`0` = off) |
 | `QE_REPO_URL`, `QE_SEARCH_URL` | from the profile | repository and search |
 | `QE_PROFILE`, `QE_PROFILES_DIR` | `wlo`, `profiles/` | repository profile |
 | `QE_DATA_DIR` | `backend/data` (image: `/data`) | data directory |

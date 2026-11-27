@@ -9,11 +9,18 @@ spec:
     matchLabels: {{ include "quellenpanel.selectorLabels" . | nindent 6 }}
   policyTypes:
   - Ingress
+  - Egress
   ingress:
-  # API + SPA: from anywhere (the ingress controller).
+  # API + SPA: from the ingress controller's namespace if set, otherwise from anywhere.
   - ports:
     - port: 8080
       protocol: TCP
+    {{- with .Values.networkPolicy.ingressNamespace }}
+    from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: {{ . | quote }}
+    {{- end }}
   # Internal port: only quellenpanel pods (export fetch) and the monitoring namespace (scrape).
   - from:
     - podSelector:
@@ -25,4 +32,29 @@ spec:
     ports:
     - port: 9090
       protocol: TCP
+  egress:
+  # DNS.
+  - ports:
+    - port: 53
+      protocol: UDP
+    - port: 53
+      protocol: TCP
+  # HTTPS: repository (search, previews, rebuild), vocabs.openeduhub.de, QE_SEED_URL, an external
+  # export source. Their addresses are not fixed, so the port is the boundary.
+  - ports:
+    - port: 443
+      protocol: TCP
+  {{- if ne .Values.config.role "team" }}
+  # Partner/public: the team's internal port (exports).
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: {{ include "quellenpanel.name" . }}
+    ports:
+    - port: 9090
+      protocol: TCP
+  {{- end }}
+  {{- with .Values.networkPolicy.extraEgress }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
 {{- end }}

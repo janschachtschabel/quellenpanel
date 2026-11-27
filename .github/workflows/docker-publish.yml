@@ -10,6 +10,10 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+# Read-only token: the image goes to Docker Hub with its own secrets, nothing writes to the repository.
+permissions:
+  contents: read
+
 jobs:
   # All quality gates (lint, tests, audits, chart, version, tag = "v" + version) — see ci.yml.
   ci:
