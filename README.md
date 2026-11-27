@@ -198,8 +198,8 @@ The repo is kept in **two remotes** and each has its own, self-contained CI:
 
 - **GitHub** — `.github/workflows/docker-publish.yml`: runs the backend + frontend tests and
   dependency audits, then builds and pushes the image to **Docker Hub** (needs `DOCKERHUB_USERNAME`
-  / `DOCKERHUB_TOKEN` secrets; tags `latest` on `main`, plus branch / short-SHA / SemVer for `v*`
-  tags). Skips the build cleanly (pipeline stays green) when the secrets are absent.
+  / `DOCKERHUB_TOKEN` secrets; tags branch / short-SHA, and SemVer `1.0.0` / `1.0` for `v*` tags; never
+  `latest`). Skips the build cleanly (pipeline stays green) when the secrets are absent.
 - **GitLab** — `.gitlab-ci.yml`: ruff lint → tests + audits → build & push the image to a
   self-hosted registry → package & push the **Helm chart**. All registry/chart credentials come
   from GitLab CI/CD variables (`DOCKER_REGISTRY`, `HELM_REGISTRY`, …); the build/deploy stages skip

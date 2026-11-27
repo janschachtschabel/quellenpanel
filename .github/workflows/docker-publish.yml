@@ -59,7 +59,10 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/quellenpanel
-          # Release images carry the version (tag v0.3.0 → 0.3.0 and 0.3); main → main + sha.
+          # Release images carry the version (tag v1.0.0 → 1.0.0 and 1.0); main → main + sha. Never `latest`
+          # (metadata-action would add it to semver tags by default).
+          flavor: |
+            latest=false
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}

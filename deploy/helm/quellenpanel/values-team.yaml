@@ -8,13 +8,16 @@ config:
   seedUrl: ""
 persistence:
   size: 2Gi
+# Port 9090 (exports, metrics) only from quellenpanel pods and monitoring — on for the data owner.
+networkPolicy:
+  enabled: true
 ingress:
   annotations:
     # Team uploads (crawler table, correction import) up to 5 MB; the API caps them at 5 MB.
     nginx.ingress.kubernetes.io/proxy-body-size: "6m"
   hosts:
   - quellenpanel-team.intern.example.de
-resources:   # gemessen, siehe docs/messung.md (Limit ≈ Spitze + 25 %)
+resources:   # gemessen, siehe docs/messung.md (Limit mit Reserve für den noch nicht gemessenen Live-Abruf)
   requests:
     cpu: 100m
     memory: 448Mi

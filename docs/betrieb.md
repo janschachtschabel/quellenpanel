@@ -15,6 +15,10 @@ Ein Image, drei Instanzen (`QE_ROLE`):
 | `partner` | 1 (Steckbrief, Passwort) | nur Export Stufe 0/1, vom Team geholt | zustandslos, beliebig |
 | `public` | 0 (Quellenliste, Widgets) | nur Export Stufe 0, vom Team geholt | zustandslos, beliebig |
 
+Ohne `QE_ROLE` (und ohne `QE_PUBLIC_ONLY`) läuft eine Instanz als `team`; das ist für die lokale
+Entwicklung gedacht. Das Helm-Chart setzt immer eine Rolle (Standard `public`), Compose ebenfalls.
+Eine Team-Instanz gehört hinter VPN/SSO: Dort ist Stufe 1 ohne Passwort offen.
+
 Partner und Öffentlich halten nie die internen Daten. Sie holen `stufe{tier}.json` vom internen Port
 des Teams (ETag, alle `QE_EXPORT_POLL_MINUTES`, solange ein Export fehlt alle 15 s) und behalten bei
 Fehlern den letzten gültigen Stand, auch als Kopie in `/tmp`.

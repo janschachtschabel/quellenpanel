@@ -18,8 +18,10 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
   antworten Datenrouten mit 503 „Daten werden aufgebaut“. Volume vor dem ersten Start anlegen
   (Helm: PVC 2 Gi, nur bei `role: team`).
 - **Drei Instanzen statt einer.** `QE_ROLE` = `team`, `partner` oder `public`. Partner und
-  Öffentlich holen ihren Export von `QE_EXPORT_SOURCE` (Standard: Team-Port 9090) alle
-  `QE_EXPORT_POLL_MINUTES`. `QE_PUBLIC_ONLY=1` gilt nur noch als Übergangsname für
+  Öffentlich holen ihren Export von `QE_EXPORT_SOURCE` alle `QE_EXPORT_POLL_MINUTES`. Die
+  Variable hat im Code keinen Standard (Helm und Compose setzen den Team-Port 9090); ohne sie
+  antworten Partner und Öffentlich mit 503. Ohne `QE_ROLE` läuft eine Instanz als `team`
+  (lokale Entwicklung); im Betrieb die Rolle immer setzen und die Team-Instanz hinter VPN/SSO legen. `QE_PUBLIC_ONLY=1` gilt nur noch als Übergangsname für
   `QE_ROLE=public`.
 - **Zweiter Port 9090** für `/health`, `/ready`, `/metrics` und die Exporte. Nie veröffentlichen;
   Probes zeigen dorthin. Der alte Healthcheck auf `8080/api/health` funktioniert weiter, ist aber
@@ -39,8 +41,11 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
   repräsentierter Bezugsquellen, `0` = aus).
 - **Ressourcen** je Rolle stehen gemessen in den Helm-Values (`docs/messung.md`); das Team-Limit
   nach der ersten Messung des Live-Abrufs im Cluster prüfen.
-- **Container laufen read-only** als uid 10001 mit beschreibbarem `/tmp` (tmpfs); nur das Team
-  schreibt nach `/data`.
+- **Container laufen read-only** als uid 10001 mit beschreibbarem `/tmp` (Compose: tmpfs, Helm:
+  `emptyDir`); nur das Team schreibt nach `/data`.
+- **Image-Tags je Pipeline:** GitHub → Docker Hub `1.0.0`/`1.0`; GitLab → `docker.edu-sharing.com`
+  `1.0.0` und `v1.0.0`, Chart `quellenpanel` 1.0.0 (früher `edu_sharing-projects-wlo-quellenpanel`;
+  im Chart-Repo erscheint der neue Name).
 
 ### Hinzugefügt
 

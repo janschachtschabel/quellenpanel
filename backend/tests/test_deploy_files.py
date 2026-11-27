@@ -91,3 +91,38 @@ def test_primary_surfaces_use_readable_token():
             if re.search(r"background(-color)?:\s*var\(--(wlo-primary|primary)\)", line):
                 bad.append(f"{f.name}:{i}")
     assert bad == []
+
+
+# --- Abschlussreview Etappe 7: Release-Pipeline und Team-Isolation -----------------------------------
+
+def test_gitlab_laedt_das_paket_mit_dem_chartnamen_hoch():
+    import yaml as _yaml
+    name = _yaml.safe_load((ROOT / "deploy/helm/quellenpanel/Chart.yaml").read_text(encoding="utf-8"))["name"]
+    ci = (ROOT / ".gitlab-ci.yml").read_text(encoding="utf-8")
+    assert f"--upload-file {name}-${{CHART_VERSION}}.tgz" in ci
+
+
+def test_gitlab_taggt_image_und_chart_ohne_v_wie_appversion():
+    """Chart-Standard: Tag = appVersion (1.0.0). Der Git-Tag heißt v1.0.0 → das 'v' muss weg."""
+    ci = (ROOT / ".gitlab-ci.yml").read_text(encoding="utf-8")
+    assert '${CI_COMMIT_TAG#v}' in ci
+    assert 'CHART_VERSION="${CHART_VERSION#v}"' in ci
+
+
+def test_github_veroeffentlicht_kein_latest():
+    pub = (ROOT / ".github/workflows/docker-publish.yml").read_text(encoding="utf-8")
+    assert "latest=false" in pub
+    assert "tags `latest`" not in (ROOT / "README.md").read_text(encoding="utf-8")
+
+
+def test_team_values_schalten_networkpolicy_ein():
+    import yaml as _yaml
+    v = _yaml.safe_load((ROOT / "deploy/helm/quellenpanel/values-team.yaml").read_text(encoding="utf-8"))
+    assert v["networkPolicy"]["enabled"] is True
+
+
+def test_uebergabe_nennt_team_isolation_als_betriebsschritt():
+    text = (ROOT / "docs/uebergabe/README.md").read_text(encoding="utf-8")
+    assert "VPN/SSO" in text and "networkPolicy.enabled" in text
+    betrieb = (ROOT / "docs/betrieb.md").read_text(encoding="utf-8")
+    assert "ohne `qe_role`" in betrieb.lower()

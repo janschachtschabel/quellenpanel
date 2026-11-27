@@ -139,7 +139,8 @@ build and push (branches):
 
 # -----------------------------------------------------------------------------
 # Docker-Image bauen + pushen bei Tag-Erstellung (z.B. v1.2.0)
-# Tag = exakter Git-Tag-Name
+# Tags: exakter Git-Tag-Name (v1.2.0) und die Version ohne "v" (1.2.0) = appVersion des Charts,
+# den der Chart als Standard-Image-Tag zieht.
 # -----------------------------------------------------------------------------
 build and push (tags):
   stage: build
@@ -157,14 +158,16 @@ build and push (tags):
     - docker --version
   script:
     - docker login "$DOCKER_REGISTRY" -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
-    - docker buildx build --tag "$DOCKER_REGISTRY/$DOCKER_IMAGE_PATH:$CI_COMMIT_REF_NAME" .
+    - docker buildx build --tag "$DOCKER_REGISTRY/$DOCKER_IMAGE_PATH:$CI_COMMIT_REF_NAME"
+        --tag "$DOCKER_REGISTRY/$DOCKER_IMAGE_PATH:${CI_COMMIT_TAG#v}" .
     - docker image push "$DOCKER_REGISTRY/$DOCKER_IMAGE_PATH:$CI_COMMIT_REF_NAME"
+    - docker image push "$DOCKER_REGISTRY/$DOCKER_IMAGE_PATH:${CI_COMMIT_TAG#v}"
   rules:
     - if: "$CI_COMMIT_TAG && $DOCKER_REGISTRY"
 
 # -----------------------------------------------------------------------------
 # Helm-Chart paketieren + ins Chart-Repo pushen
-# Chart-/App-Version = Git-Tag (bei Tag) bzw. 0.0.0-<branch-slug> (bei Branch)
+# Chart-/App-Version = Git-Tag ohne "v" (bei Tag) bzw. 0.0.0-<branch-slug> (bei Branch)
 # -----------------------------------------------------------------------------
 .helm_base:
   stage: deploy
@@ -174,13 +177,14 @@ build and push (tags):
   before_script:
     - helm version
   script:
+    - CHART_VERSION="${CHART_VERSION#v}"; APP_VERSION="${APP_VERSION#v}"
     - helm package deploy/helm/quellenpanel
         --version "$CHART_VERSION"
         --app-version "$APP_VERSION"
     - >
       curl --fail --silent --show-error
       -u "$HELM_USERNAME:$HELM_PASSWORD"
-      --upload-file edu_sharing-projects-wlo-quellenpanel-${CHART_VERSION}.tgz
+      --upload-file quellenpanel-${CHART_VERSION}.tgz
       $HELM_REGISTRY
 
 build and push helm chart:
