@@ -210,6 +210,8 @@ def test_server_compose_three_instances_behind_traefik():
     assert svc["team"]["ports"] == ["${TEAM_BIND:-127.0.0.1}:${TEAM_PORT:-18082}:8080"]
     team = svc["team"]["environment"]
     assert team["QE_ROLE"] == "team" and "quellenpanel-data:/data" in svc["team"]["volumes"]
+    # Without it tier 1 is open on the team instance to anyone who reaches it.
+    assert team["QE_TIER1_PASSWORD"] == "${QE_TIER1_PASSWORD:-}"
     assert team["QE_SEED_URL"].endswith("/profiles/wlo/daten}")   # never a deploy without corrections
 
 

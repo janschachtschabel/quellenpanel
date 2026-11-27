@@ -38,6 +38,8 @@ services:
       QE_ROLE: team
       # Team login (tier 2). Empty: no team access (fail-closed).
       QE_TEAM_PASSWORD: ${QE_TEAM_PASSWORD:-}
+      # Tier 1 password also here: without it tier 1 is open on the team instance.
+      QE_TIER1_PASSWORD: ${QE_TIER1_PASSWORD:-}
       # Empty: a random key is created once in the data volume (logins survive restarts).
       QE_SESSION_SECRET: ${QE_SESSION_SECRET:-}
       # Starting copies of korrekturen.csv and crawler.csv for an empty volume.

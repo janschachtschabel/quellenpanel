@@ -98,6 +98,7 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
 - Die bisherige Entwicklungsdatei heißt jetzt `docker-compose.build.yml`.
 - Das Team-Image wird bei jedem Deploy neu aus dem Repository gebaut (`pull_policy: build`). Vorher
   versuchte der Server es aus einer Registry zu laden, scheiterte und startete das alte lokale Image weiter.
+- Die Team-Instanz bekommt `QE_TIER1_PASSWORD` mit; vorher war Stufe 1 dort ohne Passwort sichtbar.
 
 ### Abhängigkeiten aktualisiert (Dependabot)
 
