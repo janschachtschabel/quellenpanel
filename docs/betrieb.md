@@ -149,10 +149,14 @@ Regeln sind mit `promtool test rules deploy/helm/quellenpanel/tests/rules-test.y
 | `QE_EXPORT_SOURCE`, `QE_EXPORT_POLL_MINUTES` | partner, public | | Export-Quelle mit `{tier}`, Abrufintervall |
 | `QE_ALLOWED_ORIGINS` | team | | Origins für den Team-Login aus eingebetteten Widgets |
 | `TRUST_PROXY` | partner, public | | Client-IP aus dem rechten `X-Forwarded-For`-Eintrag, nur hinter einem Proxy, der den Header überschreibt |
-| `QE_REPO_URL`, `QE_SEARCH_URL`, `QE_PROFILE` | alle | | Repository und Profil |
+| `QE_REPO_URL`, `QE_SEARCH_URL` | alle | | Repository und öffentliche Suche (Links); Standard aus dem Profil |
+| `QE_PROFILE`, `QE_PROFILES_DIR` | alle | | Repository-Profil (Standard `wlo`) und sein Verzeichnis (Standard `profiles/`) |
+| `QE_FRAME_ANCESTORS` | alle | | wer die iframe-Widgets (`/embed/…`) einbetten darf; leer = überall, auf dem Team nur `'self'` |
+| `QE_PUBLIC_ONLY` | | | Übergangsname: `1` entspricht `QE_ROLE=public` |
+| `QE_RENAME_UNREP_BQ` | team | | `0` schaltet die Umbenennung nicht repräsentierter Bezugsquellen beim Datenaufbau ab |
 | `QE_DATA_DIR` | alle | | Datenverzeichnis (Image: `/data`) |
 | `LOG_FORMAT`, `LOG_LEVEL` | alle | | Logs |
-| `QE_PORT`, `QE_INTERNAL_PORT` | alle | | Ports (8080, 9090) |
+| `QE_PORT`, `QE_INTERNAL_PORT`, `QE_HOST` | alle | | Ports (8080, 9090) und Bind-Adresse (`0.0.0.0`) |
 
 **Team-Sitzung:** Der Login setzt ein httpOnly-Cookie `qe_session` = `<ablauf>.<nonce>.<hmac>`
 (12 h). Jede Instanz mit demselben `QE_SESSION_SECRET` erkennt es; ein Neustart beendet keine

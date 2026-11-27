@@ -220,6 +220,12 @@ Deployment targets:
 
 ## Status
 
+- ✅ **Handover (Etappe 7, release 1.0.0)** — measured resources per role (idle, warm, peak,
+  rebuild; [`docs/messung.md`](docs/messung.md)) in the Helm values, service profile
+  ("Steckbrief"), compatibility-matrix row and handover checklist in
+  [`docs/uebergabe/`](docs/uebergabe/README.md), operations notes per release in
+  [`CHANGELOG.md`](CHANGELOG.md).
+
 - ✅ **Look (Etappe 6)** — edu-sharing 11 tokens (`frontend/src/_tokens.scss`, same names as
   edu-sharing), brand colours from the profile (`[branding]` → `/api/capabilities`), Open Sans
   self-hosted, tiles after the edu-sharing card anatomy, texts in the formal German "Sie",

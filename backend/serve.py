@@ -2,7 +2,7 @@
 9090) as two uvicorn servers in one process and one event loop.
 
 Both share the in-memory data. Access logs are off (obs.TraceMiddleware writes one JSON line per
-request); proxy headers are off (client IPs come from ratelimit with QE_TRUST_PROXY). SIGTERM/SIGINT
+request); proxy headers are off (client IPs come from ratelimit with TRUST_PROXY). SIGTERM/SIGINT
 set should_exit on both servers, so the API's lifespan shutdown runs to the end.
 """
 from __future__ import annotations

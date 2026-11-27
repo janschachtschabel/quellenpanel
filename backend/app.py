@@ -583,11 +583,11 @@ _DIST = config.FRONTEND / "dist" / "browser"
 
 # ---- OpenAPI per role: an instance documents only what it serves --------------------------------
 _OPENAPI_DESCRIPTION = (
-    "Quellenpanel beschreibt die Quellen eines edu-sharing-Repositorys. Jede Antwort hängt von der "
-    "Zugangsstufe ab: Stufe 0 (öffentliche Quellenliste), Stufe 1 (Steckbrief mit Details, auf der "
-    "Partner-Instanz per Passwort) und Stufe 2 (internes Team-Audit). Eine Instanz läuft in genau "
-    "einer Rolle (QE_ROLE = public, partner oder team); diese Beschreibung enthält nur die Pfade "
-    "der laufenden Rolle. Health, Readiness und Metriken liegen auf dem internen Port 9090.")
+    "Quellenpanel beschreibt die Quellen eines edu-sharing-Repositorys: als öffentliche Quellenliste "
+    "mit Widgets (Stufe 0), als Steckbrief für Partner mit Passwort (Stufe 1) und als internes "
+    "Team-Audit (Stufe 2). Jede Instanz läuft in genau einer Rolle (QE_ROLE = public, partner oder "
+    "team) und beschreibt hier nur deren Pfade; Health, Readiness und Metriken liegen auf dem internen "
+    "Port 9090.")
 _openapi_cache: dict[str, dict] = {}
 
 

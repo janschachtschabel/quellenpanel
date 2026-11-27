@@ -1,0 +1,143 @@
+# Changelog
+
+Je Release die Änderungen und die **Hinweise für den Betrieb**. Format nach
+[Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach SemVer. Die Versionen
+0.3.0 bis 0.6.0 waren Zwischenstände auf dem Weg zu 1.0.0 und wurden nicht als Release getaggt.
+
+## [1.0.0] – 2026-11-27
+
+Erstes produktives Release: aus der Einzel-App wird ein Dienst nach dem Diensteleitfaden.
+Zusammenfassung der Etappen 1 bis 7 (Details in den Abschnitten darunter).
+
+### Hinweise für den Betrieb
+
+Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 8080):
+
+- **Daten liegen nicht mehr im Image.** Die Team-Instanz baut sie im Volume `/data`
+  (`QE_DATA_DIR`) auf; beim ersten Start optional aus Startdaten unter `QE_SEED_URL`. Bis dahin
+  antworten Datenrouten mit 503 „Daten werden aufgebaut“. Volume vor dem ersten Start anlegen
+  (Helm: PVC 2 Gi, nur bei `role: team`).
+- **Drei Instanzen statt einer.** `QE_ROLE` = `team`, `partner` oder `public`. Partner und
+  Öffentlich holen ihren Export von `QE_EXPORT_SOURCE` (Standard: Team-Port 9090) alle
+  `QE_EXPORT_POLL_MINUTES`. `QE_PUBLIC_ONLY=1` gilt nur noch als Übergangsname für
+  `QE_ROLE=public`.
+- **Zweiter Port 9090** für `/health`, `/ready`, `/metrics` und die Exporte. Nie veröffentlichen;
+  Probes zeigen dorthin. Der alte Healthcheck auf `8080/api/health` funktioniert weiter, ist aber
+  keine Readiness.
+- **Image-Tag `latest` entfällt.** Images heißen nach der Version (`1.0.0`, `1.0`) oder nach
+  Branch und Commit. Deployments auf einen Versions-Tag umstellen.
+- **Port-Variable:** `PORT` entfällt, jetzt `QE_PORT` (8080) und `QE_INTERNAL_PORT` (9090);
+  `QE_HOST` setzt die Bind-Adresse (Standard `0.0.0.0`).
+- **Neue Secrets:** `QE_SESSION_SECRET` (Team-Sitzung übersteht Neustarts; leer = Abmeldung bei
+  jedem Neustart). `QE_TEAM_PASSWORD` und `QE_TIER1_PASSWORD` bleiben; ohne
+  `QE_TIER1_PASSWORD` ist Stufe 1 auf dem Partner zu (fail-closed).
+- **Neue Variablen:** `QE_PROFILE` und `QE_PROFILES_DIR` (Repository-Profil, Standard `wlo`),
+  `QE_FRAME_ANCESTORS` (wer die iframe-Widgets einbetten darf), `TRUST_PROXY` (Client-IP aus
+  `X-Forwarded-For`, nur hinter einem Proxy, der den Header überschreibt), `LOG_FORMAT`
+  (`json`/`text`) und `LOG_LEVEL`. Unverändert: `QE_REPO_URL`, `QE_SEARCH_URL`,
+  `QE_ALLOWED_ORIGINS`, `QE_AUTO_REFRESH_HOUR`, `QE_RENAME_UNREP_BQ` (Umbenennung nicht
+  repräsentierter Bezugsquellen, `0` = aus).
+- **Ressourcen** je Rolle stehen gemessen in den Helm-Values (`docs/messung.md`); das Team-Limit
+  nach der ersten Messung des Live-Abrufs im Cluster prüfen.
+- **Container laufen read-only** als uid 10001 mit beschreibbarem `/tmp` (tmpfs); nur das Team
+  schreibt nach `/data`.
+
+### Hinzugefügt
+
+- Übergabe-Doku: Steckbrief, Zeile der Kompatibilitätsmatrix, Übergabepaket
+  (`docs/uebergabe/`), Ressourcenmessung mit Lastskript (`deploy/messung/last.py`).
+
+### Geändert
+
+- `info.description` der OpenAPI auf zwei Sätze gekürzt (Kurzbeschreibung des Steckbriefs).
+- Helm-Requests und -Limits je Rolle aus der Messung.
+
+## [0.6.0] – 2026-11-27 · Look
+
+### Geändert
+
+- Oberfläche mit den edu-sharing-Tokens (Farben, Schrift Open Sans, Abstände, Schatten),
+  Kacheln nach der edu-sharing-Anatomie, Kopfzeile für schmale Fenster.
+- Markenfarbe aus dem Profil (`branding` in `/api/capabilities`); helle Markenfarben werden für
+  Text automatisch abgedunkelt, damit der Kontrast reicht.
+- Texte in Sie-Form, Leer- und Fehlertexte nennen den nächsten Schritt.
+
+### Hinzugefügt
+
+- A11y-Audit aller Ansichten (WCAG 2.1 AA), Design-Regeln als CI-Schritt (`lint:design`).
+
+### Hinweise für den Betrieb
+
+- Keine neuen Variablen. Die Markenfarbe kommt aus `profil.toml` (`[branding] primary`).
+
+## [0.5.0] – 2026-11-27 · Widgets
+
+### Hinzugefügt
+
+- Widgets zum Einbetten: Quellenliste, Top 10 je Fach, Kennzahl, eine Quelle, Statistik; Kacheln
+  und Panel als nachgeladenes Element; iframe-Seiten unter `/embed/<name>`; Testseiten unter
+  `/widgets/`. Öffentliche Kennzahl `GET /api/kennzahl`.
+
+### Hinweise für den Betrieb
+
+- `QE_FRAME_ANCESTORS` legt fest, welche Seiten die iframe-Widgets einbetten dürfen (CSP
+  `frame-ancestors`, Quellen durch Leerzeichen getrennt); leer = überall auf Partner und
+  Öffentlich, nur dieselbe Herkunft auf dem Team.
+
+## [0.4.0] – 2026-11-26 · Korrektur-Verwaltung
+
+### Hinzugefügt
+
+- Team-Ansicht „Korrekturen“: Tabelle, Anlegen/Ändern/Löschen, Import aus CSV/JSON/XLSX mit
+  Vorschau, Download, Verlauf; Upload der Crawler-Tabelle; „Auf Blacklist“ und „Beschreibung
+  ergänzen“ im Steckbrief.
+
+### Hinweise für den Betrieb
+
+- Neue Dateien im Volume: `korrekturen.csv`, `korrekturen-verlauf.csv`, Sicherungen
+  `korrekturen-<zeit>.csv` und `crawler-<zeit>.csv` (werden nicht automatisch gelöscht).
+- Uploads bis 5 MB: am Ingress des Teams `proxy-body-size` mindestens `6m`.
+
+## [0.3.0] – 2026-11-26 · Betrieb nach Leitfaden
+
+### Hinzugefügt
+
+- JSON-Logs (`LOG_FORMAT`, `LOG_LEVEL`), B3-Tracing, eine Logzeile je Anfrage.
+- Interner Port 9090 mit `/health`, `/ready`, `/metrics` und den Exporten.
+- Einheitliches Fehler-JSON mit `trace_id`; OpenAPI nur mit den Pfaden der Rolle.
+- Signierte Team-Sitzung (`QE_SESSION_SECRET`), `TRUST_PROXY`.
+- Helm-Chart mit Values je Rolle, ServiceMonitor, PrometheusRule, NetworkPolicy; Compose mit drei
+  Diensten; CI mit Audits, `helm lint --strict` und `kubeconform`.
+
+### Entfernt
+
+- Daten im Image, Vercel-Pfad, Image-Tag `latest`, Variable `PORT`.
+
+### Hinweise für den Betrieb
+
+- Erststart braucht ein Volume unter `/data` (`QE_DATA_DIR`) und optional `QE_SEED_URL`.
+- Ports über `QE_PORT` und `QE_INTERNAL_PORT`, Bind-Adresse über `QE_HOST`.
+
+## [0.2.0] – 2026-11-26 · Rollen und Exporte (ohne Versionsnummer im Code)
+
+### Hinzugefügt
+
+- `QE_ROLE` (team, partner, public) begrenzt die Zugangsstufe. Das Team schreibt Exporte je
+  Stufe; Partner und Öffentlich laden nur ihren Export von `QE_EXPORT_SOURCE` (ETag, alle
+  `QE_EXPORT_POLL_MINUTES`) und behalten bei Fehlern den letzten gültigen Stand.
+
+### Hinweise für den Betrieb
+
+- `QE_PUBLIC_ONLY=1` entspricht jetzt `QE_ROLE=public`.
+
+## [0.1.0] – 2026-11-26 · Kern und Repository-Profil (ohne Versionsnummer im Code)
+
+### Geändert
+
+- Generischer Kern; alles Repository-Spezifische (Felder, Sonderfälle, Korrekturen,
+  Crawler-Tabelle) liegt im Profil `profiles/wlo/`. Korrekturen im Langformat.
+
+### Hinweise für den Betrieb
+
+- Profil-Auswahl mit `QE_PROFILE` (Standard `wlo`) aus `QE_PROFILES_DIR` (Standard
+  `profiles/` im Repo bzw. Image).
