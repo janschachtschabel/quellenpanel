@@ -37,7 +37,7 @@ import { I18n } from './i18n.service';
           </div>
           <!-- 2–4 click target: the button holds title + preview (accessible name = title, count);
                its ::after stretches over description and metadata so the whole card body opens. -->
-          <button type="button" class="open" (click)="open.emit(s.id)">
+          <h3 class="h"><button type="button" class="open" (click)="open.emit(s.id)">
             <span class="name">{{ s.name }}</span>
             <span class="thumb" [class.placeholder]="!(s.previewUrl || resolvedPreview.get(s.id))">
               @if (s.previewUrl || resolvedPreview.get(s.id); as preview) {
@@ -48,7 +48,7 @@ import { I18n } from './i18n.service';
               }
               <span class="count">{{ s.contentCount | number }} {{ i18n.t('unit.content') }}</span>
             </span>
-          </button>
+          </button></h3>
           <div class="meta-area">
             @if (s.description) { <p class="desc">{{ s.description }}</p> }
             <dl class="rows">
@@ -114,6 +114,7 @@ import { I18n } from './i18n.service';
     .pill.family { cursor: help; }
     .sel { margin-right: -10px; }
 
+    .h { margin: 0; font: inherit; }
     .open {
       all: unset; box-sizing: border-box; display: flex; flex-direction: column; cursor: pointer; min-width: 0;
       font: inherit; color: var(--textMain); text-align: left;

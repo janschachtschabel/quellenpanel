@@ -323,7 +323,7 @@ import { KorrekturFelder } from './models';
     .db { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 14px; background: var(--wlo-bg); }
     .count-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--wlo-primary-light); border-radius: 10px; flex-wrap: wrap; }
     .c-big { font-size: 24px; font-weight: 700; color: var(--primaryText); }
-    .c-lbl { font-size: 13px; color: var(--primaryText); opacity: .85; }
+    .c-lbl { font-size: 13px; color: var(--primaryText); }
     .spacer { flex: 1; }
 
     /* Titled card sections (mirrors the Quellensteckbriefe profile). */

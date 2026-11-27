@@ -105,7 +105,7 @@ const X0 = 8;       // x of the first box
     .mf-ahf { fill: var(--textMediumLight); }
     .mf-detail { margin-top: 12px; background: var(--wlo-bg); border: 1px solid var(--wlo-border); border-left: 3px solid var(--wlo-primary); border-radius: 8px; padding: 12px 16px; }
     .mf-detail-h { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--wlo-text); }
-    .mf-detail-n { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--wlo-primary); color: var(--textWhite); font-size: 12px; flex-shrink: 0; }
+    .mf-detail-n { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--primaryText); color: var(--textWhite); font-size: 12px; flex-shrink: 0; }
     .mf-detail-t { font-size: 13px; color: var(--wlo-text); line-height: 1.55; margin: 8px 0 0; }
   `],
 })

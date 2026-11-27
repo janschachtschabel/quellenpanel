@@ -46,14 +46,14 @@ import { I18n } from './i18n.service';
               }
               <td class="c-thumb">
                 @if (s.previewUrl || resolvedPreview.get(s.id); as preview) {
-                  <img class="lavatar" [src]="preview" [alt]="s.name" loading="lazy">
+                  <img class="lavatar" [src]="preview" alt="" loading="lazy">
                 } @else {
-                  <div class="lavatar init">{{ initial(s) }}</div>
+                  <div class="lavatar init" aria-hidden="true">{{ initial(s) }}</div>
                 }
               </td>
               <td class="c-name">
                 <div class="lname-row">
-                  <span class="lname">{{ s.name }}</span>
+                  <button type="button" class="lname" (click)="$event.stopPropagation(); open.emit(s.id)">{{ s.name }}</button>
                   @if (s.familyCount) {
                     <span class="lfamily" [matTooltip]="s.familyCount + ' ' + i18n.t('tile.family')"><mat-icon>hub</mat-icon>{{ s.familyCount }}</span>
                   }
@@ -119,7 +119,8 @@ import { I18n } from './i18n.service';
     .lavatar { width: 66px; height: 44px; border-radius: 6px; object-fit: cover; display: block; }
     .lavatar.init { display: flex; align-items: center; justify-content: center; background: var(--primaryBackground50); color: var(--primaryText); font-weight: 700; font-size: 18px; }
     .lname-row { display: flex; align-items: center; gap: 6px; }
-    .lname { font-weight: 600; line-height: 1.3; color: var(--wlo-text); }
+    .lname { all: unset; cursor: pointer; font-weight: 600; line-height: 1.3; color: var(--wlo-text); text-align: left; }
+    .lname:focus-visible { outline: 2px solid var(--focusColor); outline-offset: 2px; }
     /* Bezugsquelle-family badge (publisher + sub-channels) — count of related sources. */
     .lfamily { flex-shrink: 0; display: inline-flex; align-items: center; gap: 2px; background: var(--primaryBackground50); color: var(--primaryForeground800); font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; cursor: help; }
     .lfamily mat-icon { font-size: 12px; width: 12px; height: 12px; }

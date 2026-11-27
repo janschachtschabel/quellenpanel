@@ -80,3 +80,14 @@ def test_ci_runs_design_lint():
     """Etappe 6: CI prüft die edu-sharing-Designregeln."""
     ci = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
     assert "lint:design" in ci
+
+
+def test_primary_surfaces_use_readable_token():
+    """Review-Befund Etappe 6: Flächen mit weißer Schrift nutzen --primaryText (bei jeder Markenfarbe lesbar)."""
+    import re
+    bad = []
+    for f in (ROOT / "frontend/src/app").glob("*.component.ts"):
+        for i, line in enumerate(f.read_text(encoding="utf-8").splitlines(), 1):
+            if re.search(r"background(-color)?:\s*var\(--(wlo-primary|primary)\)", line):
+                bad.append(f"{f.name}:{i}")
+    assert bad == []

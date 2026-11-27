@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { istFarbe, wendeBrandingAn } from './branding';
+import { istFarbe, wendeBrandingAn, textAnteil, kontrast, mische } from './branding';
 
 describe('branding from the profile', () => {
   it('accepts only #rrggbb colours', () => {
@@ -23,15 +23,36 @@ describe('light brand colours stay readable (review focus)', () => {
   it('uses dark text on a light primary and darker foreground tints', () => {
     const el = document.createElement('div');
     wendeBrandingAn(el, { primary: '#7fb2e5' });
-    expect(el.style.getPropertyValue('--light-primary-text')).toBe('#1d1d1d');
-    expect(el.style.getPropertyValue('--primaryForeground800')).toContain('45%');
-    expect(el.style.getPropertyValue('--primaryText')).toContain('45%');
+    expect(el.style.getPropertyValue('--primaryForeground800')).toMatch(/var\(--primary\) \d+%, #000/);
+    expect(el.style.getPropertyValue('--primaryText')).toMatch(/var\(--primary\) \d+%, #000/);
     expect(el.style.getPropertyValue('--focusColor')).toBe('var(--primaryText)');
   });
 
   it('keeps the defaults for a dark primary', () => {
     const el = document.createElement('div');
     wendeBrandingAn(el, { primary: '#003b7c' });
-    expect(el.style.getPropertyValue('--light-primary-text')).toBe('');
+    expect(el.style.getPropertyValue('--primaryText')).toBe('');
+  });
+});
+
+describe('mid-tone brand colours (review finding)', () => {
+  for (const farbe of ['#1a73e8', '#0072bc', '#d32f2f', '#008080', '#7fb2e5', '#ffff00', '#003b7c']) {
+    it(`text colour for ${farbe} reaches 4.5:1 on the light tint and white on it`, () => {
+      const anteil = textAnteil(farbe);
+      const text = mische(farbe, '#000000', anteil);
+      const tint = mische(farbe, '#ffffff', 22);
+      expect(kontrast(text, tint)).toBeGreaterThanOrEqual(4.5);
+      expect(kontrast(text, '#f3f3f3')).toBeGreaterThanOrEqual(4.5);
+      expect(kontrast(text, '#ffffff')).toBeGreaterThanOrEqual(4.5);
+    });
+  }
+
+  it('sets a darker --primaryText for #1a73e8 and none for WLO blue', () => {
+    const a = document.createElement('div');
+    wendeBrandingAn(a, { primary: '#1a73e8' });
+    expect(a.style.getPropertyValue('--primaryText')).toMatch(/color-mix\(in srgb, var\(--primary\) \d+%, #000\)/);
+    const b = document.createElement('div');
+    wendeBrandingAn(b, { primary: '#003b7c' });
+    expect(b.style.getPropertyValue('--primaryText')).toBe('');
   });
 });
