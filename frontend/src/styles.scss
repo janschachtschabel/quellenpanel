@@ -16,3 +16,9 @@ html, body {
 }
 
 @include theme.material-icons-class;
+
+// Dialogs: Material removes the top padding of the content right under the title, which cuts off
+// the floating label of a first outlined field. Give it room in every dialog.
+.mat-mdc-dialog-container .mat-mdc-dialog-title + .mat-mdc-dialog-content.mat-mdc-dialog-content {
+  padding-top: 8px;
+}

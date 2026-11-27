@@ -499,10 +499,10 @@ export class DetailDialogComponent implements OnInit {
     const vorlage = korrekturAusSteckbrief(aktion, {
       name: this.detail.name, nodeId: this.detail.binding?.node, bezugsquelle: this.detail.bezugsquelle });
     this.dialog.open(KorrekturDialogComponent, { data: { neu: true, korrektur: vorlage }, autoFocus: false })
-      .afterClosed().subscribe((k?: KorrekturFelder) => {
-        if (!k) return;
+      .afterClosed().subscribe((rows?: KorrekturFelder[]) => {
+        if (!rows?.length) return;
         this.korrSvc.lesen().subscribe({
-          next: s => this.korrSvc.anlegen(k, s.version).subscribe({
+          next: s => this.korrSvc.anlegenAlle(rows, s.version).subscribe({
             next: r => this.korrMeldung.set(this.i18n.t(r.anwenden?.wirktBeimNaechstenAufbau ? 'korr.applied.later' : 'korr.applied.now')),
             error: e => this.korrMeldung.set(fehlertext(e)),
           }),

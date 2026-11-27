@@ -8,6 +8,26 @@ export const AKTIONEN_JE_TYP: Record<string, string[]> = {
 
 export const TYPEN = Object.keys(AKTIONEN_JE_TYP);
 
+/** One action of a new correction (several may share one key). */
+export interface AktionWert { aktion: string; wert: string; }
+
+/** One row per action for the same type and key; the comment is shared, the key trimmed. */
+export function korrekturZeilen(
+  basis: { typ: string; schluessel: string; kommentar: string },
+  aktionen: AktionWert[],
+): KorrekturFelder[] {
+  return aktionen.map(a => ({ typ: basis.typ, schluessel: basis.schluessel.trim(), aktion: a.aktion,
+                              wert: a.wert, kommentar: basis.kommentar }));
+}
+
+/** Why a set of actions for ONE key cannot be saved together: '' = fine, 'doppelt' = the same
+ *  action twice, 'liste' = blacklist and whitelist at once (the later row would override). */
+export function aktionsKonflikt(aktionen: string[]): '' | 'doppelt' | 'liste' {
+  if (new Set(aktionen).size !== aktionen.length) return 'doppelt';
+  if (aktionen.includes('blacklist') && aktionen.includes('whitelist')) return 'liste';
+  return '';
+}
+
 /** Free-text search over all text columns plus optional type/action filters. */
 export function filterKorrekturen(list: Korrektur[], q: string, typ: string, aktion: string): Korrektur[] {
   const needle = q.trim().toLowerCase();

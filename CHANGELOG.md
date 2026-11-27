@@ -91,6 +91,25 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
 - Die Metadaten der Kachel (Inhaltstyp, Fach, Bildungsstufe) stehen wieder als Zeilen mit Symbol und
   linksbündigem Wert wie vor dem Umbau; leere Zeilen entfallen, die Beschriftung bleibt für Screenreader.
 
+### Behoben (Korrekturbereich)
+
+- Der Korrekturbereich hat denselben Innenabstand wie Liste und Statistik und nutzt das Tabellenbild
+  der Liste; Suchfeld, Filter und Knöpfe stehen auf einer Linie, die Überschrift mit Schloss-Symbol.
+- In Dialogen wird die Beschriftung des ersten Feldes (z. B. „Typ“ bei „Neue Korrektur“) nicht mehr
+  oben abgeschnitten; die Felder im Korrektur-Dialog haben gleichmäßige Abstände.
+
+### Hinzugefügt (Korrekturen)
+
+- „Neue Korrektur“ nimmt mehrere Aktionen für denselben Schlüssel auf („Weitere Aktion“); jede wird
+  eine eigene Zeile, nacheinander gespeichert. Doppelte Aktionen und Blacklist mit Whitelist werden
+  abgewiesen. Ein Wertfeld erscheint nur bei Aktionen, die einen Wert brauchen.
+- Kurze, aufklappbare Hilfe zu Typen und Aktionen im Korrekturbereich und im Dialog.
+
+### Behoben (Filter)
+
+- Die Filter der zweiten Zeile (Fach, Bildungsstufe, Inhaltstyp, Min. Inhalte) nutzen die freie
+  Breite und schneiden „Alle Stufen“ nicht mehr ab.
+
 ### Hinzugefügt (Server mit Traefik)
 
 - `docker-compose.yml` im Hauptordner für einen Docker-Server mit vorhandenem Traefik-Proxy. Standard

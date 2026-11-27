@@ -102,4 +102,18 @@ describe('KorrekturenService', () => {
     svc.verlauf().subscribe();
     http.expectOne(r => r.url === '/api/team/korrekturen/verlauf').flush([]);
   });
+
+  it('saves several rows one after another, each with the version of the previous answer', () => {
+    svc.setWer('JS');
+    const K2 = { ...K, aktion: 'vermerk', wert: 'Hinweis' };
+    let ende: unknown;
+    svc.anlegenAlle([K, K2], 'v1').subscribe(s => (ende = s));
+    const a = http.expectOne('/api/team/korrekturen');
+    expect(a.request.body).toEqual({ korrektur: K, wer: 'JS', version: 'v1' });
+    a.flush({ version: 'v2' });
+    const b = http.expectOne('/api/team/korrekturen');
+    expect(b.request.body).toEqual({ korrektur: K2, wer: 'JS', version: 'v2' });
+    b.flush({ version: 'v3' });
+    expect(ende).toEqual({ version: 'v3' });
+  });
 });

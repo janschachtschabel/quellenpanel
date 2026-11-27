@@ -303,12 +303,15 @@ type View = 'tile' | 'list' | 'stats' | 'korrekturen';
     .filter-row.top .search { flex: 1 1 auto; min-width: 240px; }
     .filter-row.top .art { width: 190px; flex-shrink: 0; }
     .filter-row.top .sort { width: 180px; flex-shrink: 0; }
-    .filter-row .subject { width: 170px; }
-    .filter-row .level { width: 150px; }
-    .filter-row .lrt { width: 180px; }
-    .filter-row .status { width: 220px; }
-    .filter-row .min { width: 140px; }
-    .filter-row .flag { width: 220px; }
+    /* Second row: the selects grow into the free space (no clipped "Alle Stufen"), never below
+       their minimum; checkboxes and the reset button keep their size. */
+    .filter-row .subject { flex: 2 1 180px; min-width: 180px; }
+    .filter-row .level { flex: 2 1 190px; min-width: 190px; }
+    .filter-row .lrt { flex: 2 1 180px; min-width: 180px; }
+    .filter-row .status { flex: 2 1 210px; min-width: 210px; }
+    .filter-row .min { flex: 1 1 140px; min-width: 140px; }
+    .filter-row .flag { flex: 2 1 210px; min-width: 210px; }
+    .filter-row mat-checkbox { flex-shrink: 0; }
     .filters mat-form-field { font-size: 14px; }
     .filters mat-form-field mat-icon[matPrefix] { font-size: 18px; width: 18px; height: 18px; color: var(--wlo-text-muted); }
     .filters mat-checkbox { font-size: 13px; }
