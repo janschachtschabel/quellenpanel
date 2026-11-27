@@ -35,8 +35,8 @@ die Datenrouten mit 503) oder lädt Startdaten von `QE_SEED_URL`. Im Container (
 
 **Server mit Traefik** (Docker-Server, auf dem schon ein Traefik-Proxy mit Let's Encrypt läuft,
 etwa ein Docker-Panel mit „Compose aus URL“): Die `docker-compose.yml` im Hauptordner startet eine
-Instanz, die alle Stufen über einen Port liefert (Stufe 1 und 2 nur mit ihrem Passwort), baut das Image
-aus diesem Repository und braucht beim ersten Start keine einzige Variable. Danach in der `.env`
+Instanz, die alle Stufen über einen Port liefert (Stufe 1 und 2 nur mit ihrem Passwort), zieht bei jedem
+Update das neueste Image von main aus GitHub (`QE_VERSION` legt eine Version fest) und braucht beim ersten Start keine einzige Variable. Danach in der `.env`
 (Vorlage `.env.example`) `DOMAIN` oder `PORT` und die Passwörter eintragen und erneut bereitstellen.
 Getrennte Partner- und öffentliche Instanzen lassen sich mit `SEPARATE_INSTANCES=1` zuschalten. Schritt für Schritt in [`deploy/README.md`](deploy/README.md#server-with-traefik).
 

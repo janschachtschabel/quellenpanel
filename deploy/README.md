@@ -24,13 +24,12 @@ panel that deploys a compose file straight from a GitHub URL. The file is
 [`.env.example`](../.env.example) as the starting `.env`.
 
 1. Deploy `https://github.com/janschachtschabel/quellenpanel` (branch `main`). No variable is needed:
-   the server builds the image from the repository (a few minutes), loads `korrekturen.csv` and
+   the server pulls the image GitHub built from main, loads `korrekturen.csv` and
    `crawler.csv` from `profiles/wlo/daten` and then builds the data from the live repository (the pages
    answer 503 "Daten werden aufgebaut" meanwhile). Without a domain the app is reachable at
-   `http://<SERVER-IP>:18080` (`PORT`; open it in the server firewall if needed). Each deploy rebuilds
-   the image from the repository without build cache (`pull_policy: build`, `no_cache: true`), so
-   deploying again is enough to update. When the running image was built shows `/api/capabilities` as
-   `built`.
+   `http://<SERVER-IP>:18080` (`PORT`; open it in the server firewall if needed). Each deploy pulls
+   the newest image (`pull_policy: always`), so deploying again is enough to update. Which state runs
+   shows `/api/capabilities` as `revision` (commit) and `built` (build time).
 2. Edit `.env`: `DOMAIN` (plain host name without `https://`) or `PORT`, `QE_TIER1_PASSWORD` and
    `QE_TEAM_PASSWORD`. Deploy again.
 3. Point a DNS A record of the name to the server. Without an own domain,
@@ -57,13 +56,14 @@ on a direct port cannot pick its own rate-limit key. Partner and public fetch th
 `http://team:9090` inside that network.
 
 ```bash
-docker compose up -d --build              # update to the newest code (a redeploy does the same)
-docker compose logs -f team               # rebuild progress; "Startdaten fehlen" = seed not loaded
+docker compose up -d                      # update to the newest image (a redeploy does the same)
+docker compose logs -f team               # data build progress; "Startdaten fehlen" = seed not loaded
 docker compose restart team               # retry the seed after a network error
 docker compose config -q && echo CONFIG-OK
 ```
 
-For a fixed version set `QE_GIT_URL=https://github.com/janschachtschabel/quellenpanel.git#v1.0.0`.
+GitHub builds the image `ghcr.io/janschachtschabel/quellenpanel` on every push to main (tag `main`)
+and on every release (e.g. `1.0.1` and `1.0`). For a fixed version set `QE_VERSION=1.0.1`.
 `docker-compose.build.yml` is the local development variant (one team instance from the checkout).
 
 ## Docker Compose (HTTP)

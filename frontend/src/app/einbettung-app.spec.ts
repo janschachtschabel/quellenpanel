@@ -57,4 +57,13 @@ describe('schlanke Einbettung (Kopf, Fuß, Filter, Rahmen, Ansicht, Farben)', ()
     TestBed.tick();
     expect((f.nativeElement as HTMLElement).style.getPropertyValue('--primary')).toBe('#008080');
   });
+
+  it('der Kopf zeigt keine Quellenzahl, sie steht schon über der Liste', () => {
+    const f = erzeuge({});
+    (f.componentInstance as any).data = { total: 3721, items: [], facets: {} };
+    f.detectChanges();
+    const kopf = (f.nativeElement as HTMLElement).querySelector('header.bar') as HTMLElement;
+    expect(kopf.querySelector('.total-badge')).toBeNull();
+    expect(kopf.textContent).not.toContain('3.721');
+  });
 });

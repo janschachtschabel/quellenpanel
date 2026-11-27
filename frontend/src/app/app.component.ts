@@ -61,7 +61,6 @@ type View = 'tile' | 'list' | 'stats' | 'korrekturen';
         <img class="logo" [src]="api.assetUrl('wlo-logo.svg')" alt="WissenLebtOnline">
         <span class="sep"></span>
         <span class="brand">{{ i18n.t('app.title') }}</span>
-        @if (data) { <span class="total-badge">{{ data.total | number }}</span> }
       </div>
       <div class="bar-right">
         <mat-button-toggle-group class="views" [(ngModel)]="view" (change)="onViewChange()"
@@ -282,7 +281,6 @@ type View = 'tile' | 'list' | 'stats' | 'korrekturen';
     .logo { height: 38px; width: auto; display: block; flex-shrink: 0; }
     .sep { width: 1px; height: 24px; background: var(--wlo-border); flex-shrink: 0; }
     .brand { font-size: 15px; font-weight: 700; color: var(--wlo-text); white-space: nowrap; }
-    .total-badge { background: var(--wlo-primary-light); color: var(--primaryText); font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 10px; }
     .views { --mat-standard-button-toggle-height: 36px; font-size: 13px; }
     .views mat-icon { font-size: 17px; width: 17px; height: 17px; vertical-align: -3px; margin-right: 2px; }
     .bar-right { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }
