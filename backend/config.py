@@ -171,7 +171,7 @@ def session_secret() -> bytes:
 
 
 def trust_proxy() -> bool:
-    """TRUST_PROXY: take the client IP from the first X-Forwarded-For entry (set by our proxy)."""
+    """TRUST_PROXY: take the client IP from the rightmost X-Forwarded-For entry (set by our proxy)."""
     return os.environ.get("TRUST_PROXY", "").strip().lower() in _TRUE
 
 

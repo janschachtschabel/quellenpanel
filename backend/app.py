@@ -31,6 +31,7 @@ import export_query
 import exports as exports_mod
 import export_store
 import filtering
+import openapi_doku
 import protokoll
 import ratelimit
 import repo_profile
@@ -608,8 +609,9 @@ def _openapi() -> dict:
         routes = [r for r in app.routes
                   if not getattr(r, "path", "").startswith("/internal")
                   and (role == "team" or not _is_team_only(r))]
-        _openapi_cache[role] = get_openapi(title="Quellenpanel", version=config.VERSION,
-                                           description=_OPENAPI_DESCRIPTION, routes=routes)
+        _openapi_cache[role] = openapi_doku.ergaenze(
+            get_openapi(title="Quellenpanel", version=config.VERSION,
+                        description=_OPENAPI_DESCRIPTION, routes=routes))
     return _openapi_cache[role]
 
 

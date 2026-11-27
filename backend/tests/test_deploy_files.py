@@ -148,3 +148,14 @@ def test_github_workflows_lesen_nur_und_dependabot_ist_an():
     dep = _yaml.safe_load((ROOT / ".github/dependabot.yml").read_text(encoding="utf-8"))
     ecos = {(u["package-ecosystem"], u["directory"]) for u in dep["updates"]}
     assert {("pip", "/backend"), ("npm", "/frontend"), ("github-actions", "/"), ("docker", "/")} <= ecos
+
+
+def test_root_compose_ist_aktuelle_team_entwicklungsinstanz():
+    svc = yaml.safe_load((ROOT / "docker-compose.yml").read_text(encoding="utf-8"))["services"]["quellenpanel"]
+    env = svc["environment"]
+    assert env["QE_ROLE"] == "team" and "QE_SESSION_SECRET" in env
+    assert "QE_PUBLIC_ONLY" not in env
+    assert any(v.endswith(":/data") for v in svc["volumes"])
+    assert all(p.startswith("127.0.0.1:") for p in svc["ports"])
+    assert "9090/health" in " ".join(svc["healthcheck"]["test"])
+    assert svc["read_only"] is True and str(svc["user"]) == "10001"

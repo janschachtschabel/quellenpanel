@@ -1,12 +1,14 @@
-# Local build-and-run setup (builds the image from this repo's Dockerfile).
-# For running a PUBLISHED image (+ automatic HTTPS via Caddy) use deploy/docker-compose*.yml instead.
+# Local build-and-run setup: ONE team instance built from this repo's Dockerfile (development).
+# For the three instances (team, partner, public) from a published image, and HTTPS via Caddy, use
+# deploy/docker-compose.yml and deploy/docker-compose.tls.yml (step by step in deploy/README.md).
 #
 # Quick-Start:
-#   docker compose up -d --build
-#   open http://localhost:8080
+#   QE_TEAM_PASSWORD=… docker compose up -d --build
+#   open http://localhost:8080   (Audit: top right, team password)
 #
-# Enable the team tier (Audit):  QE_TEAM_PASSWORD=… docker compose up -d --build
-# Logs:  docker compose logs -f   ·   Stop:  docker compose down
+# First start with an empty volume: the data is built from the repository (a few minutes; the data
+# routes answer 503 until then) or loaded from QE_SEED_URL.
+# Logs:  docker compose logs -f   ·   Stop:  docker compose down   ·   Data: volume quellenpanel-dev-data
 
 services:
   quellenpanel:
@@ -16,25 +18,31 @@ services:
     image: quellenpanel:local
     container_name: quellenpanel
     restart: unless-stopped
+    read_only: true
+    user: "10001"
+    tmpfs:
+      - /tmp
     ports:
-      # Bind to localhost only — put nginx/caddy in front for public exposure (see deploy/).
+      # Localhost only: the team instance must never be reachable from the internet.
       - "127.0.0.1:8080:8080"
+    volumes:
+      - quellenpanel-dev-data:/data
     environment:
-      # All access tiers are OPTIONAL; unset ⇒ end-user-only (tier 0), fail-closed.
+      QE_ROLE: team
       QE_TEAM_PASSWORD: ${QE_TEAM_PASSWORD:-}
-      QE_TIER1_PASSWORD: ${QE_TIER1_PASSWORD:-}
-      QE_PUBLIC_ONLY: ${QE_PUBLIC_ONLY:-}
-      QE_ALLOWED_ORIGINS: ${QE_ALLOWED_ORIGINS:-}
+      QE_SESSION_SECRET: ${QE_SESSION_SECRET:-}
+      QE_SEED_URL: ${QE_SEED_URL:-}
       QE_AUTO_REFRESH_HOUR: ${QE_AUTO_REFRESH_HOUR:-}
-      # Repository neutrality (defaults = production).
+      QE_ALLOWED_ORIGINS: ${QE_ALLOWED_ORIGINS:-}
       QE_REPO_URL: ${QE_REPO_URL:-https://redaktion.openeduhub.net}
       QE_SEARCH_URL: ${QE_SEARCH_URL:-https://suche.wirlernenonline.de}
-    # Stateless: the app serves the bundled data/truth.json snapshot — no volume needed. A manual /
-    # nightly refresh writes to the ephemeral container FS (reverts on restart; see README).
-    # Healthcheck mirrors the image's (python urllib; the slim image has no curl).
+    # Same check as the image: the internal port (9090) is not published.
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/api/health', timeout=3)"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9090/health', timeout=3)"]
       interval: 30s
       timeout: 5s
       start_period: 25s
       retries: 3
+
+volumes:
+  quellenpanel-dev-data:

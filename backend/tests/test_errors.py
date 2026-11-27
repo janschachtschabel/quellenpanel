@@ -213,3 +213,32 @@ def test_thumb_respects_cache_budget(client, monkeypatch):
     thumb._CACHE.clear()
     assert client.get(f"/api/thumb?url={config.REPO_URL}/edu-sharing/q.png").status_code == 200
     assert thumb._CACHE == {}
+
+
+def test_openapi_describes_every_parameter():
+    # Leitfaden: Parameter mit Beschreibung, damit die Spec ohne Quelltext lesbar ist.
+    spec = app_module.app.openapi()
+    missing = [(path, p["name"]) for path, ops in spec["paths"].items() for op in ops.values()
+               for p in op.get("parameters", []) if not p.get("description")]
+    assert missing == []
+
+
+_EXAMPLE_PATHS = ("/api/sources", "/api/sources/{source_id}", "/api/sources/{source_id}/contents",
+                  "/api/kennzahl", "/api/meta/filters", "/api/stats", "/api/health", "/api/capabilities")
+
+
+def test_openapi_has_examples_for_public_reads(client):
+    spec = app_module.app.openapi()
+    for path in _EXAMPLE_PATHS:
+        ex = spec["paths"][path]["get"]["responses"]["200"]["content"]["application/json"].get("example")
+        assert ex, path
+    # The examples match the real answers in their keys (no invented fields).
+    real = client.get("/api/sources?page_size=1").json()
+    ex = spec["paths"]["/api/sources"]["get"]["responses"]["200"]["content"]["application/json"]["example"]
+    assert set(ex) == set(real)
+    assert set(ex["items"][0]) <= set(real["items"][0]) | {"quality"}
+    assert set(spec["paths"]["/api/kennzahl"]["get"]["responses"]["200"]["content"]["application/json"]["example"]) \
+        == set(client.get("/api/kennzahl").json())
+    # Error answers are documented with the one error shape.
+    resp = spec["paths"]["/api/sources/{source_id}"]["get"]["responses"]
+    assert set(resp["404"]["content"]["application/json"]["example"]) == {"error", "message", "status", "trace_id"}
