@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quellenpanel – schlanke Einbettung auf Weiß</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; font-src 'self'; connect-src 'self'">
+  <script src="/widgets/quellenpanel-widgets.js" defer></script>
+  <style>
+    body { background: #ffffff; margin: 0; font-family: system-ui, sans-serif; color: #1d2433; }
+    main { max-width: 1200px; margin: 0 auto; padding: 32px 16px; }
+    h1 { font-weight: 400; font-size: 44px; text-align: center; margin: 24px 0 8px; }
+    .lead { text-align: center; color: #5b6475; margin: 0 0 32px; }
+    h2 { font-size: 20px; margin: 40px 0 12px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Quellen in WLO</h1>
+  <p class="lead">Stöbern Sie in unseren Quellen.</p>
+
+  <h2>Kacheln ohne Kopf, Fuß und Rahmen</h2>
+  <wlo-quellen-kacheln kopf="aus" fuss="aus" rahmen="aus" hintergrund="#ffffff"></wlo-quellen-kacheln>
+
+  <h2>Liste ohne Kopf, Fuß, Filter und Rahmen (Fach Chemie)</h2>
+  <wlo-quellen-kacheln ansicht="liste" kopf="aus" fuss="aus" filter="aus" rahmen="aus" hintergrund="#ffffff" fach="Chemie"></wlo-quellen-kacheln>
+
+  <h2>Leichte Liste ohne Rahmen, eigene Farbe</h2>
+  <wlo-quellen-liste rahmen="aus" farbe="#1a73e8" fach="Physik" max="5"></wlo-quellen-liste>
+</main>
+</body>
+</html>

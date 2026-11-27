@@ -1,3 +1,4 @@
+import { farbeOderNull, istAn } from '../app/einbettung';
 import {
   Sprache, apiBaseFor, el, externerLink, formatZahl, holeJson, queryFromAttributes, sprache, styles, texte,
 } from './core';
@@ -19,6 +20,9 @@ const CSS = `
   background: var(--wq-bg, #fff); border: 1px solid var(--wq-border, #dfe3ea); border-radius: var(--wq-radius, 10px);
   padding: 14px 16px;
 }
+
+/* rahmen="aus": nahtlos in die Gastseite. */
+.wq-w.wq-w.wq-ohne-rahmen { border: 0; border-radius: 0; padding-left: 0; padding-right: 0; }
 
 /* Reset inside the widgets, stronger than typical CMS theme rules (.entry-content ul …).
    Host rules with !important still win. */
@@ -73,7 +77,8 @@ let _scriptSrc = '';
 
 abstract class WqElement extends HTMLElement {
   static get observedAttributes(): string[] {
-    return ['api-base', 'fach', 'bildungsstufe', 'suche', 'max', 'sprache', 'nur-oer', 'variante', 'quelle', 'link'];
+    return ['api-base', 'fach', 'bildungsstufe', 'suche', 'max', 'sprache', 'nur-oer', 'variante', 'quelle', 'link',
+      'farbe', 'hintergrund', 'rahmen'];
   }
   private _laufend = 0;
   private _verbunden = false;
@@ -99,7 +104,19 @@ abstract class WqElement extends HTMLElement {
   }
 
   /** Load + render; a stale answer (attributes changed meanwhile) is dropped. */
+  /** farbe / hintergrund (#rrggbb) und rahmen="aus" — für iframe-Nutzer, die keine CSS-Variablen setzen können. */
+  private gestalten(): void {
+    const farbe = farbeOderNull(this.getAttribute('farbe'));
+    const grund = farbeOderNull(this.getAttribute('hintergrund'));
+    for (const v of ['--wq-accent', '--wq-link']) {
+      if (farbe) this.style.setProperty(v, farbe); else this.style.removeProperty(v);
+    }
+    if (grund) this.style.setProperty('--wq-bg', grund); else this.style.removeProperty('--wq-bg');
+    this.classList.toggle('wq-ohne-rahmen', !istAn(this.getAttribute('rahmen')));
+  }
+
   protected async aktualisieren(): Promise<void> {
+    this.gestalten();
     this.classList.toggle('wq-schlicht', this.getAttribute('variante') === 'schlicht');
     const lauf = ++this._laufend;
     this.setAttribute('aria-busy', 'true');

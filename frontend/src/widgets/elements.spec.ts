@@ -152,4 +152,16 @@ describe('embed height', () => {
     expect(hoeheAntworten({ data: { type: 'quellenpanel:hoehe?' }, source: parent, origin: 'null' } as MessageEvent, 5, parent)).toBe(true);
     expect(post).toHaveBeenCalledWith({ type: 'quellenpanel:hoehe', hoehe: 5 }, '*');
   });
+
+  it('farbe, hintergrund und rahmen="aus" gestalten das leichte Widget (nur gültige Farben)', async () => {
+    const host = await render('<wlo-quellen-liste api-base="/api" farbe="#1a73e8" hintergrund="ffffff" rahmen="aus"></wlo-quellen-liste>');
+    const w = host.querySelector('wlo-quellen-liste') as HTMLElement;
+    expect(w.style.getPropertyValue('--wq-accent')).toBe('#1a73e8');
+    expect(w.style.getPropertyValue('--wq-link')).toBe('#1a73e8');
+    expect(w.style.getPropertyValue('--wq-bg')).toBe('#ffffff');
+    expect(w.classList.contains('wq-ohne-rahmen')).toBe(true);
+    w.setAttribute('farbe', 'red;x:y');
+    await new Promise(r => setTimeout(r, 30));
+    expect(w.style.getPropertyValue('--wq-accent')).toBe('');
+  });
 });

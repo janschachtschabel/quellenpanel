@@ -53,3 +53,14 @@ def test_embed_csp(client, monkeypatch, role, env, expected):
         monkeypatch.delenv("QE_FRAME_ANCESTORS", raising=False)
     csp = client.get("/embed/quellen-zahl").headers["content-security-policy"]
     assert expected in csp and "script-src 'self'" in csp
+
+
+def test_embed_reicht_einbettungsoptionen_durch(client):
+    """Schlanke Einbettung im iframe: kopf/fuss/filter/rahmen/ansicht/hintergrund/farbe erreichen das Element."""
+    r = client.get("/embed/quellen-kacheln", params={
+        "kopf": "aus", "fuss": "aus", "filter": "aus", "rahmen": "aus", "ansicht": "liste",
+        "hintergrund": "#ffffff", "farbe": "#1a73e8"})
+    assert r.status_code == 200
+    for k, v in (("kopf", "aus"), ("fuss", "aus"), ("filter", "aus"), ("rahmen", "aus"), ("ansicht", "liste"),
+                 ("hintergrund", "#ffffff"), ("farbe", "#1a73e8")):
+        assert f'{k}="{v}"' in r.text, k

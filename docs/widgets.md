@@ -60,8 +60,38 @@ gesetzt werden. Doppeltes Einbinden schadet nicht.
 | `api-base` | API einer anderen Instanz |
 | `quelle` | nur `<wlo-quelle>`: Kennung der Quelle (Feld `id` der API, z. B. `crawler:bpb_spider`) |
 | `link` | nur `<wlo-quellen-zahl>`: Ziel des Links „Zum Quellenverzeichnis“ |
+| `farbe` | Markenfarbe als `#rrggbb` (Links, Rang, Balken; in Kacheln und App auch Knöpfe und Fokus) |
+| `hintergrund` | Hintergrundfarbe als `#rrggbb`, z. B. `#ffffff` für eine weiße Seite |
+| `rahmen` | `aus`: ohne Rahmen und Außenabstand, nahtlos in der Seite |
+| `kopf`, `fuss`, `filter` | nur Kacheln und App: `aus` blendet Kopfzeile, Fußzeile bzw. Filterleiste aus |
+| `ansicht` | nur Kacheln und App: `kacheln` oder `liste` (fest, wenn der Kopf ausgeblendet ist) |
+
+Ungültige Farben (alles außer `#rrggbb`) werden ignoriert. `aus`, `off`, `false`, `0` und `nein`
+schalten aus; jeder andere Wert lässt den Teil an.
 
 Die Attribute lassen sich nachträglich per JavaScript ändern; das Element lädt dann neu.
+
+### Schlanke Einbettung (Kacheln oder Liste ohne Kopf und Fuß)
+
+Für eine ruhige Einbindung in eine Webseite, etwa auf weißem Hintergrund:
+
+```html
+<script src="https://<host>/widgets/quellenpanel-widgets.js" defer></script>
+
+<!-- Kacheln, nur Basisansicht, ohne Kopf, Fuß und Rahmen, auf Weiß -->
+<wlo-quellen-kacheln kopf="aus" fuss="aus" rahmen="aus" hintergrund="#ffffff"></wlo-quellen-kacheln>
+
+<!-- dieselbe Ansicht als Liste, ohne Filterleiste, Fach vorbelegt -->
+<wlo-quellen-kacheln ansicht="liste" kopf="aus" fuss="aus" filter="aus" rahmen="aus"
+                     hintergrund="#ffffff" fach="Chemie"></wlo-quellen-kacheln>
+```
+
+Ohne Kopf gibt es keinen Umschalter für Ansicht, Stufe und Sprache: Es gilt die Basisansicht
+(Stufe 0), die Ansicht aus `ansicht` und die Sprache aus `sprache`. Suche und Filter bleiben, solange
+`filter` nicht `aus` ist; das Blättern bleibt immer. Dieselben Angaben wirken als Query-Parameter
+der iframe-Seite (`/embed/quellen-kacheln?kopf=aus&fuss=aus&rahmen=aus&hintergrund=%23ffffff`) und
+der App selbst (`https://<host>/?kopf=aus&ansicht=liste`). Im Query-String wird `#` als `%23`
+geschrieben; `hintergrund=ffffff` ohne Raute geht auch.
 
 ### Aussehen anpassen
 

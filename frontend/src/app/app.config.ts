@@ -1,3 +1,5 @@
+import { MatPaginatorIntl } from '@angular/material/paginator';
+import { QuellenPaginatorIntl } from './paginator-intl';
 import { ApplicationConfig, LOCALE_ID, provideZoneChangeDetection } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localeDe from '@angular/common/locales/de';
@@ -16,6 +18,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideHttpClient(withInterceptors([credentialsInterceptor])),
     provideAnimationsAsync(),
-    { provide: LOCALE_ID, useValue: 'de-DE' },   // German number formatting (62.867 not 62,867)
+    { provide: LOCALE_ID, useValue: 'de-DE' },
+    { provide: MatPaginatorIntl, useClass: QuellenPaginatorIntl },   // Blättern auf Deutsch/Englisch   // German number formatting (62.867 not 62,867)
   ],
 };

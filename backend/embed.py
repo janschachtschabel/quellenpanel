@@ -16,7 +16,8 @@ import config
 
 WIDGETS = ("quellen-liste", "quellen-top", "quellen-zahl", "quelle", "quellen-statistik",
            "quellen-kacheln", "quellenpanel")
-ATTRIBUTE = ("fach", "bildungsstufe", "suche", "max", "sprache", "nur-oer", "variante", "quelle")
+ATTRIBUTE = ("fach", "bildungsstufe", "suche", "max", "sprache", "nur-oer", "variante", "quelle",
+             "kopf", "fuss", "filter", "rahmen", "ansicht", "hintergrund", "farbe")
 MAX_WERT = 200
 
 

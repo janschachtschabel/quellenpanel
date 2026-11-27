@@ -29,6 +29,7 @@ import { TeamLoginComponent } from './team-login.component';
 import { KorrekturenComponent } from './korrekturen.component';
 import { TierService } from './tier.service';
 import { wendeBrandingAn } from './branding';
+import { EINBETT_STANDARD, EinbettOptionen, ansichtOderNull, farbeOderNull, istAn, leseEinbettung, wendeHintergrundAn } from './einbettung';
 import { SelectionService } from './selection.service';
 import { PdfService } from './pdf.service';
 import { PRUEF_GROUPS } from './data-problem-filters';
@@ -52,7 +53,8 @@ type View = 'tile' | 'list' | 'stats' | 'korrekturen';
     TeamStatsComponent, TilesComponent, ListComponent, KorrekturenComponent,
   ],
   template: `
-  <div class="host">
+  <div class="host" [class.ohne-rahmen]="!ein().rahmen">
+    @if (ein().kopf) {
     <header class="bar">
       <div class="bar-left">
         <img class="logo" [src]="api.assetUrl('wlo-logo.svg')" alt="WissenLebtOnline">
@@ -87,8 +89,9 @@ type View = 'tile' | 'list' | 'stats' | 'korrekturen';
         </mat-button-toggle-group>
       </div>
     </header>
+    }
 
-    @if (view !== 'stats' && view !== 'korrekturen') {
+    @if (ein().filter && view !== 'stats' && view !== 'korrekturen') {
       <div class="filters">
         <div class="filter-row top">
           <mat-form-field appearance="outline" class="search">
@@ -252,6 +255,7 @@ type View = 'tile' | 'list' | 'stats' | 'korrekturen';
       </div>
     }
 
+    @if (ein().fuss) {
     <footer class="appfoot">
       <span class="foot-brand">WissenLebtOnline · {{ i18n.t('app.title') }}</span>
       <nav class="foot-links">
@@ -260,6 +264,7 @@ type View = 'tile' | 'list' | 'stats' | 'korrekturen';
         <a class="foot-link" href="https://wirlernenonline.de/" target="_blank" rel="noopener">wirlernenonline.de ↗</a>
       </nav>
     </footer>
+    }
   </div>
   `,
   styles: [`
@@ -268,6 +273,8 @@ type View = 'tile' | 'list' | 'stats' | 'korrekturen';
       border: 1px solid var(--wlo-border); border-radius: 12px; overflow: hidden;
       box-shadow: var(--shadowSmall);
     }
+    /* Schlanke Einbettung (rahmen="aus"): nahtlos in die Gastseite, ohne Rahmen, Schatten, Abstand. */
+    .host.ohne-rahmen { max-width: none; margin: 0; border: 0; border-radius: 0; box-shadow: none; }
 
     .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 15px; padding: 10px 15px; min-height: 56px; background: var(--wlo-card); border-bottom: 1px solid var(--wlo-border); }
     .bar-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
@@ -374,6 +381,21 @@ export class AppComponent implements OnInit {
   @Input('sprache') set presetSprache(v: string) { if (v === 'de' || v === 'en') this.i18n.set(v, false); }
   @Input('nur-oer') set presetOer(v: string | boolean) { this.onlyOer = v === '' || v === true || v === 'true'; }
 
+  /** Schlanke Einbettung (siehe einbettung.ts und docs/widgets.md): Attribute am Element, in der
+   *  App auch als Query-Parameter (`/?kopf=aus&ansicht=liste&hintergrund=%23ffffff`). */
+  readonly ein = signal<EinbettOptionen>({ ...EINBETT_STANDARD });
+  @Input('kopf') set einKopf(v: string) { this.ein.update((o) => ({ ...o, kopf: istAn(v) })); }
+  @Input('fuss') set einFuss(v: string) { this.ein.update((o) => ({ ...o, fuss: istAn(v) })); }
+  @Input('filter') set einFilter(v: string) { this.ein.update((o) => ({ ...o, filter: istAn(v) })); }
+  @Input('rahmen') set einRahmen(v: string) { this.ein.update((o) => ({ ...o, rahmen: istAn(v) })); }
+  @Input('ansicht') set einAnsicht(v: string) {
+    const a = ansichtOderNull(v);
+    this.ein.update((o) => ({ ...o, ansicht: a }));
+    if (a) this.view = a;
+  }
+  @Input('hintergrund') set einHintergrund(v: string) { this.ein.update((o) => ({ ...o, hintergrund: farbeOderNull(v) })); }
+  @Input('farbe') set einFarbe(v: string) { this.ein.update((o) => ({ ...o, farbe: farbeOderNull(v) })); }
+
   view: View = 'tile';
   q = '';
   subject = '';
@@ -417,11 +439,23 @@ export class AppComponent implements OnInit {
   constructor() {
     // Profile brand colours as tokens: on the element itself, and in the SPA also on <html> so
     // overlays (dialogs, menus) attached to <body> get them too.
+    const el0 = this.host.nativeElement as HTMLElement;
+    if (el0.tagName === 'WLO-ROOT') {
+      // Die App selbst (auch im iframe) nimmt dieselben Optionen aus dem Query-String.
+      const q = leseEinbettung(new URLSearchParams(window.location.search));
+      this.ein.set(q);
+      if (q.ansicht) this.view = q.ansicht;
+    }
     effect(() => {
-      const b = this.tiers.branding();
+      const e = this.ein();
+      const b = e.farbe ? { ...(this.tiers.branding() ?? {}), primary: e.farbe } : this.tiers.branding();
       const el = this.host.nativeElement as HTMLElement;
       wendeBrandingAn(el, b);
-      if (el.tagName === 'WLO-ROOT') wendeBrandingAn(document.documentElement, b);
+      wendeHintergrundAn(el, e.hintergrund);
+      if (el.tagName === 'WLO-ROOT') {
+        wendeBrandingAn(document.documentElement, b);
+        wendeHintergrundAn(document.documentElement, e.hintergrund);
+      }
     });
     for (const bp of COL_BREAKPOINTS) {
       const mql = window.matchMedia(`(min-width: ${bp.min}px)`);
