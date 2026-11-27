@@ -20,7 +20,7 @@ or tier 2 data in memory.
 
 ## Installation
 
-**Try it locally** (Python 3.12, Node 22):
+**Try it locally** (Python 3.12, Node 22 or 26):
 
 ```bash
 cd frontend && npm ci && npm run build && npm run build:element && npm run build:widgets && cd ..

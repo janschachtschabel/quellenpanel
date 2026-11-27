@@ -106,7 +106,9 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
   fest auf E4/E7/E9/F, wie bisher). Die OpenAPI der partner- und public-Instanz blendet die Team-Pfade
   jetzt über ihr Präfix aus, weil FastAPI eingebundene Router nicht mehr auflöst.
 - GitHub-Actions: checkout 7, setup-node 7, setup-python 7, setup-helm 5, build-push 7, setup-buildx 4.
-- Nicht übernommen: TypeScript 7 (Angular 22 verlangt 6.0) und Node 25 (keine LTS-Linie); Dependabot
+- Zweite Runde: zone.js 0.16, jspdf-autotable 5.0.9, docker/metadata-action 6, Node 26 (LTS) im
+  Build-Image und in der CI.
+- Nicht übernommen: TypeScript 7 (Angular 22 verlangt 6.0) und Node 25 (keine LTS-Linie; Node 26 ist übernommen); Dependabot
   schlägt beides nicht mehr vor.
 
 ### Behoben (Abschluss-Audit)

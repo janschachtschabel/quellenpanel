@@ -60,7 +60,7 @@ jobs:
 
       - name: Derive image tags
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/quellenpanel
           # Release images carry the version (tag v1.0.0 → 1.0.0 and 1.0); main → main + sha. Never `latest`
