@@ -32,31 +32,31 @@ import { I18n } from './i18n.service';
             }
             @if (selectable) {
               <mat-checkbox class="sel" [checked]="sel.has(s.id)" (change)="sel.toggle(s.id)"
-                [attr.aria-label]="i18n.t('select.one') + ': ' + s.name"></mat-checkbox>
+                [aria-label]="i18n.t('select.one') + ': ' + s.name"></mat-checkbox>
             }
           </div>
-          <!-- 2–4 one click target: preview, title, metadata -->
-          <button type="button" class="open" (click)="open.emit(s.id)"
-            [attr.aria-labelledby]="'tn-' + s.id" [attr.aria-describedby]="'td-' + s.id">
+          <!-- 2–4 click target: the button holds title + preview (accessible name = title, count);
+               its ::after stretches over description and metadata so the whole card body opens. -->
+          <button type="button" class="open" (click)="open.emit(s.id)">
+            <span class="name">{{ s.name }}</span>
             <span class="thumb" [class.placeholder]="!(s.previewUrl || resolvedPreview.get(s.id))">
               @if (s.previewUrl || resolvedPreview.get(s.id); as preview) {
-                <img class="blur" [src]="preview" alt="" aria-hidden="true" loading="lazy">
+                <img class="blur" [src]="preview" alt="" loading="lazy">
                 <img class="pic" [src]="preview" alt="" loading="lazy">
               } @else {
                 <mat-icon aria-hidden="true">public</mat-icon>
               }
               <span class="count">{{ s.contentCount | number }} {{ i18n.t('unit.content') }}</span>
             </span>
-            <span class="meta-area">
-              <span class="name" [id]="'tn-' + s.id">{{ s.name }}</span>
-              @if (s.description) { <span class="desc">{{ s.description }}</span> }
-              <span class="rows" [id]="'td-' + s.id">
-                <span class="row"><span class="label">{{ i18n.t('filter.lrt') }}</span><span class="value">{{ s.contentTypes.slice(0, 3).join(', ') || '–' }}</span></span>
-                <span class="row"><span class="label">{{ i18n.t('filter.subject') }}</span><span class="value">{{ s.subjects.slice(0, 4).join(', ') || '–' }}</span></span>
-                <span class="row"><span class="label">{{ i18n.t('filter.level') }}</span><span class="value">{{ s.educationalContext.slice(0, 4).join(', ') || '–' }}</span></span>
-              </span>
-            </span>
           </button>
+          <div class="meta-area">
+            @if (s.description) { <p class="desc">{{ s.description }}</p> }
+            <dl class="rows">
+              <div class="row"><dt class="label">{{ i18n.t('filter.lrt') }}</dt><dd class="value">{{ s.contentTypes.slice(0, 3).join(', ') || '–' }}</dd></div>
+              <div class="row"><dt class="label">{{ i18n.t('filter.subject') }}</dt><dd class="value">{{ s.subjects.slice(0, 4).join(', ') || '–' }}</dd></div>
+              <div class="row"><dt class="label">{{ i18n.t('filter.level') }}</dt><dd class="value">{{ s.educationalContext.slice(0, 4).join(', ') || '–' }}</dd></div>
+            </dl>
+          </div>
           <!-- 5 option bar: quality (left), field profile and source bindings (right) -->
           <div class="foot">
             <wlo-quality-row [quality]="s.quality"></wlo-quality-row>
@@ -88,7 +88,7 @@ import { I18n } from './i18n.service';
 
     /* edu-sharing Grid card: no radius, bottom shadow, elevated background (node-entries-anatomy §1). */
     .tile {
-      display: flex; flex-direction: column; min-width: 0;
+      position: relative; display: flex; flex-direction: column; min-width: 0;
       background: var(--backgroundElevatedColor); box-shadow: var(--shadowBottom);
       transition: box-shadow var(--transitionNormal), background var(--transitionNormal);
     }
@@ -115,11 +115,14 @@ import { I18n } from './i18n.service';
     .sel { margin-right: -10px; }
 
     .open {
-      all: unset; box-sizing: border-box; display: flex; flex-direction: column; flex: 1; cursor: pointer; min-width: 0;
+      all: unset; box-sizing: border-box; display: flex; flex-direction: column; cursor: pointer; min-width: 0;
       font: inherit; color: var(--textMain); text-align: left;
     }
+    /* Stretched click area: from below the header bar to above the option bar. */
+    .open::after { content: ''; position: absolute; inset: 40px 0 40px 0; }
+    .open:focus-visible { outline: none; }
     .open:focus-visible .name { outline: 2px solid var(--focusColor); outline-offset: 2px; }
-    .open:focus-visible { outline: 2px solid var(--focusColor); outline-offset: -2px; }
+    .top, .foot { position: relative; z-index: 1; }
 
     .thumb {
       position: relative; height: 150px; display: flex; align-items: center; justify-content: center; overflow: hidden;
@@ -133,7 +136,13 @@ import { I18n } from './i18n.service';
       font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: var(--borderRadiusBadges);
     }
 
-    .meta-area { display: flex; flex-direction: column; gap: 5px; padding: 10px 15px 10px; flex: 1; min-width: 0; }
+    .thumb { order: -1; }
+    .open .name { margin: 10px 15px 0; }
+    .meta-area { display: flex; flex-direction: column; gap: 5px; padding: 5px 15px 10px; flex: 1; min-width: 0; }
+    .desc { margin: 0; }
+    .rows { margin: 0; }
+    .row dt { margin: 0; }
+    .row dd { margin: 0 0 0 auto; }
     /* Title: left-aligned, at most two lines (limitLineCount(2, 1.4)), space for two lines reserved. */
     .name {
       font-size: 16px; font-weight: 600; line-height: 1.4; min-height: 2.8em; color: var(--textMain);

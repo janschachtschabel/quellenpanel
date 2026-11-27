@@ -18,6 +18,7 @@
   --primaryForeground800: color-mix(in srgb, var(--primary) 78%, #000);
   --primaryForeground900: color-mix(in srgb, var(--primary) 62%, #000);
   --light-primary-text: #fff;
+  --primaryText: var(--primary);   // primary used as text/icon colour; darker for light brand colours (branding.ts)
   --focusColor: var(--primaryBackground300);
 
   --textMain: #383838;

@@ -53,7 +53,7 @@ import { KorrekturFelder } from './models';
         @if (detail.language) { <mat-chip>{{ detail.language }}</mat-chip> }
       </mat-chip-set>
     </div>
-    <button mat-icon-button mat-dialog-close [attr.aria-label]="i18n.t('action.close')"><mat-icon>close</mat-icon></button>
+    <button mat-icon-button mat-dialog-close [aria-label]="i18n.t('action.close')"><mat-icon>close</mat-icon></button>
   </div>
 
   <mat-dialog-content class="db">
@@ -219,7 +219,7 @@ import { KorrekturFelder } from './models';
         <div class="kv ki">
           @for (k of keys(detail.ki); track k) {
             <div class="k">{{ k }}<ng-container [ngTemplateOutlet]="pp" [ngTemplateOutletContext]="{ $implicit: k }"></ng-container></div>
-            <div class="v">@if (detail.ki[k]) { {{ detail.ki[k] }} } @else { <span class="muted">—</span> }</div>
+            <div class="v" tabindex="0" role="region" [attr.aria-label]="k">@if (detail.ki[k]) { {{ detail.ki[k] }} } @else { <span class="muted">—</span> }</div>
           }
         </div>
       </section>
@@ -316,19 +316,19 @@ import { KorrekturFelder } from './models';
     .dh { display: flex; gap: 16px; padding: 16px 16px 8px; align-items: flex-start; }
     .dh-preview { width: 132px; height: 88px; border-radius: 10px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--wlo-border); background: var(--primaryBackground50); }
     .dh-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .dh-init { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: var(--wlo-primary); background: var(--wlo-primary-light); }
+    .dh-init { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: var(--primaryText); background: var(--wlo-primary-light); }
     .dh-info { flex: 1; min-width: 0; }
     .dh-name { margin: 0 0 8px !important; font-size: 19px; font-weight: 700; color: var(--wlo-text); line-height: 1.25; }
     .c-oer { --mdc-chip-elevated-container-color: var(--colorStatusPositiveBackground); --mdc-chip-label-text-color: var(--colorStatusPositiveText); font-weight: 700; }
     .db { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 14px; background: var(--wlo-bg); }
     .count-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--wlo-primary-light); border-radius: 10px; flex-wrap: wrap; }
-    .c-big { font-size: 24px; font-weight: 700; color: var(--wlo-primary); }
-    .c-lbl { font-size: 13px; color: var(--wlo-primary); opacity: .85; }
+    .c-big { font-size: 24px; font-weight: 700; color: var(--primaryText); }
+    .c-lbl { font-size: 13px; color: var(--primaryText); opacity: .85; }
     .spacer { flex: 1; }
 
     /* Titled card sections (mirrors the Quellensteckbriefe profile). */
     .sb { background: var(--wlo-card); border: 1px solid var(--wlo-border); border-radius: 12px; padding: 14px 16px; }
-    .sb > h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; font-size: 14px; font-weight: 700; color: var(--wlo-primary); }
+    .sb > h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; font-size: 14px; font-weight: 700; color: var(--primaryText); }
     .sb > h3 mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .sb-sub { font-weight: 400; font-size: 12px; color: var(--wlo-text-muted); }
     .sb-hint { font-size: 12px; color: var(--wlo-text-muted); margin: -4px 0 10px; line-height: 1.45; }
@@ -354,6 +354,7 @@ import { KorrekturFelder } from './models';
     .kv .v { color: var(--wlo-text); word-break: break-word; }
     .kv .v .muted { color: var(--wlo-text-muted); }
     .kv.remarks .v { white-space: pre-wrap; line-height: 1.5; }
+    .kv.ki .v:focus-visible { outline: 2px solid var(--focusColor); outline-offset: 2px; }
     .kv.ki .v { max-height: 150px; overflow: auto; background: var(--wlo-bg); border: 1px solid var(--wlo-border); border-radius: 6px; padding: 4px 8px; white-space: pre-wrap; }
     @media (max-width: 560px) { .kv { grid-template-columns: 1fr; gap: 1px 0; } .kv .k { margin-top: 8px; font-weight: 600; } }
     .from-content { font-weight: 400; opacity: .8; }

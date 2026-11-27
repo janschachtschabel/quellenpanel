@@ -41,7 +41,7 @@ import { I18n } from './i18n.service';
               @if (selectable) {
                 <td class="c-sel" (click)="$event.stopPropagation()">
                   <mat-checkbox [checked]="sel.has(s.id)" (change)="sel.toggle(s.id)"
-                    [attr.aria-label]="i18n.t('select.one')"></mat-checkbox>
+                    [aria-label]="i18n.t('select.one') + ': ' + s.name"></mat-checkbox>
                 </td>
               }
               <td class="c-thumb">
@@ -87,7 +87,8 @@ import { I18n } from './i18n.service';
               </td>
               <td class="c-go">
                 @if (s.url) {
-                  <a class="go" [href]="s.url" target="_blank" rel="noopener" [matTooltip]="i18n.t('action.open')" (click)="$event.stopPropagation()">
+                  <a class="go" [href]="s.url" target="_blank" rel="noopener" [matTooltip]="i18n.t('action.open')" (click)="$event.stopPropagation()"
+                    [attr.aria-label]="s.name + ': ' + i18n.t('action.open') + ' ' + i18n.t('a11y.newTab')">
                     <mat-icon>open_in_new</mat-icon>
                   </a>
                 }
@@ -113,17 +114,17 @@ import { I18n } from './i18n.service';
     .ltable th.c-count, .ltable td.c-count { text-align: right; }
     .c-thumb { width: 80px; } .c-count { width: 84px; } .c-subj { width: 150px; }
     .c-edu { width: 130px; } .c-type { width: 130px; } .c-oer { width: 50px; } .c-status { width: 56px; text-align: center; } .c-qual { width: 152px; } .c-go { width: 40px; text-align: center; }
-    .status-badge { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--wlo-primary-light); color: var(--wlo-primary); font-weight: 700; font-size: 12px; cursor: help; }
+    .status-badge { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--wlo-primary-light); color: var(--primaryText); font-weight: 700; font-size: 12px; cursor: help; }
     .status-badge.done { background: var(--colorStatusPositiveBackground); color: var(--colorStatusPositiveText); }
     .lavatar { width: 66px; height: 44px; border-radius: 6px; object-fit: cover; display: block; }
-    .lavatar.init { display: flex; align-items: center; justify-content: center; background: var(--primaryBackground50); color: var(--wlo-primary); font-weight: 700; font-size: 18px; }
+    .lavatar.init { display: flex; align-items: center; justify-content: center; background: var(--primaryBackground50); color: var(--primaryText); font-weight: 700; font-size: 18px; }
     .lname-row { display: flex; align-items: center; gap: 6px; }
     .lname { font-weight: 600; line-height: 1.3; color: var(--wlo-text); }
     /* Bezugsquelle-family badge (publisher + sub-channels) — count of related sources. */
     .lfamily { flex-shrink: 0; display: inline-flex; align-items: center; gap: 2px; background: var(--primaryBackground50); color: var(--primaryForeground800); font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; cursor: help; }
     .lfamily mat-icon { font-size: 12px; width: 12px; height: 12px; }
     .lsub { font-size: 11px; color: var(--textMediumLight); }
-    .c-count .cn { font-weight: 700; color: var(--wlo-primary); display: block; }
+    .c-count .cn { font-weight: 700; color: var(--primaryText); display: block; }
     .c-count .cl { font-size: 9px; color: var(--textMediumLight); text-transform: uppercase; letter-spacing: .04em; }
     .tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 20px; margin: 1px; white-space: nowrap; }
     .tag.subj { background: var(--primaryBackground50); color: var(--primaryForeground800); }
@@ -131,7 +132,7 @@ import { I18n } from './i18n.service';
     .tag.type { background: var(--primaryBackground50); color: var(--textLight); }
     .tag.oer  { background: var(--colorStatusPositiveBackground); color: var(--colorStatusPositiveText); font-weight: 700; }
     .go { display: inline-flex; color: var(--textMediumLight); }
-    .go:hover { color: var(--wlo-primary); }
+    .go:hover { color: var(--primaryText); }
     .go mat-icon { font-size: 20px; width: 20px; height: 20px; }
   `],
 })

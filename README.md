@@ -220,6 +220,12 @@ Deployment targets:
 
 ## Status
 
+- ✅ **Look (Etappe 6)** — edu-sharing 11 tokens (`frontend/src/_tokens.scss`, same names as
+  edu-sharing), brand colours from the profile (`[branding]` → `/api/capabilities`), Open Sans
+  self-hosted, tiles after the edu-sharing card anatomy, texts in the formal German "Sie",
+  `npm run lint:design` (edu-sharing design rules, in CI) and an axe-core audit of all views
+  (`frontend/scripts/a11y-audit.mjs`, WCAG 2.1 AA, 0 violations). Details: [`docs/a11y.md`](docs/a11y.md).
+
 - ✅ **Widgets (Etappe 5)** — one light script (`quellenpanel-widgets.js`, ~14 KB, no dependencies)
   with list, plain list, top N per subject, key figure, single source and statistics elements; tiles
   and the whole app as Angular elements; every element also as an iframe page with height protocol.
@@ -228,7 +234,7 @@ Deployment targets:
 - ✅ **Operations (Etappe 3)** — JSON logs + B3 tracing, one error shape with trace id, internal
   port 9090 (health/ready/metrics), signed sessions, data out of the image (seed / first-start build),
   hardened digest-pinned image, three-service Compose, Helm chart per role with alerts, CI gates,
-  version 0.5.0 from `backend/pyproject.toml`. Details: [`docs/betrieb.md`](docs/betrieb.md).
+  version 0.6.0 from `backend/pyproject.toml`. Details: [`docs/betrieb.md`](docs/betrieb.md).
 - ✅ **Backend** — merged 3-tier API; ruff clean (`backend/ruff.toml`); no-leak
   invariant + `QE_PUBLIC_ONLY` hard cap verified; login/fetch rate limits (proxy-safe) + thumbnail
   SSRF guard tested; deps pinned + CVE-clean (`pip-audit`). The Bezugsquelle-family index (publisher

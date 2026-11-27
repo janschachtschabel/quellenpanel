@@ -89,13 +89,13 @@ const X0 = 8;       // x of the first box
     .mf { width: 100%; height: auto; display: block; }
     .mf-g { cursor: pointer; }
     .mf-g:focus-visible { outline: none; }
-    .mf-g:focus-visible .mf-rect { stroke: var(--wlo-primary); stroke-width: 2; }
+    .mf-g:focus-visible .mf-rect { stroke: var(--primaryText); stroke-width: 2; }
     .mf-rect { fill: var(--wlo-card); stroke: var(--wlo-border); stroke-width: 1.2; transition: fill .15s, stroke .15s; }
-    .mf-g:hover .mf-rect { stroke: var(--wlo-primary); }
+    .mf-g:hover .mf-rect { stroke: var(--primaryText); }
     /* ONLY the selected phase is highlighted — no permanent accent that could look "stuck". */
-    .mf-g.sel .mf-rect { stroke: var(--wlo-primary); stroke-width: 2.6; fill: var(--wlo-primary-light); }
+    .mf-g.sel .mf-rect { stroke: var(--primaryText); stroke-width: 2.6; fill: var(--wlo-primary-light); }
     .mf-num { fill: var(--textMediumLight); }
-    .mf-g.sel .mf-num { fill: var(--wlo-primary); }
+    .mf-g.sel .mf-num { fill: var(--primaryText); }
     .mf-numt { fill: var(--textWhite); font-size: 12px; font-weight: 700; text-anchor: middle; }
     /* foreignObject content — flows + wraps like normal HTML */
     .mf-inner { height: 70px; display: flex; flex-direction: column; justify-content: center; font-family: inherit; pointer-events: none; }

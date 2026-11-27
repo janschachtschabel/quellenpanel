@@ -124,7 +124,7 @@ import { I18n } from './i18n.service';
     .kpi-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
     .kpi { flex: 1; min-width: 120px; background: var(--wlo-card); border: 1px solid var(--wlo-border); border-radius: 12px; padding: 16px; text-align: center; }
     .kpi.accent { background: var(--wlo-primary-light); border-color: transparent; }
-    .kpi-val { font-size: 24px; font-weight: 700; color: var(--wlo-primary); }
+    .kpi-val { font-size: 24px; font-weight: 700; color: var(--primaryText); }
     .kpi-lbl { font-size: 12px; color: var(--wlo-text-muted); margin-top: 4px; }
     .lane { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
     .lane-lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--wlo-text-muted); }

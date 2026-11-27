@@ -1,26 +1,23 @@
 @use '@angular/material' as mat;
 @use 'tokens';
 
-// Material 3 theme — azure primary (close to WLO blue) + orange tertiary (accent).
-$wlo-theme: mat.define-theme((
-  color: (
-    theme-type: light,
-    primary: mat.$azure-palette,
-    tertiary: mat.$orange-palette,
-  ),
-  density: (scale: 0),
-));
+// Material 3 theme via system variables (mat.theme): components read --mat-sys-*, which are then
+// pointed at the edu-sharing tokens below — so the profile's brand colour drives Material too.
 
 /// Material theme + WLO brand variables, emitted inside the given selector (SPA: :root, element: the host tags).
 @mixin wlo-theme-vars {
-  @include mat.all-component-themes($wlo-theme);
+  @include mat.theme((
+    color: (theme-type: light, primary: mat.$azure-palette, tertiary: mat.$orange-palette),
+    typography: 'Open Sans',
+    density: 0,
+  ));
 
   @include tokens.tokens;
 
   // Material (M3) system colours follow the edu-sharing tokens, so the brand colour drives buttons,
   // toggles, checkboxes and form fields.
-  --mat-sys-primary: var(--primary);
-  --mat-sys-on-primary: var(--light-primary-text);
+  --mat-sys-primary: var(--primaryText);
+  --mat-sys-on-primary: var(--textWhite);
   --mat-sys-primary-container: var(--primaryBackground100);
   --mat-sys-on-primary-container: var(--primaryForeground800);
   --mat-sys-secondary-container: var(--primaryBackground100);

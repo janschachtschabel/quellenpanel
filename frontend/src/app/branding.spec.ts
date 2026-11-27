@@ -18,3 +18,20 @@ describe('branding from the profile', () => {
     expect(el.style.getPropertyValue('--primary')).toBe('#123456');
   });
 });
+
+describe('light brand colours stay readable (review focus)', () => {
+  it('uses dark text on a light primary and darker foreground tints', () => {
+    const el = document.createElement('div');
+    wendeBrandingAn(el, { primary: '#7fb2e5' });
+    expect(el.style.getPropertyValue('--light-primary-text')).toBe('#1d1d1d');
+    expect(el.style.getPropertyValue('--primaryForeground800')).toContain('45%');
+    expect(el.style.getPropertyValue('--primaryText')).toContain('45%');
+    expect(el.style.getPropertyValue('--focusColor')).toBe('var(--primaryText)');
+  });
+
+  it('keeps the defaults for a dark primary', () => {
+    const el = document.createElement('div');
+    wendeBrandingAn(el, { primary: '#003b7c' });
+    expect(el.style.getPropertyValue('--light-primary-text')).toBe('');
+  });
+});

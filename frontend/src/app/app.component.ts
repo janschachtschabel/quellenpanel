@@ -274,7 +274,7 @@ type View = 'tile' | 'list' | 'stats' | 'korrekturen';
     .logo { height: 38px; width: auto; display: block; flex-shrink: 0; }
     .sep { width: 1px; height: 24px; background: var(--wlo-border); flex-shrink: 0; }
     .brand { font-size: 15px; font-weight: 700; color: var(--wlo-text); white-space: nowrap; }
-    .total-badge { background: var(--wlo-primary-light); color: var(--wlo-primary); font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 10px; }
+    .total-badge { background: var(--wlo-primary-light); color: var(--primaryText); font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 10px; }
     .views { --mat-standard-button-toggle-height: 36px; font-size: 13px; }
     .views mat-icon { font-size: 17px; width: 17px; height: 17px; vertical-align: -3px; margin-right: 2px; }
     .bar-right { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }
@@ -299,7 +299,7 @@ type View = 'tile' | 'list' | 'stats' | 'korrekturen';
     .filter-row .level { width: 150px; }
     .filter-row .lrt { width: 180px; }
     .filter-row .status { width: 220px; }
-    .filter-row .min { width: 120px; }
+    .filter-row .min { width: 140px; }
     .filter-row .flag { width: 220px; }
     .filters mat-form-field { font-size: 14px; }
     .filters mat-form-field mat-icon[matPrefix] { font-size: 18px; width: 18px; height: 18px; color: var(--wlo-text-muted); }
@@ -322,14 +322,14 @@ type View = 'tile' | 'list' | 'stats' | 'korrekturen';
 
     /* Sammel-PDF selection bar (tier 1+, shown once ≥1 source is ticked). */
     .selbar { display: flex; align-items: center; gap: 10px; padding: 8px 14px; margin-bottom: 14px; background: var(--wlo-primary-light); border: 1px solid var(--wlo-primary); border-radius: 10px; }
-    .selcount { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; color: var(--wlo-primary); }
+    .selcount { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; color: var(--primaryText); }
     .selcount mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .selspacer { flex: 1; }
 
     .appfoot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--wlo-border); background: var(--wlo-card); font-size: 12px; color: var(--wlo-text-muted); }
     .foot-links { display: flex; gap: 14px; align-items: center; }
     .foot-link { background: none; border: none; padding: 0; font: inherit; font-size: 12px; color: var(--wlo-text-muted); cursor: pointer; text-decoration: none; }
-    .foot-link:hover { color: var(--wlo-primary); text-decoration: underline; }
+    .foot-link:hover { color: var(--primaryText); text-decoration: underline; }
     @media (max-width: 600px) { .filter-row.top .search { flex-basis: 100%; } .filter-row.top .sort { width: 100%; } }
   `],
 })

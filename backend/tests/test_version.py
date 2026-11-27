@@ -9,11 +9,11 @@ PYPROJECT = Path(__file__).resolve().parents[1] / "pyproject.toml"
 
 def test_version_comes_from_pyproject():
     project = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))["project"]
-    assert config.VERSION == project["version"] == "0.5.0"
+    assert config.VERSION == project["version"] == "0.6.0"
 
 
 def test_openapi_reports_version(client):
-    assert client.get("/openapi.json").json()["info"]["version"] == "0.5.0"
+    assert client.get("/openapi.json").json()["info"]["version"] == "0.6.0"
 
 
 def test_missing_pyproject_falls_back(tmp_path):
