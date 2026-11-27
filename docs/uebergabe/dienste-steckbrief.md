@@ -7,10 +7,10 @@ Checkliste: [README.md](README.md).
 |---|---|
 | **Service** | Quellenpanel (Dienst-ID `quellenpanel`) |
 | **Funktionalität** | Zeigt die Quellen des Repositorys (WLO): öffentliche Quellenliste mit Widgets, Steckbrief für Partner, internes Audit mit Korrekturen fürs Team |
-| **Stabile Version** | `vorhanden` (1.0.0, Tag `v1.0.0`) |
+| **Stabile Version** | `In Klärung` (1.0.0 fertig, Tag `v1.0.0` noch nicht gesetzt) |
 | **Technischer Owner** | Jan Schachtschabel |
 | **Jira** | `nicht vorhanden` |
-| **Deployment Status** | `In Klärung` (Vorgängerversion läuft produktiv; 1.0.0 noch nicht im Cluster) |
+| **Deployment Status** | `In Klärung` (Vorgängerversion läuft produktiv; 1.0.0 läuft im Testbetrieb per Docker Compose, noch nicht im Cluster) |
 | **Repository** | `vorhanden` ([GitHub](https://github.com/janschachtschabel/quellenpanel)) |
 | **OpenAPI Spec** | `vorhanden` (`GET /openapi.json`, je Instanz nur deren Pfade) |
 | **Pipeline und Git-Tags** | `vorhanden` (Tags `v<version>`, `.gitlab-ci.yml` und `.github/workflows/` im Repo) |
@@ -23,12 +23,12 @@ Checkliste: [README.md](README.md).
 
 | Architektur | |
 |---|---|
-| **Überblick** | FastAPI-Backend und Angular-22-Oberfläche in einem Image; drei Instanzen: team (Stufe 2), partner (Stufe 1), public (Stufe 0) |
+| **Überblick** | FastAPI-Backend und Angular-22-Oberfläche in einem Image. Server (Compose): eine Instanz auf einem Port für alle Stufen, Stufe 1 und 2 per Passwort; optional getrennte Instanzen. Cluster (Helm): drei Instanzen team (Stufe 2), partner (Stufe 1), public (Stufe 0) |
 | **Horizontale Skalierbarkeit** | `geprüft` (partner und public ja; team 1 Pod wegen RWO-Volume) |
 | **Integriert in B-API** | `geprüft` (nein, begründet: anonymer Lesezugriff auf öffentliche Daten) |
 | **Schreibt Suggestions** | `geprüft` (nein) |
 | **Nutzt Routing** | `geprüft` (nein, kein LLM) |
-| **Nutzt API Keys** | `geprüft` (nein, Passwörter je Instanz) |
+| **Nutzt API Keys** | `geprüft` (nein, Passwörter je Zugangsstufe) |
 | **Repo über B-API** | `geprüft` (nein, öffentliche REST-API des Repositorys, nur lesend) |
 | **Benötigte Dienste** | `geprüft` (keine; liest Repository und Vokabular `vocabs.openeduhub.de`) |
 
@@ -36,13 +36,13 @@ Checkliste: [README.md](README.md).
 |---|---|
 | **HELM** | `vorhanden` (`deploy/helm/quellenpanel`, eine Release je Rolle) |
 | **Docker-Files** | `vorhanden` (`Dockerfile`, `deploy/docker-compose.yml`, `docker-compose.yml` für Server mit Traefik) |
-| **Abschaltbare Komponenten** | `geprüft` (ja: partner und public einzeln; NetworkPolicy, ServiceMonitor, Alarme per Value) |
+| **Abschaltbare Komponenten** | `geprüft` (ja: partner und public einzeln, in Compose per `SEPARATE_INSTANCES`; NetworkPolicy, ServiceMonitor, Alarme per Value) |
 | **Datenbank** | `geprüft` (nein) |
 | **Große Daten** | `geprüft` (nein; Team-Volume 2 Gi, rund 25 MB belegt) |
 
 | Security und Konfiguration | |
 |---|---|
-| **Authentifizierung** | `geprüft` (Stufe 0 offen; Stufe 1 Passwort auf partner; Stufe 2 Team-Passwort mit signierter Sitzung, Team-Host hinter VPN/SSO) |
+| **Authentifizierung** | `geprüft` (Stufe 0 offen; Stufe 1 Passwort `QE_TIER1_PASSWORD` auf team und partner, ohne Passwort geschlossen; Stufe 2 Team-Passwort mit signierter Sitzung, Team-Host hinter VPN/SSO) |
 | **Network Policy** | `vorhanden` (ein- und ausgehend, in allen drei Rollen an) |
 | **ENV Variablen** | `vorhanden` (Tabelle in `docs/betrieb.md`) |
 | **Benötigte Secrets** | `vorhanden` (`QE_TEAM_PASSWORD`, `QE_SESSION_SECRET`, `QE_TIER1_PASSWORD`) |
