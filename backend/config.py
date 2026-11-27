@@ -34,6 +34,17 @@ def _revision() -> str:
 
 
 REVISION = _revision()
+
+
+def _built(path: Path) -> str:
+    """Build time of the image (file BUILD_TIME, written by the Dockerfile); "" outside an image."""
+    try:
+        return path.read_text(encoding="utf-8").strip()
+    except OSError:
+        return ""
+
+
+BUILT = _built(HERE.parent / "BUILD_TIME")
 FRONTEND = HERE.parent / "frontend"
 
 
