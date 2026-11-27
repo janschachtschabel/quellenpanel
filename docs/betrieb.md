@@ -17,7 +17,7 @@ Ein Image, drei Instanzen (`QE_ROLE`):
 
 Ohne `QE_ROLE` (und ohne `QE_PUBLIC_ONLY`) läuft eine Instanz als `team`; das ist für die lokale
 Entwicklung gedacht. Das Helm-Chart setzt immer eine Rolle (Standard `public`), Compose ebenfalls.
-Eine Team-Instanz gehört hinter VPN/SSO: Dort ist Stufe 1 ohne Passwort offen.
+Eine Team-Instanz gehört im Kubernetes-Betrieb hinter VPN/SSO: Sie hält alle Daten und die Schreibrouten. Stufe 1 und 2 sind dort nur mit ihrem Passwort erreichbar.
 
 Partner und Öffentlich halten nie die internen Daten. Sie holen `stufe{tier}.json` vom internen Port
 des Teams (ETag, alle `QE_EXPORT_POLL_MINUTES`, solange ein Export fehlt alle 15 s) und behalten bei
@@ -163,7 +163,7 @@ Regeln sind mit `promtool test rules deploy/helm/quellenpanel/tests/rules-test.y
 | `QE_ROLE` | alle | | `team` / `partner` / `public` |
 | `QE_TEAM_PASSWORD` | team | ja | Team-Login (Stufe 2); leer = kein Team-Zugang |
 | `QE_SESSION_SECRET` | team | ja | HMAC-Schlüssel der Team-Sitzung; leer = einmal zufällig erzeugt in `session.key` im Datenordner (Volume), ohne beschreibbaren Datenordner zufällig je Prozess |
-| `QE_TIER1_PASSWORD` | partner | ja | Passwort für Stufe 1; leer = Stufe 1 bleibt zu |
+| `QE_TIER1_PASSWORD` | partner, team | ja | Passwort für Stufe 1; leer = Stufe 1 bleibt zu (auf jeder Instanz) |
 | `QE_SEED_URL` | team | | Startdaten für den Erststart |
 | `QE_AUTO_REFRESH_HOUR` | team | | Stunde des nächtlichen Rebuilds |
 | `QE_EXPORT_SOURCE`, `QE_EXPORT_POLL_MINUTES` | partner, public | | Export-Quelle mit `{tier}`, Abrufintervall |

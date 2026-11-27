@@ -24,11 +24,11 @@ def test_tier0_list_comes_from_export(client):
     assert got["items"] and not any("flags" in it or "bind" in it for it in got["items"])
 
 
-def test_tier1_detail_and_stats_from_export(client):
+def test_tier1_detail_and_stats_from_export(client, tier1):
     doc = export_store.current(1)
     sid = doc["items"][0]["id"]
-    assert client.get(f"/api/sources/{sid}?tier=1").json() == doc["items"][0]["detail"]
-    assert client.get("/api/stats?tier=1").json() == doc["stats"]
+    assert client.get(f"/api/sources/{sid}?tier=1", headers=tier1).json() == doc["items"][0]["detail"]
+    assert client.get("/api/stats?tier=1", headers=tier1).json() == doc["stats"]
     assert client.get("/api/meta/filters").json() == export_store.current(0)["filters"]
 
 

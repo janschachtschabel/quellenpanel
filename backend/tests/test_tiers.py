@@ -113,16 +113,25 @@ def _req(cookie=None):
                                  client=types.SimpleNamespace(host="127.0.0.9"))
 
 
-def test_max_tier_tier1_open_by_default():
-    assert tiers.max_tier(_req(), None, None, None) == 1  # tier 1 open, no team pw
+def test_max_tier_tier1_closed_without_password():
+    # Fail-closed on every role: without QE_TIER1_PASSWORD nobody gets tier 1 without logging in.
+    assert tiers.max_tier(_req(), None, None, None) == 0
+
+
+def test_team_role_tier1_needs_its_password(monkeypatch):
+    monkeypatch.setattr(config, "TIER1_PW", "p1")
+    assert tiers.max_tier(_req(), None, None, None) == 0
+    assert tiers.max_tier(_req(), None, None, "p1") == 1
+    assert tiers.max_tier(_req(), None, "test-team-pw", None) == 2   # one port, three logins
 
 
 def test_max_tier_team_password():
     assert tiers.max_tier(_req(), "test-team-pw", None, None) == 2
 
 
-def test_check_tier1_open_when_unset():
-    assert config.check_tier1_pw(None, None) is True  # open unless QE_TIER1_PASSWORD set
+def test_check_tier1_closed_when_unset():
+    assert config.check_tier1_pw(None, None) is False
+    assert config.check_tier1_pw(None, "anything") is False
 
 
 def test_api_sources_default_is_tier0_clean(client):
@@ -132,10 +141,11 @@ def test_api_sources_default_is_tier0_clean(client):
         assert not [k for k in LEAK if k in it]
 
 
-def test_api_tier2_capped_without_auth(client):
-    # Tier 1 is open by default, so an unauthenticated caller asking for tier 2 is capped to
-    # tier 1 (the highest it may reach) — and crucially still carries no internal data.
-    d = client.get("/api/sources?tier=2&page_size=3").json()
+def test_api_tier2_capped_without_auth(client, tier1):
+    # Without any password a caller asking for tier 2 gets tier 0; with the tier-1 password it is
+    # capped to tier 1 — and crucially still carries no internal data.
+    assert client.get("/api/sources?tier=2&page_size=3").json()["tier"] == 0
+    d = client.get("/api/sources?tier=2&page_size=3", headers=tier1).json()
     assert d["tier"] == 1
     assert all("internal" not in it for it in d["items"])
 
@@ -148,9 +158,9 @@ def test_api_tier2_list_has_flags_not_internal(client, team_pw):
     assert all("internal" not in it for it in d["items"])   # internal is detail-only
 
 
-def test_api_detail_tier1_no_internal(client):
+def test_api_detail_tier1_no_internal(client, tier1):
     sid = client.get("/api/sources?page_size=1").json()["items"][0]["id"]
-    d = client.get(f"/api/sources/{sid}?tier=1").json()
+    d = client.get(f"/api/sources/{sid}?tier=1", headers=tier1).json()
     assert "ki" in d and "fieldGeneration" in d and "internal" not in d and "provenance" not in d
 
 
@@ -162,7 +172,7 @@ def test_api_detail_tier2_has_internal(client, team_pw):
 
 def test_capabilities_reflect_auth(client, team_pw):
     base = client.get("/api/capabilities").json()
-    assert base["maxTier"] == 1 and base["teamAvailable"] is True and base["publicOnly"] is False
+    assert base["maxTier"] == 0 and base["teamAvailable"] is True and base["publicOnly"] is False
     withpw = client.get("/api/capabilities", headers={"X-Team-Password": team_pw}).json()
     assert withpw["maxTier"] == 2
 

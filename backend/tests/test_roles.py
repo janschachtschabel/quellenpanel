@@ -54,15 +54,15 @@ def test_is_team_false_outside_team_role(monkeypatch, role):
     assert tiers.is_team(_req(), "test-team-pw") is False
 
 
-def test_team_role_keeps_team_and_open_tier1():
+def test_team_role_keeps_team_and_closed_tier1():
     assert tiers.max_tier(_req(), None, "test-team-pw", None) == 2
-    assert tiers.max_tier(_req(), None, None, None) == 1
+    assert tiers.max_tier(_req(), None, None, None) == 0      # tier 1 needs its password
 
 
 def test_capabilities_reports_role(client):
     caps = client.get("/api/capabilities").json()
     assert caps["role"] == "team"
-    assert caps["teamAvailable"] is True
+    assert caps["teamAvailable"] is True and caps["tier1Gated"] is True   # one port: tier 1 gated too
 
 
 def test_capabilities_partner(client, monkeypatch):

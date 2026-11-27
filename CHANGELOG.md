@@ -86,16 +86,18 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
 
 ### Hinzugefügt (Server mit Traefik)
 
-- `docker-compose.yml` im Hauptordner für einen Docker-Server mit vorhandenem Traefik-Proxy: drei
-  Instanzen aus einem Image, das aus diesem Repository gebaut wird; Traefik-Labels je Instanz
-  (`DOMAIN`, `PARTNER_DOMAIN`, `TEAM_DOMAIN`), keine veröffentlichten Ports, kein externes Netz. Der
-  erste Start braucht keine Variable; Startdaten kommen aus `profiles/wlo/daten`. Vorlage `.env.example`.
-  Ohne Domain direkt erreichbar über `PORT` (18080) und `PARTNER_PORT` (18081); der Team-Port
-  `TEAM_PORT` (18082) lauscht nur auf dem Server, außer `TEAM_BIND` ist gesetzt.
+- `docker-compose.yml` im Hauptordner für einen Docker-Server mit vorhandenem Traefik-Proxy. Standard
+  ist eine Instanz auf einem Port (`DOMAIN` oder `PORT`, 18080), die alle Stufen liefert; Stufe 1 und 2
+  nur mit ihrem Passwort. Getrennte Partner- und öffentliche Instanzen schaltet `SEPARATE_INSTANCES=1`
+  zu (`PARTNER_DOMAIN`/`PARTNER_PORT`, `PUBLIC_DOMAIN`/`PUBLIC_PORT`). Das Image wird bei jedem Deploy
+  aus diesem Repository gebaut (`pull_policy: build`, keine Registry). Der erste Start braucht keine
+  Variable; Startdaten kommen aus `profiles/wlo/daten`. Vorlage `.env.example`, kein externes Netz.
 - `TRUST_PROXY` wertet `X-Forwarded-For` nur aus, wenn die Anfrage von einer privaten Adresse kommt.
 - Ohne `QE_SESSION_SECRET` legt das Team einmal `session.key` im Datenordner an; Anmeldungen
   überstehen so Neustarts.
 - Die bisherige Entwicklungsdatei heißt jetzt `docker-compose.build.yml`.
+- **Stufe 1 ist jetzt überall fail-closed:** ohne `QE_TIER1_PASSWORD` bleibt sie auch auf der
+  Team-Instanz zu (vorher dort ohne Passwort offen). `/api/capabilities` meldet `tier1Gated` immer.
 
 ### Abhängigkeiten aktualisiert (Dependabot)
 

@@ -20,8 +20,8 @@ import session
 
 def max_tier(request: Request, team_pw: str | None, team_header: str | None,
              tier1_header: str | None) -> int:
-    """Highest tier the caller may access. Team (cookie or password) wins; otherwise tier 1 if
-    it is open or the tier-1 password matches; otherwise tier 0."""
+    """Highest tier the caller may access. Team (cookie or password) wins; otherwise tier 1 if the
+    tier-1 password is set and matches (fail-closed on every role); otherwise tier 0."""
     role = config.role()
     cap = config.ROLE_MAX_TIER[role]
     if cap == 0:
@@ -29,13 +29,10 @@ def max_tier(request: Request, team_pw: str | None, team_header: str | None,
     if role == "team" and (session.valid(request.cookies.get(session.COOKIE))
                            or _team_pw_ok(request, team_pw or team_header)):
         return 2
-    if role == "partner":
-        # Fail-closed: without a configured partner password tier 1 stays shut on this instance.
-        ok = bool(config.TIER1_PW) and _tier1_pw_ok(request, tier1_header)
-        return 1 if ok else 0
-    if not config.TIER1_PW or _tier1_pw_ok(request, tier1_header):  # tier 1 open, or pw matches
-        return min(1, cap)
-    return 0
+    # Fail-closed: without a configured tier-1 password tier 1 stays shut, also on the team instance
+    # (which may serve all tiers on one port).
+    ok = bool(config.TIER1_PW) and _tier1_pw_ok(request, tier1_header)
+    return 1 if ok else 0
 
 
 def _team_pw_ok(request: Request, given: str | None) -> bool:
