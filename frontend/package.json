@@ -35,7 +35,7 @@
     "@angular/cli": "^21.2.31",
     "@angular/compiler-cli": "^21.2.26",
     "axe-core": "^4.14.1",
-    "happy-dom": "^20.10.6",
+    "happy-dom": "^21.0.4",
     "typescript": "~5.9.0",
     "vitest": "^4.1.9"
   }
