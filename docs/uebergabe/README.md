@@ -1,6 +1,7 @@
 # Übergabepaket Quellenpanel (Version 1.0.0)
 
-Checkliste nach dem Diensteleitfaden, Kapitel 6. Jeder Punkt verweist auf die Stelle, die ihn
+Checkliste nach dem Diensteleitfaden, Kapitel 6. Kurzfassung als Dienste-Steckbrief:
+[dienste-steckbrief.md](dienste-steckbrief.md). Jeder Punkt verweist auf die Stelle, die ihn
 beantwortet. Offen sind die Vertretung der Ansprechperson und wer Updates anstößt. Zwei Schritte
 liegen beim Betrieb (Spalte „Stand“: **Schritt für den Betrieb**).
 
