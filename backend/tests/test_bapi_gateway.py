@@ -76,3 +76,20 @@ def test_ueber_b_api_kein_team_login(client, team_pw):
     r = client.post("/api/auth", headers={**BAPI, "X-Team-Password": team_pw})
     assert r.status_code == 403
     assert "set-cookie" not in r.headers
+
+
+def test_review_spec_ueber_b_api_nur_get_mit_trace_und_ohne_cache(client):
+    r = client.get("/openapi.json", headers=BAPI)
+    assert r.headers.get("x-b3-traceid")                 # läuft durch die Trace-Middleware
+    assert "no-store" in r.headers.get("cache-control", "")
+    assert client.post("/openapi.json", headers=BAPI).status_code != 200
+    via = r.json()["paths"]
+    for p in ("/api/auth/status", "/api/logout", "/jobs/latest"):
+        assert p not in via, p
+
+
+def test_review_team_status_ueber_b_api_immer_false(client, team_pw):
+    login = client.post("/api/auth", headers={"X-Team-Password": team_pw})
+    assert login.status_code == 200
+    assert client.get("/api/auth/status").json()["team"] is True          # direkt: angemeldet
+    assert client.get("/api/auth/status", headers=BAPI).json()["team"] is False

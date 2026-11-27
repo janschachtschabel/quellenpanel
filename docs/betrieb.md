@@ -220,10 +220,16 @@ zurück). Die Erkennung nimmt nur Rechte weg; wer den Header fälscht, gewinnt n
 | `allowedResponseContentTypes` | `application/json`, `text/csv` (Export ab Stufe 1), `image/*` (`/api/thumb`) |
 | `pathToIgnore` | `/embed/**`, `/widgets/**` (Oberfläche und Widgets bleiben direkt) |
 
+**Nie die Team-Instanz als `baseUrl` eintragen.** Die Einschränkung hängt am Delegations-Token, das
+nur mit `forwardDelegation` (oder `delegationHeader`) ankommt. Fehlt beides, sieht eine Anfrage über
+die b-api aus wie eine direkte; auf der Team-Instanz wären dann mit einem freigegebenen
+`X-Team-Password` Stufe 2 und Schreibzugriffe erreichbar.
+
 Offen mit dem b-api-Team: Ob der Proxy die Client-Adresse als `X-Forwarded-For` mitschickt. Sonst
-teilen sich alle Aufrufe über die b-api die Drossel für Live-Abrufe (600 je Minute), weil der Dienst
-nur die Adresse der b-api sieht; mit `TRUST_PROXY=1` und einer privaten Adresse der b-api zählt der
-mitgeschickte Header.
+sieht der Dienst nur die Adresse der b-api, und alle Aufrufe über die b-api teilen sich die Drosseln
+je Client: die für Live-Abrufe (600 je Minute) und das Fehlversuchsbudget für Passwörter (8 in 5
+Minuten; danach ist Stufe 1 über die b-api für alle 5 Minuten gesperrt). Mit `TRUST_PROXY=1` und
+einer privaten Adresse der b-api zählt der mitgeschickte Header.
 
 ## Versionen und Freigabe
 
