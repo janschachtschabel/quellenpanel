@@ -30,4 +30,5 @@ backend/data/truth.json
 backend/data/raw/
 backend/data/exports/
 backend/data/status.json
+backend/data/session.key
 profiles/*/daten/

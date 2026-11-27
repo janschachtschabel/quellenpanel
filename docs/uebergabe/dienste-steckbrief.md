@@ -35,7 +35,7 @@ Checkliste: [README.md](README.md).
 | Deployment und Infrastruktur | |
 |---|---|
 | **HELM** | `vorhanden` (`deploy/helm/quellenpanel`, eine Release je Rolle) |
-| **Docker-Files** | `vorhanden` (`Dockerfile`, `deploy/docker-compose.yml`) |
+| **Docker-Files** | `vorhanden` (`Dockerfile`, `deploy/docker-compose.yml`, `docker-compose.yml` für Server mit Traefik) |
 | **Abschaltbare Komponenten** | `geprüft` (ja: partner und public einzeln; NetworkPolicy, ServiceMonitor, Alarme per Value) |
 | **Datenbank** | `geprüft` (nein) |
 | **Große Daten** | `geprüft` (nein; Team-Volume 2 Gi, rund 25 MB belegt) |

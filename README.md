@@ -32,7 +32,13 @@ Ohne `QE_ROLE` läuft die Instanz als `team`; das ist nur für die Entwicklung g
 Start ohne Daten baut sie die Daten aus dem Repository auf (einige Minuten, bis dahin antworten
 die Datenrouten mit 503) oder lädt Startdaten von `QE_SEED_URL`. Im Container (Compose, Helm) fehlen Korrekturen und Crawler-Tabelle im Image: dort `QE_SEED_URL` setzen oder beide Dateien im Team-Bereich hochladen, sonst baut das Team keine Daten.
 
-**Server mit Docker Compose** (drei Instanzen, Schritt für Schritt in
+**Server mit Traefik** (Docker-Server, auf dem schon ein Traefik-Proxy mit Let's Encrypt läuft,
+etwa ein Docker-Panel mit „Compose aus URL“): Die `docker-compose.yml` im Hauptordner startet die drei
+Instanzen, baut das Image aus diesem Repository und braucht beim ersten Start keine einzige Variable.
+Danach in der `.env` (Vorlage `.env.example`) `DOMAIN` und die Passwörter eintragen und erneut
+bereitstellen. Schritt für Schritt in [`deploy/README.md`](deploy/README.md#server-with-traefik).
+
+**Server mit Docker Compose** (drei Instanzen aus einem veröffentlichten Image, Schritt für Schritt in
 [`deploy/README.md`](deploy/README.md)):
 
 ```bash
@@ -175,7 +181,7 @@ App (`/?kopf=aus&ansicht=liste`). Alle Elemente, Attribute und Farben:
 | `QE_ROLE` | `team` | `team`, `partner` oder `public` |
 | `QE_TEAM_PASSWORD` | leer (kein Team-Zugang) | Passwort Stufe 2 |
 | `QE_TIER1_PASSWORD` | leer (Partner: Stufe 1 zu) | Passwort Stufe 1 |
-| `QE_SESSION_SECRET` | zufällig je Prozess | Schlüssel der Team-Sitzung |
+| `QE_SESSION_SECRET` | `session.key` im Datenordner | Schlüssel der Team-Sitzung |
 | `QE_EXPORT_SOURCE`, `QE_EXPORT_POLL_MINUTES` | leer, `10` | Partner/Öffentlich: Export-Quelle mit `{tier}`, Abgleich in Minuten |
 | `QE_SEED_URL` | leer | Team: Startdaten für den ersten Start |
 | `QE_AUTO_REFRESH_HOUR` | leer (aus) | Team: Stunde des nächtlichen Abgleichs |

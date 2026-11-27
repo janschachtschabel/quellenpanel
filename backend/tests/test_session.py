@@ -72,8 +72,11 @@ def test_revoked_list_evicts_expired(monkeypatch):
     assert len(session._revoked) == 1
 
 
-def test_missing_secret_generates_one_per_process(monkeypatch, caplog):
+def test_missing_secret_generates_one_per_process(monkeypatch, caplog, tmp_path):
     monkeypatch.delenv("QE_SESSION_SECRET")
+    blocker = tmp_path / "keine-mappe"
+    blocker.write_text("x")                               # data dir not writable: key stays in memory
+    monkeypatch.setenv("QE_DATA_DIR", str(blocker))
     monkeypatch.setattr(config, "_GENERATED_SECRET", None)
     with caplog.at_level("WARNING"):
         a = config.session_secret()
@@ -116,3 +119,15 @@ def test_client_ip_trust_proxy_uses_rightmost(monkeypatch):
     # Behind a proxy that APPENDS, the leftmost entries are client-controlled: take the rightmost.
     monkeypatch.setenv("TRUST_PROXY", "1")
     assert ratelimit.client_ip(_request({"X-Forwarded-For": "1.2.3.4, 203.0.113.9"})) == "203.0.113.9"
+
+
+def test_missing_secret_is_kept_in_the_team_data_dir(monkeypatch, tmp_path):
+    # A deploy without QE_SESSION_SECRET keeps team logins across restarts: the key lives in the volume.
+    monkeypatch.delenv("QE_SESSION_SECRET")
+    monkeypatch.setenv("QE_DATA_DIR", str(tmp_path))
+    monkeypatch.setattr(config, "_GENERATED_SECRET", None)
+    a = config.session_secret()
+    monkeypatch.setattr(config, "_GENERATED_SECRET", None)   # "restart"
+    assert config.session_secret() == a and len(a) >= 32
+    key = tmp_path / "session.key"
+    assert key.is_file() and (key.stat().st_mode & 0o077) == 0

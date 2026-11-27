@@ -1,48 +1,117 @@
-# Local build-and-run setup: ONE team instance built from this repo's Dockerfile (development).
-# For the three instances (team, partner, public) from a published image, and HTTPS via Caddy, use
-# deploy/docker-compose.yml and deploy/docker-compose.tls.yml (step by step in deploy/README.md).
+# Quellenpanel on a Docker server behind an existing Traefik proxy (ports 80/443, Let's Encrypt).
+# Three instances from one image, built from this repository (no registry needed):
 #
-# Quick-Start:
-#   QE_TEAM_PASSWORD=… docker compose up -d --build
-#   open http://localhost:8080   (Audit: top right, team password)
+#   public   tier 0: public source list and widgets    → https://DOMAIN
+#   partner  tier 1: Steckbrief, password              → https://PARTNER_DOMAIN   (optional)
+#   team     tier 2: audit and corrections, password   → https://TEAM_DOMAIN      (optional, see .env.example)
 #
-# First start with an empty volume: the data is built from the repository (a few minutes; the data
-# routes answer 503 until then) or loaded from QE_SEED_URL.
-# Logs:  docker compose logs -f   ·   Stop:  docker compose down   ·   Data: volume quellenpanel-dev-data
+# The first deploy needs no variable at all: the team instance builds the data (a few minutes,
+# the pages answer 503 meanwhile), nothing is reachable from outside until DOMAIN is set.
+# Then fill in .env (start: .env.example) and deploy again. Step by step: deploy/README.md.
+#
+# Update to the newest code:  docker compose up -d --build
+# Logs: docker compose logs -f team   ·   Data: volume quellenpanel-data (corrections, history, data)
 
 services:
-  quellenpanel:
+  team:
     build:
-      context: .
-      dockerfile: Dockerfile
-    image: quellenpanel:local
-    container_name: quellenpanel
+      context: ${QE_GIT_URL:-https://github.com/janschachtschabel/quellenpanel.git#main}
+    image: quellenpanel:server
     restart: unless-stopped
     read_only: true
-    user: "10001"
     tmpfs:
       - /tmp
-    ports:
-      # Localhost only: the team instance must never be reachable from the internet.
-      - "127.0.0.1:8080:8080"
+    user: "10001"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     volumes:
-      - quellenpanel-dev-data:/data
+      - quellenpanel-data:/data
     environment:
       QE_ROLE: team
+      # Team login (tier 2). Empty: no team access (fail-closed).
       QE_TEAM_PASSWORD: ${QE_TEAM_PASSWORD:-}
+      # Empty: a random key is created once in the data volume (logins survive restarts).
       QE_SESSION_SECRET: ${QE_SESSION_SECRET:-}
-      QE_SEED_URL: ${QE_SEED_URL:-}
-      QE_AUTO_REFRESH_HOUR: ${QE_AUTO_REFRESH_HOUR:-}
-      QE_ALLOWED_ORIGINS: ${QE_ALLOWED_ORIGINS:-}
+      # Starting copies of korrekturen.csv and crawler.csv for an empty volume.
+      QE_SEED_URL: ${QE_SEED_URL:-https://raw.githubusercontent.com/janschachtschabel/quellenpanel/main/profiles/wlo/daten}
+      QE_AUTO_REFRESH_HOUR: ${QE_AUTO_REFRESH_HOUR:-3}
       QE_REPO_URL: ${QE_REPO_URL:-https://redaktion.openeduhub.net}
       QE_SEARCH_URL: ${QE_SEARCH_URL:-https://suche.wirlernenonline.de}
-    # Same check as the image: the internal port (9090) is not published.
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9090/health', timeout=3)"]
-      interval: 30s
-      timeout: 5s
-      start_period: 25s
-      retries: 3
+      # Exactly one proxy (Traefik) in front: the client address is its rightmost X-Forwarded-For entry.
+      TRUST_PROXY: "1"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-quellenpanel-web}"
+      - "traefik.http.routers.quellenpanel-team.rule=Host(`${TEAM_DOMAIN:-}`)"
+      - "traefik.http.routers.quellenpanel-team.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}"
+      - "traefik.http.routers.quellenpanel-team.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
+      - "traefik.http.services.quellenpanel-team.loadbalancer.server.port=8080"
+
+  partner:
+    image: quellenpanel:server
+    pull_policy: never
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    user: "10001"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      QE_ROLE: partner
+      # Tier 1 password. Empty: tier 1 stays closed on this instance.
+      QE_TIER1_PASSWORD: ${QE_TIER1_PASSWORD:-}
+      QE_EXPORT_SOURCE: http://team:9090/internal/exports/stufe{tier}.json
+      QE_EXPORT_POLL_MINUTES: ${QE_EXPORT_POLL_MINUTES:-10}
+      QE_REPO_URL: ${QE_REPO_URL:-https://redaktion.openeduhub.net}
+      QE_SEARCH_URL: ${QE_SEARCH_URL:-https://suche.wirlernenonline.de}
+      TRUST_PROXY: "1"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-quellenpanel-web}"
+      - "traefik.http.routers.quellenpanel-partner.rule=Host(`${PARTNER_DOMAIN:-}`)"
+      - "traefik.http.routers.quellenpanel-partner.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}"
+      - "traefik.http.routers.quellenpanel-partner.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
+      - "traefik.http.services.quellenpanel-partner.loadbalancer.server.port=8080"
+    depends_on:
+      - team
+
+  public:
+    image: quellenpanel:server
+    pull_policy: never
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    user: "10001"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      QE_ROLE: public
+      QE_EXPORT_SOURCE: http://team:9090/internal/exports/stufe{tier}.json
+      QE_EXPORT_POLL_MINUTES: ${QE_EXPORT_POLL_MINUTES:-10}
+      QE_REPO_URL: ${QE_REPO_URL:-https://redaktion.openeduhub.net}
+      QE_SEARCH_URL: ${QE_SEARCH_URL:-https://suche.wirlernenonline.de}
+      TRUST_PROXY: "1"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-quellenpanel-web}"
+      - "traefik.http.routers.quellenpanel-public.rule=Host(`${DOMAIN:-}`)"
+      - "traefik.http.routers.quellenpanel-public.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}"
+      - "traefik.http.routers.quellenpanel-public.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
+      - "traefik.http.services.quellenpanel-public.loadbalancer.server.port=8080"
+    depends_on:
+      - team
+
+networks:
+  default:
+    name: ${TRAEFIK_NETWORK:-quellenpanel-web}
 
 volumes:
-  quellenpanel-dev-data:
+  quellenpanel-data:

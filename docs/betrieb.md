@@ -162,7 +162,7 @@ Regeln sind mit `promtool test rules deploy/helm/quellenpanel/tests/rules-test.y
 |---|---|---|---|
 | `QE_ROLE` | alle | | `team` / `partner` / `public` |
 | `QE_TEAM_PASSWORD` | team | ja | Team-Login (Stufe 2); leer = kein Team-Zugang |
-| `QE_SESSION_SECRET` | team | ja | HMAC-Schlüssel der Team-Sitzung; leer = zufällig je Prozess, Sitzungen enden beim Neustart |
+| `QE_SESSION_SECRET` | team | ja | HMAC-Schlüssel der Team-Sitzung; leer = einmal zufällig erzeugt in `session.key` im Datenordner (Volume), ohne beschreibbaren Datenordner zufällig je Prozess |
 | `QE_TIER1_PASSWORD` | partner | ja | Passwort für Stufe 1; leer = Stufe 1 bleibt zu |
 | `QE_SEED_URL` | team | | Startdaten für den Erststart |
 | `QE_AUTO_REFRESH_HOUR` | team | | Stunde des nächtlichen Rebuilds |
@@ -183,7 +183,7 @@ Regeln sind mit `promtool test rules deploy/helm/quellenpanel/tests/rules-test.y
 oder die Werte im Chart-Secret; Compose: `deploy/.env`), dann die Pods neu starten
 (`kubectl rollout restart deployment/<release>` bzw. `docker compose up -d`). Ein neues
 `QE_TEAM_PASSWORD` oder `QE_TIER1_PASSWORD` gilt ab dem Neustart; bestehende Team-Sitzungen laufen
-weiter, bis sie ablaufen (12 h). Ein neues `QE_SESSION_SECRET` beendet sofort alle Team-Sitzungen.
+weiter, bis sie ablaufen (12 h). Ein neues `QE_SESSION_SECRET` beendet sofort alle Team-Sitzungen; ohne die Variable tut das das Löschen von `session.key` im Datenordner und ein Neustart.
 
 **Team-Sitzung:** Der Login setzt ein httpOnly-Cookie `qe_session` = `<ablauf>.<nonce>.<hmac>`
 (12 h). Jede Instanz mit demselben `QE_SESSION_SECRET` erkennt es; ein Neustart beendet keine
