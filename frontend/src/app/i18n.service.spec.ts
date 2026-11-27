@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { I18n } from './i18n.service';
+import { DICT, I18n } from './i18n.service';
 
 describe('I18n', () => {
   let i18n: I18n;
@@ -47,5 +47,30 @@ describe('I18n', () => {
     i18n.set('en');
     expect(localStorage.getItem('wlo-lang')).toBe('en');
     expect(new I18n().lang()).toBe('en');
+  });
+});
+
+describe('UI texts (write-copy rules, Etappe 6)', () => {
+  const eintraege = Object.entries(DICT);
+
+  it('every key has a German and an English text', () => {
+    const leer = eintraege.filter(([, v]) => !v.de?.trim() || !v.en?.trim()).map(([k]) => k);
+    expect(leer).toEqual([]);
+  });
+
+  it('German texts address the user formally (no du/dein/dich/dir)', () => {
+    const du = eintraege.filter(([, v]) => /(^|[^\p{L}])(du|dein\p{L}*|dich|dir)([^\p{L}]|$)/iu.test(v.de)).map(([k]) => k);
+    expect(du).toEqual([]);
+  });
+
+  it('empty and error texts name a next step', () => {
+    const schritt = /(bitte|ändern|entfernen|versuchen|wählen|prüfen|setzen|zurücksetzen|change|remove|try|select|check|reset)/i;
+    const keys = ['results.empty', 'export.tableEmpty', 'error.load', 'select.pdfEmpty', 'detail.contentNone', 'export.tableError', 'sync.error', 'select.pdfError'];
+    const ohne = keys.filter(k => !schritt.test(DICT[k].de) || !schritt.test(DICT[k].en));
+    expect(ohne).toEqual([]);
+  });
+
+  it('uses the typographic ellipsis, not three dots', () => {
+    expect(eintraege.filter(([, v]) => v.de.includes('...') || v.en.includes('...')).map(([k]) => k)).toEqual([]);
   });
 });

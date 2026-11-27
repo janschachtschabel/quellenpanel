@@ -7,14 +7,14 @@ export type Sprache = 'de' | 'en';
 
 const TEXTE = {
   de: {
-    laden: 'Wird geladen …', fehler: 'Das Quellenverzeichnis ist gerade nicht erreichbar.',
+    laden: 'Wird geladen …', fehler: 'Das Quellenverzeichnis ist gerade nicht erreichbar. Bitte versuchen Sie es später erneut.',
     keine: 'Keine Quellen gefunden.', suche: 'Quellen durchsuchen', suchePh: 'Name, Thema …',
     inhalte: 'Inhalte', quellen: 'Quellen', neuerTab: '(öffnet in neuem Tab)', mehr: 'Zum Quellenverzeichnis',
     faecher: 'Fächer', stufen: 'Bildungsstufen', lizenz: 'Lizenz', oer: 'OER', website: 'Zur Website',
     ohneQuelle: 'Keine Quelle angegeben (Attribut quelle).',
   },
   en: {
-    laden: 'Loading …', fehler: 'The source directory is not reachable right now.',
+    laden: 'Loading …', fehler: 'The source directory is not reachable right now. Please try again later.',
     keine: 'No sources found.', suche: 'Search sources', suchePh: 'Name, topic …',
     inhalte: 'contents', quellen: 'sources', neuerTab: '(opens in a new tab)', mehr: 'Open the source directory',
     faecher: 'Subjects', stufen: 'Educational levels', lizenz: 'License', oer: 'OER', website: 'Visit website',

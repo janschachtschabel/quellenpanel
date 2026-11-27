@@ -8,7 +8,7 @@ export type Lang = 'de' | 'en';
  * UI chrome is translated here — data (subjects, source names, quality values) comes from the
  * backend and stays in its original language, and the Impressum stays German (legal text).
  */
-const DICT: Record<string, { de: string; en: string }> = {
+export const DICT: Record<string, { de: string; en: string }> = {
   // header / views
   'app.title':            { de: 'Quellenverzeichnis', en: 'Source directory' },
   'view.tiles':           { de: 'Kacheln', en: 'Tiles' },
@@ -102,7 +102,7 @@ const DICT: Record<string, { de: string; en: string }> = {
   'filter.more':          { de: 'Weitere Filter', en: 'More filters' },
   'filter.lrt':           { de: 'Inhaltstyp', en: 'Content type' },
   'filter.problem':       { de: 'Datenprüfung (Team)', en: 'Data check (team)' },
-  'filter.clear':         { de: 'Filter löschen', en: 'Clear filters' },
+  'filter.clear':         { de: 'Filter zurücksetzen', en: 'Reset filters' },
 
   // results / units
   'results.count':        { de: 'Quellen', en: 'sources' },
@@ -111,8 +111,8 @@ const DICT: Record<string, { de: string; en: string }> = {
   'export.table':         { de: 'Tabelle', en: 'Table' },
   'export.tableTitle':    { de: 'Aktuelle Filter-Auswahl als Tabellen-PDF', en: 'Current filter selection as a table PDF' },
   'export.tableDone':     { de: 'Tabelle erzeugt', en: 'Table created' },
-  'export.tableEmpty':    { de: 'Keine Quellen im aktuellen Filter.', en: 'No sources in the current filter.' },
-  'export.tableError':    { de: 'Tabelle konnte nicht erzeugt werden.', en: 'Could not create the table.' },
+  'export.tableEmpty':    { de: 'Im aktuellen Filter sind keine Quellen. Bitte ändern Sie die Filter.', en: 'There are no sources in the current filter. Please change the filters.' },
+  'export.tableError':    { de: 'Die Tabelle konnte nicht erzeugt werden. Bitte versuchen Sie es erneut.', en: 'The table could not be created. Please try again.' },
   'status.blacklist':     { de: 'Blacklist', en: 'blacklist' },
   'status.mehrfach':      { de: 'Mehrfach', en: 'duplicate' },
   'status.hidden':        { de: 'ausgeblendet', en: 'hidden' },
@@ -130,9 +130,9 @@ const DICT: Record<string, { de: string; en: string }> = {
   'sync.title':           { de: 'Live-Abruf von WLO starten und die Datenbasis neu aufbauen (wie der nächtliche Lauf).', en: 'Fetch live from WLO and rebuild the data (like the nightly job).' },
   'sync.running':         { de: 'Aktualisierung läuft …', en: 'Refreshing …' },
   'sync.done':            { de: 'Datenaktualisierung abgeschlossen.', en: 'Data refresh complete.' },
-  'sync.error':           { de: 'Aktualisierung fehlgeschlagen.', en: 'Refresh failed.' },
-  'results.empty':        { de: 'Keine Quellen für diese Filter gefunden.', en: 'No sources found for these filters.' },
-  'error.load':           { de: 'Daten konnten nicht geladen werden. Bitte später erneut versuchen.', en: 'Could not load data. Please try again later.' },
+  'sync.error':           { de: 'Die Aktualisierung ist fehlgeschlagen. Bitte versuchen Sie es später erneut.', en: 'The refresh failed. Please try again later.' },
+  'results.empty':        { de: 'Für diese Filter gibt es keine Quellen. Ändern Sie die Filter oder setzen Sie sie zurück.', en: 'No sources match these filters. Change the filters or reset them.' },
+  'error.load':           { de: 'Die Daten konnten nicht geladen werden. Bitte versuchen Sie es später erneut.', en: 'Could not load data. Please try again later.' },
   'unit.content':         { de: 'Inhalte', en: 'content' },
 
   // tile / list
@@ -190,8 +190,8 @@ const DICT: Record<string, { de: string; en: string }> = {
   'select.pdf':           { de: 'Sammel-PDF', en: 'Bundle PDF' },
   'select.pdfBusy':       { de: 'PDF wird erzeugt …', en: 'Generating PDF …' },
   'select.pdfDone':       { de: 'PDF erzeugt', en: 'PDF created' },
-  'select.pdfEmpty':      { de: 'Keine Daten für die Auswahl.', en: 'No data for the selection.' },
-  'select.pdfError':      { de: 'PDF konnte nicht erzeugt werden.', en: 'Could not create the PDF.' },
+  'select.pdfEmpty':      { de: 'Für die Auswahl gibt es keine Daten. Bitte wählen Sie andere Quellen.', en: 'There is no data for the selection. Please select other sources.' },
+  'select.pdfError':      { de: 'Das PDF konnte nicht erzeugt werden. Bitte versuchen Sie es erneut.', en: 'The PDF could not be created. Please try again.' },
 
   // stats
   'stats.kpi.sources':    { de: 'Quellen', en: 'Sources' },
@@ -298,7 +298,7 @@ const DICT: Record<string, { de: string; en: string }> = {
   'detail.examples':      { de: 'Beispiel-Inhalte aus WLO', en: 'Example content from WLO' },
   'detail.contentLoading':{ de: 'Inhalte werden geladen …', en: 'Loading content …' },
   'detail.contentError':  { de: 'Inhalte derzeit nicht abrufbar.', en: 'Content currently unavailable.' },
-  'detail.contentNone':   { de: 'Keine verknüpften Inhalte gefunden.', en: 'No linked content found.' },
+  'detail.contentNone':   { de: 'Zu dieser Quelle sind keine Inhalte verknüpft. Prüfen Sie die Quelle in der WLO-Suche.', en: 'No content is linked to this source. Check the source in the WLO search.' },
 
   // footer
   'footer.impressum':     { de: 'Impressum', en: 'Imprint' },
