@@ -16,6 +16,12 @@ describe('I18n', () => {
     expect(i18n.t('q.kosten')).toBe('Kosten');
   });
 
+  it('embedded preset sets the language without touching the host localStorage (review finding)', () => {
+    i18n.set('en', false);
+    expect(i18n.lang()).toBe('en');
+    expect(localStorage.getItem('wlo-lang')).toBeNull();
+  });
+
   it('switches to English on set, and back to German', () => {
     i18n.set('en');
     expect(i18n.lang()).toBe('en');

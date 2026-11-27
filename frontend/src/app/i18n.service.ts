@@ -393,8 +393,10 @@ export class I18n {
     } catch { /* localStorage unavailable (e.g. private mode) — keep the default */ }
   }
 
-  set(l: Lang): void {
+  /** merken=false: a preset from the embedding page, not the visitor's choice — not stored. */
+  set(l: Lang, merken = true): void {
     this.lang.set(l);
+    if (!merken) return;
     try { localStorage.setItem('wlo-lang', l); } catch { /* ignore */ }
   }
 

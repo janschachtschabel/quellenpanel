@@ -362,6 +362,7 @@ export class AppComponent implements OnInit {
   @Input('fach') set presetFach(v: string) { this.subject = (v ?? '').trim(); }
   @Input('bildungsstufe') set presetStufe(v: string) { this.level = (v ?? '').trim(); }
   @Input('suche') set presetSuche(v: string) { this.q = (v ?? '').trim(); }
+  @Input('sprache') set presetSprache(v: string) { if (v === 'de' || v === 'en') this.i18n.set(v, false); }
   @Input('nur-oer') set presetOer(v: string | boolean) { this.onlyOer = v === '' || v === true || v === 'true'; }
 
   view: View = 'tile';

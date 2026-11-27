@@ -1,7 +1,10 @@
 # Quellenpanel-Widgets einbinden
 
 Das Quellenverzeichnis lässt sich auf jeder Webseite einbinden: als Element mit einem Skript, oder
-als iframe. Die Widgets zeigen nur öffentliche Daten (Stufe 0) und senden keine Cookies.
+als iframe. Die leichten Widgets zeigen nur öffentliche Daten (Stufe 0) und senden keine Cookies.
+`<wlo-quellen-kacheln>` und `<wlo-quellenpanel>` sind die volle App: Sie bieten die normale
+Anmeldung der jeweiligen Instanz an (Partner-Passwort, Team-Login), der Server begrenzt die Daten
+weiterhin nach Rolle.
 
 `<host>` steht im Folgenden für die Adresse der öffentlichen Instanz.
 
@@ -114,8 +117,9 @@ fragt, und danach bei jeder Änderung:
 const frame = document.querySelector('iframe');
 const herkunft = new URL(frame.src).origin;
 addEventListener('message', (ev) => {
-  if (ev.source === frame.contentWindow && ev.origin === herkunft && ev.data?.type === 'quellenpanel:hoehe') {
-    frame.style.height = ev.data.hoehe + 'px';
+  if (ev.source === frame.contentWindow && ev.origin === herkunft && ev.data?.type === 'quellenpanel:hoehe'
+      && typeof ev.data.hoehe === 'number') {
+    frame.style.height = Math.min(ev.data.hoehe, 5000) + 'px';
   }
 });
 frame.addEventListener('load', () => frame.contentWindow.postMessage({ type: 'quellenpanel:hoehe?' }, herkunft));
