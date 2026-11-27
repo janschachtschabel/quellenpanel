@@ -13,6 +13,8 @@ Je Release die Änderungen und die **Hinweise für den Betrieb**. Format nach
   (`pull_policy: always`). GitHub baut das Image bei jedem Push auf main und bei jedem Release.
   Ein lokal gebautes Image lief auf einem Docker-Panel nach dem Update weiter. `QE_VERSION`
   ersetzt `QE_GIT_URL` und legt bei Bedarf eine Version fest (z. B. `1.0.1`).
+- Server-Compose reicht `QE_PROFILE`, `QE_REPO_URL` und `QE_SEARCH_URL` durch (leer: Werte des
+  Profils). Ein anderes Repository lässt sich so allein über die `.env` einstellen.
 - Der Kopf zeigt die Zahl der Quellen nicht mehr; sie steht schon über der Liste.
 
 ## [1.0.0] – 2026-11-27
