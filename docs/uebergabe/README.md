@@ -1,7 +1,7 @@
 # Übergabepaket Quellenpanel (Version 1.0.0)
 
 Checkliste nach dem Diensteleitfaden, Kapitel 6. Jeder Punkt verweist auf die Stelle, die ihn
-beantwortet. Offen sind die Ansprechperson mit Vertretung und wer Updates anstößt. Zwei Schritte
+beantwortet. Offen sind die Vertretung der Ansprechperson und wer Updates anstößt. Zwei Schritte
 liegen beim Betrieb (Spalte „Stand“: **Schritt für den Betrieb**).
 
 | Punkt | Stand | Wo |
@@ -23,7 +23,7 @@ liegen beim Betrieb (Spalte „Stand“: **Schritt für den Betrieb**).
 | Kosten je Funktion | erfüllt: nur Betriebskosten (kein Modell, keine kostenpflichtigen Drittdienste). Laufzeit je Funktion im Steckbrief. | [steckbrief.md](steckbrief.md) |
 | Kompatibilitätsmatrix | erfüllt: Zeile `quellenpanel`. | [kompatibilitaet.md](kompatibilitaet.md) |
 | Changelog | erfüllt: je Release mit Hinweisen für den Betrieb. | [CHANGELOG.md](../../CHANGELOG.md) |
-| Ansprechperson und Vertretung | offen: werden vor der Übergabe eingetragen. | [steckbrief.md](steckbrief.md) |
+| Ansprechperson und Vertretung | Ansprechperson Jan Schachtschabel; Vertretung offen. | [steckbrief.md](steckbrief.md) |
 | Wer Updates anstößt | offen: vor der Übergabe festzulegen (siehe Wartung). | diese Seite |
 
 ## Architektur in Kürze

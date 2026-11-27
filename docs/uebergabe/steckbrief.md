@@ -14,7 +14,7 @@ Kapitel 6. Status: **erfüllt**, **Abweichung begründet**, **entfällt** (mit G
 | **Updates und CronJobs** | Kein CronJob: Der nächtliche Datenaufbau läuft im Team-Pod (`QE_AUTO_REFRESH_HOUR`, z. B. 3 Uhr), weil nur dieser Pod das RWO-Volume eingebunden hat; dieselbe Sperre wie der Knopf „Daten aktualisieren“. Laufzeit: Neuaufbau aus vorhandenen Daten 0,8 s; der Live-Abruf aus dem Repository ist noch im Cluster zu messen (in der Messumgebung gesperrt), Metrik `quellenpanel_rebuild_duration_seconds`. Überwachung: Alarme `QuellenpanelRebuildStale` (Daten älter als 26 h), `QuellenpanelNoData`, `QuellenpanelExportFetchFailing`. Partner/Öffentlich gleichen ihren Export alle `QE_EXPORT_POLL_MINUTES` (10) per ETag ab. | erfüllt (Laufzeit Live-Abruf offen) |
 | **Ressourcen** | Gemessen ([messung.md](../messung.md)): Speicher fest, CPU elastisch, höchstens 1 Kern je Pod. Team request 100m / 448Mi, limit 1 / 1Gi; Partner 50m / 192Mi, limit 1 / 288Mi; Öffentlich 50m / 96Mi, limit 1 / 160Mi. Team-Limit über Spitze + 30 %, weil der Live-Abruf noch nicht gemessen ist; Storage Team 2 Gi. | Abweichung begründet |
 | **Image-Größe** | 64 MB komprimiert (270 MB entpackt). Keine Modelle, keine Daten im Image. | erfüllt |
-| **Ansprechperson** | offen: Ansprechperson und Vertretung werden vor der Übergabe eingetragen. | offen |
+| **Ansprechperson** | Jan Schachtschabel. Vertretung: offen, wird vor der Übergabe eingetragen. | teilweise (Vertretung offen) |
 
 ## Funktionen: Laufzeit je Endpunkt
 

@@ -43,9 +43,9 @@ def test_steckbrief_kurzbeschreibung_ist_info_description(client):
     assert desc in " ".join(_text("steckbrief.md").split())
 
 
-def test_ansprechperson_ist_offen_markiert_nicht_erfunden():
+def test_ansprechperson_eingetragen_vertretung_offen_markiert():
     zeile = _zeilen(_text("steckbrief.md"))["Ansprechperson"]
-    assert "offen" in zeile.lower()
+    assert "Jan Schachtschabel" in zeile and "Vertretung: offen" in zeile
 
 
 def _norm(p: str) -> str:
