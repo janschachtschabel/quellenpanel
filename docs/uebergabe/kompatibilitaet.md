@@ -4,7 +4,7 @@ Eintrag für die gemeinsame Tabelle aller Dienste (Diensteleitfaden, Kapitel 6).
 
 | Dienst-ID | braucht Dienste | Rechte am Schlüssel | Delegations-Scopes | LLM-Route | Repository-Bezug | nur gemeinsam mit |
 |---|---|---|---|---|---|---|
-| `quellenpanel` | keine | keine (läuft ohne b-api) | keine | keine | direkt (öffentliche REST-API des Repositorys, nur lesend, anonym) | – |
+| `quellenpanel` | keine | keine (läuft ohne b-api; optional hinter dem Dienste-Proxy, ohne Rechte am Schlüssel) | keine (Token wird nicht genutzt) | keine | direkt (öffentliche REST-API des Repositorys, nur lesend, anonym) | – |
 
 Erläuterung:
 

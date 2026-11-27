@@ -15,6 +15,11 @@ Je Release die Änderungen und die **Hinweise für den Betrieb**. Format nach
   ersetzt `QE_GIT_URL` und legt bei Bedarf eine Version fest (z. B. `1.0.1`).
 - Server-Compose reicht `QE_PROFILE`, `QE_REPO_URL` und `QE_SEARCH_URL` durch (leer: Werte des
   Profils). Ein anderes Repository lässt sich so allein über die `.env` einstellen.
+- **Betrieb mit und ohne b-api.** Der Dienst erkennt je Anfrage am Delegations-Token
+  (`Authorization: Bearer bdt_…` oder `B_API_DELEGATION_HEADER`), dass sie über den Dienste-Proxy der
+  b-api kommt. Dort gibt es keine eigene Anmeldung: Stufe 0 anonym, Stufe 1 nur mit
+  `X-Tier1-Password`, kein Team-Bereich, `/openapi.json` ohne Team-Pfade. `/api/capabilities` meldet
+  `gateway`. Direkt bleibt alles wie bisher. Proxy-Eintrag in `docs/betrieb.md`.
 - README (de/en): neuer Abschnitt „Anderes Repository anbinden“ Schritt für Schritt bis zum Server;
   `profiles/README.md` listet die Schlüssel der Crawler-Tabelle mit ihrer Stufe. Korrigiert: Stufe 1
   braucht auch auf der Team-Instanz ihr Passwort, und ohne beide Startdateien baut das Team keine Daten.
