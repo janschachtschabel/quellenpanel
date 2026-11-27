@@ -35,8 +35,8 @@ answer 503) or loads starting data from `QE_SEED_URL`. In a container (Compose, 
 
 **Server with Traefik** (a Docker server that already runs a Traefik proxy with Let's Encrypt, such
 as a Docker panel with "compose from URL"): `docker-compose.yml` in the root folder starts one instance
-that serves every tier on one port (tier 1 and 2 only with their password), pulls the newest image of main
-(`ghcr.io/janschachtschabel/quellenpanel:main`) on every deploy and needs no variable at all on the first start. Then set `DOMAIN` or `PORT` and the
+that serves every tier on one port (tier 1 and 2 only with their password), builds the image from this
+repository and needs no variable at all on the first start. Then set `DOMAIN` or `PORT` and the
 passwords in `.env` (template `.env.example`) and deploy again. Separate partner and public instances
 can be added with `SEPARATE_INSTANCES=1`. Step by step
 in [`deploy/README.md`](deploy/README.md#server-with-traefik).

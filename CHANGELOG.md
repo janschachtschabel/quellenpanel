@@ -107,11 +107,11 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
 
 ### Geändert (Server-Compose)
 
-- `docker-compose.yml` baut das Image nicht mehr auf dem Server, sondern holt bei jedem Bereitstellen das
-  Image, das GitHub aus `main` baut (`ghcr.io/janschachtschabel/quellenpanel:main`, `pull_policy:
-  always`). Vorher konnte ein Server ein altes, lokal gebautes Image weiterlaufen lassen. `QE_GIT_URL`
-  entfällt; eine feste Version wählt `QE_IMAGE` (z. B. `…:1.0.0`).
-- `/api/capabilities` nennt den Commit des laufenden Images als `revision` (Build-Argument `QE_REVISION`, setzt die CI).
+- `docker-compose.yml` baut das Image bei jedem Bereitstellen ohne Build-Cache neu aus dem Repository
+  (`no_cache: true`; neuester Stand von main oder der Tag in `QE_GIT_URL`). Vorher konnte ein Server
+  einen älteren, zwischengespeicherten Stand weiterlaufen lassen.
+- `/api/capabilities` nennt die Bauzeit des laufenden Images als `built` und bei Images aus der CI den
+  Commit als `revision` (Build-Argument `QE_REVISION`).
 
 ### Behoben (Inhaltszahlen)
 

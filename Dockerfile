@@ -42,7 +42,8 @@ COPY --from=frontend /build/dist/browser /app/quellenpanel/frontend/dist/browser
 # Widgets (light script, iframe helper, test pages) and the Angular element bundle → /widgets/…
 COPY --from=frontend /build/dist-widgets /app/quellenpanel/frontend/dist-widgets
 
-RUN chown -R appuser:appuser /app
+# Build time, shown by /api/capabilities as "built": tells which build a server really runs.
+RUN date -u +%Y-%m-%dT%H:%M:%SZ > /app/quellenpanel/BUILD_TIME && chown -R appuser:appuser /app
 USER appuser
 
 # Git commit of this build (CI passes it; /api/capabilities shows it as "revision").
