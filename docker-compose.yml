@@ -1,5 +1,7 @@
 # Quellenpanel on a Docker server behind an existing Traefik proxy (ports 80/443, Let's Encrypt).
-# Built from this repository (no registry needed).
+# Runs the image GitHub builds from this repository (ghcr.io/janschachtschabel/quellenpanel), like
+# the other apps on the server: every deploy (a Docker panel's redeploy included) pulls the newest
+# image of main. QE_VERSION in .env pins a release only when one is wanted (e.g. 1.0.1).
 #
 # Standard: ONE instance on ONE port serves every tier. Tier 0 (public list, widgets) is open;
 # tier 1 (Steckbrief) needs QE_TIER1_PASSWORD, tier 2 (audit, corrections) QE_TEAM_PASSWORD.
@@ -15,19 +17,15 @@
 #
 # The first deploy needs no variable at all: the instance builds the data (a few minutes, the
 # pages answer 503 meanwhile). Then fill in .env (start: .env.example) and deploy again.
-# Each deploy rebuilds the image from the repository without build cache (newest main or the tag in
-# QE_GIT_URL). When it was built: /api/capabilities → "built". Logs: docker compose logs -f team
+# Which state runs: /api/capabilities → "revision" (commit) and "built" (build time).
+# Logs: docker compose logs -f team
 # Data: volume quellenpanel-data (corrections, history, data). Port 9090 (metrics, exports) stays inside.
 
 services:
   team:
-    build:
-      context: ${QE_GIT_URL:-https://github.com/janschachtschabel/quellenpanel.git#main}
-      # Build afresh every time: a cached build may otherwise keep an older state of the code.
-      no_cache: true
-    image: quellenpanel:server
-    # Never pulled (there is no registry): rebuilt from the repository on every deploy.
-    pull_policy: build
+    image: ghcr.io/janschachtschabel/quellenpanel:${QE_VERSION:-main}
+    # Pulled on every deploy, so the server always runs the newest image of main (or QE_VERSION).
+    pull_policy: always
     restart: unless-stopped
     read_only: true
     tmpfs:
@@ -67,8 +65,8 @@ services:
       - "traefik.http.services.quellenpanel-team.loadbalancer.server.port=8080"
 
   partner:
-    image: quellenpanel:server
-    pull_policy: never
+    image: ghcr.io/janschachtschabel/quellenpanel:${QE_VERSION:-main}
+    pull_policy: always
     # Off unless SEPARATE_INSTANCES=1.
     deploy:
       replicas: ${SEPARATE_INSTANCES:-0}
@@ -103,8 +101,8 @@ services:
       - team
 
   public:
-    image: quellenpanel:server
-    pull_policy: never
+    image: ghcr.io/janschachtschabel/quellenpanel:${QE_VERSION:-main}
+    pull_policy: always
     # Off unless SEPARATE_INSTANCES=1.
     deploy:
       replicas: ${SEPARATE_INSTANCES:-0}

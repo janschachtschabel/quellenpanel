@@ -4,6 +4,17 @@ Je Release die Änderungen und die **Hinweise für den Betrieb**. Format nach
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach SemVer. Die Versionen
 0.3.0 bis 0.6.0 waren Zwischenstände auf dem Weg zu 1.0.0 und wurden nicht als Release getaggt.
 
+## [Unveröffentlicht]
+
+### Geändert
+
+- **Server-Compose zieht das fertige Image aus GitHub.** `docker-compose.yml` baut nicht mehr
+  auf dem Server, sondern zieht bei jedem Bereitstellen `ghcr.io/janschachtschabel/quellenpanel:main`
+  (`pull_policy: always`). GitHub baut das Image bei jedem Push auf main und bei jedem Release.
+  Ein lokal gebautes Image lief auf einem Docker-Panel nach dem Update weiter. `QE_VERSION`
+  ersetzt `QE_GIT_URL` und legt bei Bedarf eine Version fest (z. B. `1.0.1`).
+- Der Kopf zeigt die Zahl der Quellen nicht mehr; sie steht schon über der Liste.
+
 ## [1.0.0] – 2026-11-27
 
 Erstes produktives Release: aus der Einzel-App wird ein Dienst nach dem Diensteleitfaden.
