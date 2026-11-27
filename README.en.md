@@ -32,7 +32,13 @@ Without `QE_ROLE` the instance runs as `team`; that is meant for development onl
 without data it builds the data from the repository (a few minutes; until then the data routes
 answer 503) or loads starting data from `QE_SEED_URL`. In a container (Compose, Helm) the image carries no corrections or crawler table: set `QE_SEED_URL` or upload both files in the team area, otherwise the team builds no data.
 
-**Server with Docker Compose** (three instances, step by step in
+**Server with Traefik** (a Docker server that already runs a Traefik proxy with Let's Encrypt, such
+as a Docker panel with "compose from URL"): `docker-compose.yml` in the root folder starts the three
+instances, builds the image from this repository and needs no variable at all on the first start.
+Then set `DOMAIN` and the passwords in `.env` (template `.env.example`) and deploy again. Step by step
+in [`deploy/README.md`](deploy/README.md#server-with-traefik).
+
+**Server with Docker Compose** (three instances from a published image, step by step in
 [`deploy/README.md`](deploy/README.md)):
 
 ```bash
@@ -176,7 +182,7 @@ view, `hintergrund` = background, `farbe` = colour; `aus` = off). The same works
 | `QE_ROLE` | `team` | `team`, `partner` or `public` |
 | `QE_TEAM_PASSWORD` | empty (no team access) | tier 2 password |
 | `QE_TIER1_PASSWORD` | empty (partner: tier 1 shut) | tier 1 password |
-| `QE_SESSION_SECRET` | random per process | key of the team session |
+| `QE_SESSION_SECRET` | `session.key` in the data folder | key of the team session |
 | `QE_EXPORT_SOURCE`, `QE_EXPORT_POLL_MINUTES` | empty, `10` | partner/public: export source with `{tier}`, sync interval in minutes |
 | `QE_SEED_URL` | empty | team: starting data for the first start |
 | `QE_AUTO_REFRESH_HOUR` | empty (off) | team: hour of the nightly refresh |

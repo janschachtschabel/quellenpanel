@@ -82,7 +82,17 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
   HTTP-Methoden erscheinen in Log und Metriken als `OTHER`.
 - Vorschaubild-Zwischenspeicher 16 MiB statt 128 MiB (`QE_THUMB_CACHE_MB`).
 - Paginator auf Deutsch und Englisch („1–25 von 3.721“).
-- `docker-compose.yml` im Wurzelverzeichnis startet eine Team-Instanz mit Volume (Entwicklung).
+- `docker-compose.build.yml` im Wurzelverzeichnis startet eine Team-Instanz mit Volume (Entwicklung).
+
+### Hinzugefügt (Server mit Traefik)
+
+- `docker-compose.yml` im Hauptordner für einen Docker-Server mit vorhandenem Traefik-Proxy: drei
+  Instanzen aus einem Image, das aus diesem Repository gebaut wird; Traefik-Labels je Instanz
+  (`DOMAIN`, `PARTNER_DOMAIN`, `TEAM_DOMAIN`), keine veröffentlichten Ports, kein externes Netz. Der
+  erste Start braucht keine Variable; Startdaten kommen aus `profiles/wlo/daten`. Vorlage `.env.example`.
+- Ohne `QE_SESSION_SECRET` legt das Team einmal `session.key` im Datenordner an; Anmeldungen
+  überstehen so Neustarts.
+- Die bisherige Entwicklungsdatei heißt jetzt `docker-compose.build.yml`.
 
 ### Behoben (Abschluss-Audit)
 

@@ -1,0 +1,48 @@
+# Local build-and-run setup: ONE team instance built from this checkout (development).
+# Server with a Traefik proxy: docker-compose.yml next to this file. Three instances from a published
+# image, or HTTPS via Caddy: deploy/docker-compose.yml and deploy/docker-compose.tls.yml (deploy/README.md).
+#
+# Quick-Start:
+#   QE_TEAM_PASSWORD=… docker compose -f docker-compose.build.yml up -d --build
+#   open http://localhost:8080   (Audit: top right, team password)
+#
+# First start with an empty volume: the data is built from the repository (a few minutes; the data
+# routes answer 503 until then); korrekturen.csv and crawler.csv come from QE_SEED_URL (default: this repo).
+# Logs:  docker compose -f docker-compose.build.yml logs -f   ·   Stop: … down   ·   Data: volume quellenpanel-dev-data
+
+services:
+  quellenpanel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: quellenpanel:local
+    container_name: quellenpanel
+    restart: unless-stopped
+    read_only: true
+    user: "10001"
+    tmpfs:
+      - /tmp
+    ports:
+      # Localhost only: the team instance must never be reachable from the internet.
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - quellenpanel-dev-data:/data
+    environment:
+      QE_ROLE: team
+      QE_TEAM_PASSWORD: ${QE_TEAM_PASSWORD:-}
+      QE_SESSION_SECRET: ${QE_SESSION_SECRET:-}
+      QE_SEED_URL: ${QE_SEED_URL:-https://raw.githubusercontent.com/janschachtschabel/quellenpanel/main/profiles/wlo/daten}
+      QE_AUTO_REFRESH_HOUR: ${QE_AUTO_REFRESH_HOUR:-}
+      QE_ALLOWED_ORIGINS: ${QE_ALLOWED_ORIGINS:-}
+      QE_REPO_URL: ${QE_REPO_URL:-https://redaktion.openeduhub.net}
+      QE_SEARCH_URL: ${QE_SEARCH_URL:-https://suche.wirlernenonline.de}
+    # Same check as the image: the internal port (9090) is not published.
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9090/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 25s
+      retries: 3
+
+volumes:
+  quellenpanel-dev-data:

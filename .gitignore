@@ -26,3 +26,4 @@ frontend/.angular/
 .DS_Store
 Thumbs.db
 backend/data/status.json
+backend/data/session.key

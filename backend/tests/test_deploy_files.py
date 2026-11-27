@@ -151,7 +151,7 @@ def test_github_workflows_lesen_nur_und_dependabot_ist_an():
 
 
 def test_root_compose_ist_aktuelle_team_entwicklungsinstanz():
-    svc = yaml.safe_load((ROOT / "docker-compose.yml").read_text(encoding="utf-8"))["services"]["quellenpanel"]
+    svc = yaml.safe_load((ROOT / "docker-compose.build.yml").read_text(encoding="utf-8"))["services"]["quellenpanel"]
     env = svc["environment"]
     assert env["QE_ROLE"] == "team" and "QE_SESSION_SECRET" in env
     assert "QE_PUBLIC_ONLY" not in env
@@ -168,3 +168,54 @@ def test_gitlab_versionspruefung_bricht_wirklich_ab():
     for line in gl["version check"]["script"]:
         if line.startswith("test ") or " && test " in line:
             assert "&&" not in line or line.rstrip().endswith("exit 1"), line
+
+
+# --- Server behind an existing Traefik proxy: docker-compose.yml in the repository root -----------
+def _server():
+    text = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    return text, yaml.safe_load(text)
+
+
+def test_server_compose_deploys_without_any_variable():
+    text, doc = _server()
+    assert ":?" not in text and "\t" not in text and "<<:" not in text and "*common" not in text
+    variables = [part.split("}")[0] for part in text.split("${")[1:]]
+    assert variables and all(":-" in v and "${" not in v for v in variables), variables   # all with default
+    assert doc["networks"]["default"]["name"] == "${TRAEFIK_NETWORK:-quellenpanel-web}"
+    assert not any(n.get("external") for n in doc["networks"].values())
+
+
+def test_server_compose_three_instances_behind_traefik():
+    _, doc = _server()
+    svc = doc["services"]
+    assert set(svc) == {"team", "partner", "public"}
+    assert svc["team"]["build"]["context"].startswith("${QE_GIT_URL:-https://github.com/")
+    for name, host in (("team", "TEAM_DOMAIN"), ("partner", "PARTNER_DOMAIN"), ("public", "DOMAIN")):
+        s = svc[name]
+        assert "ports" not in s, name                      # 80/443 belong to the proxy
+        assert s["image"] == "quellenpanel:server", name
+        assert s["read_only"] is True and str(s["user"]) == "10001", name
+        assert s["environment"]["TRUST_PROXY"] == "1", name
+        labels = "\n".join(s["labels"])
+        assert f"quellenpanel-{name}.rule=Host(`${{{host}:-}}`)" in labels, name
+        assert "loadbalancer.server.port=8080" in labels and "traefik.docker.network=" in labels, name
+    for name in ("partner", "public"):
+        assert svc[name]["pull_policy"] == "never"
+        assert svc[name]["environment"]["QE_EXPORT_SOURCE"] == "http://team:9090/internal/exports/stufe{tier}.json"
+    team = svc["team"]["environment"]
+    assert team["QE_ROLE"] == "team" and "quellenpanel-data:/data" in svc["team"]["volumes"]
+    assert team["QE_SEED_URL"].endswith("/profiles/wlo/daten}")   # never a deploy without corrections
+
+
+def test_server_env_example_starts_empty():
+    lines = [ln for ln in (ROOT / ".env.example").read_text(encoding="utf-8").splitlines()
+             if ln.strip() and not ln.startswith("#")]
+    assert lines and all(ln.endswith("=") for ln in lines), lines
+    text, _ = _server()
+    for ln in lines:
+        assert "${" + ln[:-1] + ":-" in text, ln
+
+
+def test_seed_copies_exist_where_the_compose_points():
+    for name in ("korrekturen.csv", "crawler.csv"):
+        assert (ROOT / "profiles" / "wlo" / "daten" / name).is_file()

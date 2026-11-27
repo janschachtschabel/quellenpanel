@@ -158,16 +158,40 @@ _TRUE = ("1", "true", "yes", "on")
 
 
 def session_secret() -> bytes:
-    """HMAC key for team sessions (QE_SESSION_SECRET). Without it: one random key per process."""
+    """HMAC key for team sessions (QE_SESSION_SECRET). Without it the team keeps a random key in
+    <data dir>/session.key (created once, mode 600), so logins survive restarts; if that file cannot
+    be read or written: one random key per process."""
     global _GENERATED_SECRET
     raw = os.environ.get("QE_SESSION_SECRET", "").strip()
     if raw:
         return raw.encode("utf-8")
     if _GENERATED_SECRET is None:
+        _GENERATED_SECRET = _stored_secret()
+    if _GENERATED_SECRET is None:
         _GENERATED_SECRET = secrets.token_bytes(32)
         logging.getLogger("quellenpanel").warning(
             "QE_SESSION_SECRET fehlt: zufälliger Schlüssel, Sitzungen überleben keinen Neustart")
     return _GENERATED_SECRET
+
+
+def _stored_secret() -> bytes | None:
+    """The team's key file in the data dir, created on first use; None when that is not possible."""
+    if role() != "team":
+        return None
+    path = data_dir() / "session.key"
+    try:
+        try:
+            fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        except FileExistsError:
+            key = path.read_bytes().strip()
+            return key if len(key) >= 32 else None
+        key = secrets.token_hex(32).encode("ascii")
+        with os.fdopen(fd, "wb") as f:
+            f.write(key)
+        logging.getLogger("quellenpanel").info("Sitzungsschlüssel in %s angelegt", path)
+        return key
+    except OSError:
+        return None
 
 
 def trust_proxy() -> bool:
