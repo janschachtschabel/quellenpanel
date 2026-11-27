@@ -168,7 +168,7 @@ Regeln sind mit `promtool test rules deploy/helm/quellenpanel/tests/rules-test.y
 | `QE_AUTO_REFRESH_HOUR` | team | | Stunde des nächtlichen Rebuilds |
 | `QE_EXPORT_SOURCE`, `QE_EXPORT_POLL_MINUTES` | partner, public | | Export-Quelle mit `{tier}`, Abrufintervall |
 | `QE_ALLOWED_ORIGINS` | team | | Origins für den Team-Login aus eingebetteten Widgets |
-| `TRUST_PROXY` | partner, public | | Client-IP aus dem rechten `X-Forwarded-For`-Eintrag, nur hinter einem Proxy, der den Header überschreibt |
+| `TRUST_PROXY` | alle | | Client-IP aus dem rechten `X-Forwarded-For`-Eintrag, nur wenn die Anfrage von einer privaten Adresse (dem Proxy) kommt; nur hinter einem Proxy, der den Header setzt |
 | `QE_REPO_URL`, `QE_SEARCH_URL` | alle | | Repository und öffentliche Suche (Links); Standard aus dem Profil |
 | `QE_PROFILE`, `QE_PROFILES_DIR` | alle | | Repository-Profil (Standard `wlo`) und sein Verzeichnis (Standard `profiles/`) |
 | `QE_FRAME_ANCESTORS` | alle | | wer die iframe-Widgets (`/embed/…`) einbetten darf; leer = überall, auf dem Team nur `'self'` |
