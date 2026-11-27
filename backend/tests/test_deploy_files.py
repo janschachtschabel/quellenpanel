@@ -192,7 +192,7 @@ def test_server_compose_three_instances_behind_traefik():
     assert svc["team"]["build"]["context"].startswith("${QE_GIT_URL:-https://github.com/")
     for name, host in (("team", "TEAM_DOMAIN"), ("partner", "PARTNER_DOMAIN"), ("public", "DOMAIN")):
         s = svc[name]
-        assert "ports" not in s, name                      # 80/443 belong to the proxy
+        assert all(":80:" not in p and ":443:" not in p for p in s["ports"]), name   # 80/443: proxy
         assert s["image"] == "quellenpanel:server", name
         assert s["read_only"] is True and str(s["user"]) == "10001", name
         assert s["environment"]["TRUST_PROXY"] == "1", name
@@ -202,6 +202,9 @@ def test_server_compose_three_instances_behind_traefik():
     for name in ("partner", "public"):
         assert svc[name]["pull_policy"] == "never"
         assert svc[name]["environment"]["QE_EXPORT_SOURCE"] == "http://team:9090/internal/exports/stufe{tier}.json"
+    assert svc["public"]["ports"] == ["${PORT:-18080}:8080"]
+    assert svc["partner"]["ports"] == ["${PARTNER_PORT:-18081}:8080"]
+    assert svc["team"]["ports"] == ["${TEAM_BIND:-127.0.0.1}:${TEAM_PORT:-18082}:8080"]
     team = svc["team"]["environment"]
     assert team["QE_ROLE"] == "team" and "quellenpanel-data:/data" in svc["team"]["volumes"]
     assert team["QE_SEED_URL"].endswith("/profiles/wlo/daten}")   # never a deploy without corrections

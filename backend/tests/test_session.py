@@ -131,3 +131,13 @@ def test_missing_secret_is_kept_in_the_team_data_dir(monkeypatch, tmp_path):
     assert config.session_secret() == a and len(a) >= 32
     key = tmp_path / "session.key"
     assert key.is_file() and (key.stat().st_mode & 0o077) == 0
+
+
+def test_trust_proxy_ignores_forwarded_for_from_a_public_peer(monkeypatch):
+    # The app port may also be published directly: a client from the internet (public peer address)
+    # must not choose its own rate-limit key via X-Forwarded-For. Only a private peer (the proxy) counts.
+    monkeypatch.setenv("TRUST_PROXY", "1")
+    forged = {"X-Forwarded-For": "198.51.100.1"}
+    assert ratelimit.client_ip(_request(forged, host="93.184.216.34")) == "93.184.216.34"
+    assert ratelimit.client_ip(_request(forged, host="172.18.0.1")) == "198.51.100.1"
+    assert ratelimit.client_ip(_request(forged, host="127.0.0.1")) == "198.51.100.1"

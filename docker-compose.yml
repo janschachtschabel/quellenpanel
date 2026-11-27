@@ -6,7 +6,8 @@
 #   team     tier 2: audit and corrections, password   → https://TEAM_DOMAIN      (optional, see .env.example)
 #
 # The first deploy needs no variable at all: the team instance builds the data (a few minutes,
-# the pages answer 503 meanwhile), nothing is reachable from outside until DOMAIN is set.
+# the pages answer 503 meanwhile). Without a domain: public on http://SERVER:18080, partner on
+# :18081 (PORT, PARTNER_PORT); the team port 18082 is bound to this host only (TEAM_PORT, TEAM_BIND).
 # Then fill in .env (start: .env.example) and deploy again. Step by step: deploy/README.md.
 #
 # Update to the newest code:  docker compose up -d --build
@@ -26,6 +27,9 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    ports:
+      # Direct access without the proxy. Only on this host unless TEAM_BIND=0.0.0.0 (then use a strong password).
+      - "${TEAM_BIND:-127.0.0.1}:${TEAM_PORT:-18082}:8080"
     volumes:
       - quellenpanel-data:/data
     environment:
@@ -39,7 +43,8 @@ services:
       QE_AUTO_REFRESH_HOUR: ${QE_AUTO_REFRESH_HOUR:-3}
       QE_REPO_URL: ${QE_REPO_URL:-https://redaktion.openeduhub.net}
       QE_SEARCH_URL: ${QE_SEARCH_URL:-https://suche.wirlernenonline.de}
-      # Exactly one proxy (Traefik) in front: the client address is its rightmost X-Forwarded-For entry.
+      # Behind the proxy the client address is the rightmost X-Forwarded-For entry; on the direct
+      # ports (public peer address) the header is ignored.
       TRUST_PROXY: "1"
     labels:
       - "traefik.enable=true"
@@ -77,6 +82,8 @@ services:
       - "traefik.http.routers.quellenpanel-partner.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}"
       - "traefik.http.routers.quellenpanel-partner.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
       - "traefik.http.services.quellenpanel-partner.loadbalancer.server.port=8080"
+    ports:
+      - "${PARTNER_PORT:-18081}:8080"
     depends_on:
       - team
 
@@ -106,6 +113,8 @@ services:
       - "traefik.http.routers.quellenpanel-public.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}"
       - "traefik.http.routers.quellenpanel-public.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
       - "traefik.http.services.quellenpanel-public.loadbalancer.server.port=8080"
+    ports:
+      - "${PORT:-18080}:8080"
     depends_on:
       - team
 

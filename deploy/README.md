@@ -25,7 +25,10 @@ panel that deploys a compose file straight from a GitHub URL. The file is
 1. Deploy `https://github.com/janschachtschabel/quellenpanel` (branch `main`). No variable is needed:
    the team builds the image from the repository (a few minutes), loads `korrekturen.csv` and
    `crawler.csv` from `profiles/wlo/daten` and then builds the data from the live repository (the pages
-   answer 503 "Daten werden aufgebaut" meanwhile). Nothing is reachable from outside yet.
+   answer 503 "Daten werden aufgebaut" meanwhile). Without a domain the public list is reachable at
+   `http://<SERVER-IP>:18080` and the partner instance at `:18081` (`PORT`, `PARTNER_PORT`; open
+   them in the server firewall if needed). The team port `18082` listens on the server only
+   (`TEAM_PORT`; `TEAM_BIND=0.0.0.0` opens it, only for tests and with a long password).
 2. Edit `.env`: `DOMAIN` (public list, plain host name without `https://`), optionally
    `PARTNER_DOMAIN` with `QE_TIER1_PASSWORD`, and `QE_TEAM_PASSWORD`. Deploy again.
 3. Point a DNS A record of each name to the server. Without an own domain,
@@ -35,10 +38,12 @@ The team instance is not reachable while `TEAM_DOMAIN` is empty. Set it only for
 VPN/SSO, and always with a long `QE_TEAM_PASSWORD`. Without `QE_SESSION_SECRET` the team keeps a
 random key in the data volume (`session.key`), so logins survive restarts.
 
-Details: no ports are published (80/443 belong to Traefik); all three join the network
+Details: 80/443 stay with Traefik, the instances only publish their own direct ports; all three join the network
 `TRAEFIK_NETWORK` (default `quellenpanel-web`, created if missing, never `external`); routers are named
 `quellenpanel-public|partner|team`; entry point and resolver default to `websecure` and
-`letsencrypt`. With exactly one proxy in front the apps run with `TRUST_PROXY=1`. Partner and public
+`letsencrypt`. The apps run with `TRUST_PROXY=1`: `X-Forwarded-For` counts only when the request
+comes from a private address (the proxy), so a client on a direct port cannot pick its own
+rate-limit key. Partner and public
 fetch their exports from `http://team:9090` inside that network.
 
 ```bash

@@ -4,6 +4,7 @@ One place for the client-identity + rolling-window logic shared by the team-logi
 guard, the live-content endpoint and the thumbnail proxy. In-memory and per-process (fine for a
 single-process internal tool; see session.py for the same scaling caveat). No external dependency.
 """
+import ipaddress
 import time
 
 import config
@@ -17,12 +18,23 @@ def client_ip(request: Request) -> str:
     # remote address, see deploy/): the RIGHTMOST XFF entry, i.e. the address our proxy saw. Behind a
     # proxy that appends instead, the left entries are client-controlled; rightmost then fails safe
     # (one shared bucket per proxy hop) instead of open (a fresh budget per forged value).
-    if config.trust_proxy():
+    # The header only counts when the peer is a private address (our proxy): if the app port is also
+    # published directly, a client from the internet keeps its own address as the key.
+    peer = request.client.host if request.client else "?"
+    if config.trust_proxy() and _private(peer):
         entries = [e.strip() for e in (request.headers.get("x-forwarded-for") or "").split(",")]
         entries = [e for e in entries if e]
         if entries:
             return entries[-1]
-    return request.client.host if request.client else "?"
+    return peer
+
+
+def _private(host: str) -> bool:
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    return ip.is_private or ip.is_loopback
 
 
 def sweep(bucket: dict[str, list[float]], window: float, now: float) -> None:

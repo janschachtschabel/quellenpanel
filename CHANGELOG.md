@@ -90,6 +90,9 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
   Instanzen aus einem Image, das aus diesem Repository gebaut wird; Traefik-Labels je Instanz
   (`DOMAIN`, `PARTNER_DOMAIN`, `TEAM_DOMAIN`), keine veröffentlichten Ports, kein externes Netz. Der
   erste Start braucht keine Variable; Startdaten kommen aus `profiles/wlo/daten`. Vorlage `.env.example`.
+  Ohne Domain direkt erreichbar über `PORT` (18080) und `PARTNER_PORT` (18081); der Team-Port
+  `TEAM_PORT` (18082) lauscht nur auf dem Server, außer `TEAM_BIND` ist gesetzt.
+- `TRUST_PROXY` wertet `X-Forwarded-For` nur aus, wenn die Anfrage von einer privaten Adresse kommt.
 - Ohne `QE_SESSION_SECRET` legt das Team einmal `session.key` im Datenordner an; Anmeldungen
   überstehen so Neustarts.
 - Die bisherige Entwicklungsdatei heißt jetzt `docker-compose.build.yml`.
