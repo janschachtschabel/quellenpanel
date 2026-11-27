@@ -1,7 +1,8 @@
 # Deploying WLO Quellenpanel
 
-One image serves the API **and** the built Angular SPA. It runs as three instances, one per role
-(`QE_ROLE`):
+One image serves the API **and** the built Angular SPA. On a single server one team instance can serve
+every tier on one port ([Server with Traefik](#server-with-traefik)); otherwise it runs as three
+instances, one per role (`QE_ROLE`):
 
 | Instance | Tier | Holds | Reachable |
 |---|---|---|---|

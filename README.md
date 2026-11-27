@@ -4,7 +4,8 @@
 
 Quellenpanel zeigt die Quellen eines edu-sharing-Repositorys (Standard: WirLernenOnline): als
 öffentliche Quellenliste mit Widgets, als Steckbrief für Partner und als internes Audit für das
-Team. Ein Image, drei Instanzen, je Instanz genau eine Zugangsstufe. Version und Änderungen:
+Team. Ein Image: als eine Instanz, die alle Stufen per Passwort trennt, oder als drei Instanzen mit je
+einer Zugangsstufe. Version und Änderungen:
 [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Überblick

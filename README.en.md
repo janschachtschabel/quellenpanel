@@ -4,7 +4,8 @@
 
 Quellenpanel shows the sources of an edu-sharing repository (default: WirLernenOnline): as a public
 source list with widgets, as a source profile ("Steckbrief") for partners and as an internal audit
-for the team. One image, three instances, exactly one access tier per instance. Version and
+for the team. One image: as one instance that separates the tiers by password, or as three instances
+with one access tier each. Version and
 changes: [`CHANGELOG.md`](CHANGELOG.md) (German).
 
 ## Overview
