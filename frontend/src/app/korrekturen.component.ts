@@ -31,22 +31,22 @@ import { Anwenden, Korrektur, KorrekturFelder, KorrekturStand, VerlaufEintrag } 
   imports: [FormsModule, MatButtonModule, MatDialogModule, MatFormFieldModule, MatIconModule, MatInputModule,
             MatPaginatorModule, MatSelectModule, MatTabsModule, KorrekturImportComponent, CrawlerUploadComponent],
   template: `
-  <div class="tier-head team">🔒 {{ i18n.t('korr.title') }}</div>
+  <h2 class="head"><mat-icon aria-hidden="true">lock</mat-icon>{{ i18n.t('korr.title') }}</h2>
   <mat-tab-group animationDuration="0ms" (selectedIndexChange)="tab($event)">
     <mat-tab [label]="i18n.t('korr.tab.list')">
       <div class="bar">
-        <mat-form-field appearance="outline" class="q">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="q">
           <mat-label>{{ i18n.t('korr.search') }}</mat-label>
           <input matInput [(ngModel)]="q" (ngModelChange)="seite = 0">
         </mat-form-field>
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
           <mat-label>{{ i18n.t('korr.col.typ') }}</mat-label>
           <mat-select [(ngModel)]="typ" (selectionChange)="seite = 0">
             <mat-option value="">{{ i18n.t('korr.all') }}</mat-option>
             @for (t of typen; track t) { <mat-option [value]="t">{{ t }}</mat-option> }
           </mat-select>
         </mat-form-field>
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
           <mat-label>{{ i18n.t('korr.col.aktion') }}</mat-label>
           <mat-select [(ngModel)]="aktion" (selectionChange)="seite = 0">
             <mat-option value="">{{ i18n.t('korr.all') }}</mat-option>
@@ -72,11 +72,11 @@ import { Anwenden, Korrektur, KorrekturFelder, KorrekturStand, VerlaufEintrag } 
         }
         <p class="count">{{ gefiltert().length }} / {{ s.eintraege.length }} {{ i18n.t('korr.rows') }}</p>
         <div class="tablewrap">
-          <table class="korr">
+          <table class="ltable">
             <thead><tr>
               <th>{{ i18n.t('korr.col.typ') }}</th><th>{{ i18n.t('korr.col.schluessel') }}</th>
               <th>{{ i18n.t('korr.col.aktion') }}</th><th>{{ i18n.t('korr.col.wert') }}</th>
-              <th>{{ i18n.t('korr.col.kommentar') }}</th><th>{{ i18n.t('korr.col.wer') }}</th><th></th>
+              <th>{{ i18n.t('korr.col.kommentar') }}</th><th>{{ i18n.t('korr.col.wer') }}</th><th class="act"><span class="sr">{{ i18n.t('korr.edit') }}</span></th>
             </tr></thead>
             <tbody>
               @for (k of seiteZeilen(); track k.id) {
@@ -105,7 +105,7 @@ import { Anwenden, Korrektur, KorrekturFelder, KorrekturStand, VerlaufEintrag } 
     </mat-tab>
     <mat-tab [label]="i18n.t('korr.tab.history')">
       <div class="tablewrap">
-        <table class="korr">
+        <table class="ltable">
           <thead><tr><th>{{ i18n.t('korr.h.when') }}</th><th>{{ i18n.t('korr.col.wer') }}</th><th>{{ i18n.t('korr.h.what') }}</th>
             <th>{{ i18n.t('korr.h.old') }}</th><th>{{ i18n.t('korr.h.new') }}</th></tr></thead>
           <tbody>
@@ -120,17 +120,28 @@ import { Anwenden, Korrektur, KorrekturFelder, KorrekturStand, VerlaufEintrag } 
   </mat-tab-group>
   `,
   styles: [`
-    .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+    /* Same frame and table look as the source list (app .results + list.component .ltable). */
+    :host { display: block; padding: 16px 16px 24px; }
+    .head { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 16px; font-weight: 600; color: var(--textMain); }
+    .head mat-icon { font-size: 20px; width: 20px; height: 20px; color: var(--primaryText); }
+    .bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 16px 0 12px; }
     .bar .q { flex: 1 1 260px; }
+    .bar mat-form-field:not(.q) { width: 180px; }
     .spacer { flex: 1; }
     .tablewrap { overflow-x: auto; }
-    table.korr { width: 100%; border-collapse: collapse; font-size: 13px; }
-    table.korr th, table.korr td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--tableSeperatorLineColor); vertical-align: top; }
-    table.korr th { font-weight: 600; background: var(--primaryBackground50); position: sticky; top: 0; }
+    .ltable { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--wlo-card); }
+    .ltable thead tr { background: var(--wlo-bg); border-bottom: 2px solid var(--wlo-border); }
+    .ltable th { padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 600; color: var(--wlo-text-muted); text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+    .ltable td { padding: 9px 12px; border-bottom: 1px solid var(--tableSeperatorLineColor); vertical-align: middle; color: var(--textMain); }
+    .ltable th, .ltable td { border-right: 1px solid var(--tableSeperatorLineColor); }
+    .ltable th:last-child, .ltable td:last-child { border-right: none; }
+    .ltable tbody tr:hover td { background: var(--primaryBackground50); }
+    .ltable small { color: var(--textMediumLight); }
     .mono { font-family: ui-monospace, monospace; font-size: 12px; word-break: break-all; }
     .clip { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .act { white-space: nowrap; }
-    .count { color: var(--textLight); margin: 4px 0; }
+    .act { white-space: nowrap; width: 96px; text-align: right; }
+    .sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .count { color: var(--wlo-text-muted); font-size: 14px; margin: 4px 0 12px; }
     .info { background: var(--primaryBackground50); padding: 8px 12px; border-radius: 6px; }
     .err { color: var(--warn); }
     .probleme { margin: 8px 0; }

@@ -23,31 +23,31 @@ export interface KorrekturDialogData { korrektur?: Partial<KorrekturFelder>; neu
   template: `
     <h2 mat-dialog-title>{{ i18n.t(data.neu ? 'korr.dialog.new' : 'korr.dialog.edit') }}</h2>
     <mat-dialog-content class="form">
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>{{ i18n.t('korr.col.typ') }}</mat-label>
         <mat-select [(ngModel)]="k.typ" (selectionChange)="typGeaendert()">
           @for (t of typen; track t) { <mat-option [value]="t">{{ t }}</mat-option> }
         </mat-select>
       </mat-form-field>
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>{{ i18n.t('korr.col.schluessel') }}</mat-label>
         <input matInput [(ngModel)]="k.schluessel" [placeholder]="k.typ === 'node' ? 'Node-ID (UUID)' : 'Name der Bezugsquelle'">
       </mat-form-field>
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>{{ i18n.t('korr.col.aktion') }}</mat-label>
         <mat-select [(ngModel)]="k.aktion">
           @for (a of aktionen(); track a) { <mat-option [value]="a">{{ a }}</mat-option> }
         </mat-select>
       </mat-form-field>
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>{{ i18n.t('korr.col.wert') }}</mat-label>
         <textarea matInput rows="3" [(ngModel)]="k.wert"></textarea>
       </mat-form-field>
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>{{ i18n.t('korr.col.kommentar') }}</mat-label>
         <input matInput [(ngModel)]="k.kommentar">
       </mat-form-field>
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>{{ i18n.t('korr.wer') }}</mat-label>
         <input matInput [(ngModel)]="wer" maxlength="40" required>
         <mat-hint>{{ i18n.t('korr.wer.hint') }}</mat-hint>
@@ -58,7 +58,7 @@ export interface KorrekturDialogData { korrektur?: Partial<KorrekturFelder>; neu
       <button mat-flat-button color="primary" (click)="speichern()" [disabled]="!gueltig()">{{ i18n.t('korr.save') }}</button>
     </mat-dialog-actions>
   `,
-  styles: [`.form { display: flex; flex-direction: column; min-width: min(480px, 80vw); gap: 2px; }`],
+  styles: [`.form { display: flex; flex-direction: column; min-width: min(480px, 80vw); gap: 16px; }`],
 })
 export class KorrekturDialogComponent {
   readonly i18n = inject(I18n);
