@@ -1,7 +1,7 @@
 [
  {
   "confidence": "high",
-  "contentCount": 120,
+  "contentCount": 130,
   "erschliessung": "im Bestand verfuegbar",
   "fieldActiveCount": 1,
   "fieldGeneration": [
@@ -65,7 +65,7 @@
    "Faecher": [
     "Mathematik"
    ],
-   "Inhaltsanzahl": 120,
+   "Inhaltsanzahl": 130,
    "Inhaltstypen": [
     "Quelle"
    ],
@@ -85,7 +85,7 @@
  },
  {
   "confidence": "high",
-  "contentCount": 40,
+  "contentCount": 45,
   "erschliessung": "im Bestand verfuegbar",
   "fieldActiveCount": 2,
   "fieldGeneration": [
@@ -154,7 +154,7 @@
    "Faecher": [
     "Mathematik"
    ],
-   "Inhaltsanzahl": 40,
+   "Inhaltsanzahl": 45,
    "Inhaltstypen": [
     "Quelle"
    ],
@@ -173,8 +173,8 @@
  },
  {
   "confidence": "medium",
-  "contentCount": 0,
-  "erschliessung": "nur als Bezugsquelle bekannt",
+  "contentCount": 8,
+  "erschliessung": "im Bestand verfuegbar",
   "fieldActiveCount": 0,
   "fieldGeneration": [],
   "flags": [
@@ -201,11 +201,13 @@
   "previewUrl": "https://img.test/g.png",
   "provenance": {
    "Bezugsquelle": "WLO-API (Facette)",
+   "Inhaltsanzahl": "WLO-API (Facette)",
    "URL": "datencrawler.csv",
    "Urheber": "datencrawler.csv"
   },
   "public": {
    "Bezugsquelle": "Gamma Org",
+   "Inhaltsanzahl": 8,
    "URL": "https://gamma.test",
    "Urheber": "Gamma e.V."
   },

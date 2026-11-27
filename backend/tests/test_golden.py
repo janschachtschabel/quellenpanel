@@ -2,7 +2,8 @@
 
 Die Referenz (expected_*.json) wurde einmal mit dem Code-Stand VOR Etappe 1 erzeugt
 (tests/fixtures/golden/regenerate.py). Bei einem Umbau wird nur build_golden() angepasst,
-nie die erwarteten Dateien.
+nie die erwarteten Dateien. Ausnahme: bewusste Verhaltensänderungen — 2026-11-27 Inhaltszahl
+und Suchlink folgen der Bezugsquelle wie die WLO-Suche (Crawler: die größere der beiden Zahlen).
 """
 import json
 import shutil
