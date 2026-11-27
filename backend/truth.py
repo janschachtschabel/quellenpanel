@@ -153,6 +153,19 @@ def _mark_data_problems(records):
 # ---------------------------------------------------------------------------
 # Merge the single source of truth
 # ---------------------------------------------------------------------------
+def crawler_content(spider: str, bq: str, sp_facet: dict, bq_facet: dict) -> tuple[int, str]:
+    """Content count of a crawler record and which facet it comes from ('spider'/'bezugsquelle').
+    The Spider facet (replicationsource) is what the crawler delivered — kept even when 0 (a dead
+    crawler genuinely has 0). The WLO search filters »Quelle« by Bezugsquelle, which can also hold
+    contents from other ways in (manual uploads, migration): when that count is larger, show it so
+    the panel matches the search link. A crawler spanning several publishers keeps its Spider count."""
+    sp = sp_facet.get(spider, 0) if spider else 0
+    bqc = bq_facet.get(bq, 0) if bq else 0
+    if bqc > sp or (not spider and bq):
+        return bqc, "bezugsquelle"
+    return sp, "spider"
+
+
 def build(rename_unrepresented=True):
     # rename_unrepresented (variant A, default): if a Bezugsquelle has no
     # source dataset of its own, the representing individual item is listed
@@ -213,10 +226,7 @@ def build(rename_unrepresented=True):
             bq = top_pub
         elif bq_from_csv and _norm(bq_from_csv) not in placeholder:
             bq = bq_from_csv
-        # A crawler's content is its Spider facet (replicationsource count) — use it even
-        # when 0 (a dead crawler genuinely has 0). `or` would wrongly fall back to the
-        # Bezugsquelle total; the bq fallback only applies when there is no Spider at all.
-        content = sp_facet.get(spider, 0) if spider else (bq_facet.get(bq, 0) if bq else 0)
+        content, _src = crawler_content(spider, bq, sp_facet, bq_facet)
         if node:
             used_nodes.add(node["nodeId"])
         if bq:

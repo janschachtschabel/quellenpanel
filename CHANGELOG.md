@@ -105,6 +105,15 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
   abgewiesen. Ein Wertfeld erscheint nur bei Aktionen, die einen Wert brauchen.
 - Kurze, aufklappbare Hilfe zu Typen und Aktionen im Korrekturbereich und im Dialog.
 
+### Behoben (Inhaltszahlen)
+
+- Der Link „In der WLO-Suche“ filtert nach der Bezugsquelle statt nach dem Titel des
+  Quelldatensatzes; die WLO-Suche filtert »Quelle« nach der Bezugsquelle. Vorher führte z. B.
+  „Ecole Science bei YouTube“ zu einer leeren Suche (betraf rund 780 Quellen).
+- Crawler zeigen die größere Zahl aus Spider-Facette und Bezugsquellen-Facette. Liegen unter der
+  Bezugsquelle mehr Inhalte als der Crawler geliefert hat (z. B. Uploads, Migration), stimmt die
+  Zahl jetzt mit der WLO-Suche überein (bpb: 62.867 → 63.034 nach dem nächsten Datenaufbau).
+
 ### Behoben (Filter)
 
 - Die Filter der zweiten Zeile (Fach, Bildungsstufe, Inhaltstyp, Min. Inhalte) nutzen die freie

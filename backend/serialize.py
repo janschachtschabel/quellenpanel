@@ -12,10 +12,7 @@ nested `public` dict the tile/list/detail components don't read):
 Every result carries `searchUrl` (jump to the source's contents in the WLO search).
 The tier passed in must already be resolved (see tiers.effective_tier); this function trusts it.
 """
-import json
-import urllib.parse
 
-import config
 import enduser
 
 # AI-usage / legal public fields surfaced as the tier-1 "KI-Nutzung & Recht" section — the basis of
@@ -32,14 +29,6 @@ _PROV_FIELD_MAP = {
 }
 
 
-def search_url(name: str) -> str:
-    """Link to a source's contents in the public WLO search, built from the configurable SEARCH_URL."""
-    if not name:
-        return ""
-    flt = json.dumps({"source": [name]}, separators=(",", ":"))
-    return f"{config.SEARCH_URL}/search/de/search?filters={urllib.parse.quote(flt, safe=':')}"
-
-
 def source(r: dict, tier: int, detail: bool = False,
            related: dict | None = None, family: int = 0) -> dict:
     """Serialize one record at the granted tier. `detail` selects the richer per-source payload.
@@ -47,7 +36,7 @@ def source(r: dict, tier: int, detail: bool = False,
     — `family` is the sibling count for the tile/list badge, `related` the full sibling list for the
     detail view (both from store; display only, no effect on any aggregation)."""
     out = enduser.detail(r) if detail else enduser.card(r)
-    out["searchUrl"] = search_url(r.get("name", ""))
+    out["searchUrl"] = enduser.record_search_url(r)
 
     if tier >= 2:
         # Bezugsquelle-family link is Audit-tier only (team): WHICH other source datasets share a

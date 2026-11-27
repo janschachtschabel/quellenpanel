@@ -1,7 +1,7 @@
 [
  {
   "bezugsquelle": "Alpha Verlag",
-  "contentCount": 120,
+  "contentCount": 130,
   "contentTypes": [
    "Quelle"
   ],
@@ -25,7 +25,7 @@
  },
  {
   "bezugsquelle": "Beta Portal",
-  "contentCount": 40,
+  "contentCount": 45,
   "contentTypes": [
    "Quelle"
   ],
@@ -49,11 +49,11 @@
  },
  {
   "bezugsquelle": "Gamma Org",
-  "contentCount": 0,
+  "contentCount": 8,
   "contentTypes": [],
   "description": "",
   "educationalContext": [],
-  "erschliessungsstatus": "nur als Bezugsquelle bekannt",
+  "erschliessungsstatus": "im Bestand verfuegbar",
   "id": "crawler:gamma_spider",
   "language": "",
   "license": "",
@@ -84,7 +84,7 @@
   "oer": true,
   "previewUrl": "https://repo.test/preview/eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
   "quality": {},
-  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22Einzelnes%20Video%20%5Cu00fcber%20Bienen%22%5D%7D",
+  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22Delta%20Medien%22%5D%7D",
   "subjects": [
    "Mathematik"
   ],
@@ -108,7 +108,7 @@
   "oer": true,
   "previewUrl": "https://repo.test/preview/dddddddd-dddd-dddd-dddd-dddddddddddd",
   "quality": {},
-  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22Delta%20Medien%20Mediathek%22%5D%7D",
+  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22Delta%20Medien%22%5D%7D",
   "subjects": [
    "Mathematik"
   ],
@@ -156,7 +156,7 @@
   "oer": true,
   "previewUrl": "https://repo.test/preview/ffffffff-ffff-ffff-ffff-ffffffffffff",
   "quality": {},
-  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22Migrierte%20Quelle%22%5D%7D",
+  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22WirLernenOnline%22%5D%7D",
   "subjects": [
    "Mathematik"
   ],
@@ -232,7 +232,7 @@
   "oer": true,
   "previewUrl": "https://repo.test/preview/33333333-3333-3333-3333-333333333333",
   "quality": {},
-  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22Kanal%20X%22%5D%7D",
+  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22YouTube%20-%20Kanal%20X%22%5D%7D",
   "subjects": [
    "Mathematik"
   ],

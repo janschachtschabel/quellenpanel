@@ -24,6 +24,13 @@ def _search_url(name: str) -> str:
     return f"{config.SEARCH_URL}/search/de/search?filters={urllib.parse.quote(flt, safe=':')}"
 
 
+def record_search_url(r: dict) -> str:
+    """Search link of a record. The WLO search filters »Quelle« by Bezugsquelle, so link the
+    Bezugsquelle (exact facet value) — a source dataset titled 'Ecole Science bei YouTube' holds its
+    contents under 'Ecole Science'. Falls back to the name when there is no Bezugsquelle."""
+    return _search_url((r.get("identity") or {}).get("bezugsquelle") or r.get("name", ""))
+
+
 def _load_supplements() -> dict:
     """Curated source-level description + preview for node-less sources whose own metadata is
     empty (YouTube, Bayerischer Rundfunk, OER Commons and ~30 smaller publishers): the
@@ -67,7 +74,7 @@ def card(r: dict) -> dict:
         "name":               r["name"],
         "contentCount":       r.get("contentCount") or 0,
         "url":                p.get("URL", ""),
-        "searchUrl":          _search_url(r["name"]),
+        "searchUrl":          record_search_url(r),
         # Bezugsquelle (publisher) — public-facing (shown in the Steckbriefe header), surfaced for
         # the detail's Grund-Informationen and the PDF. Empty for node-only sources.
         "bezugsquelle":       (r.get("identity") or {}).get("bezugsquelle", ""),
