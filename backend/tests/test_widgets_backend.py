@@ -64,3 +64,21 @@ def test_embed_reicht_einbettungsoptionen_durch(client):
     for k, v in (("kopf", "aus"), ("fuss", "aus"), ("filter", "aus"), ("rahmen", "aus"), ("ansicht", "liste"),
                  ("hintergrund", "#ffffff"), ("farbe", "#1a73e8")):
         assert f'{k}="{v}"' in r.text, k
+
+
+def test_widgets_doku_nennt_jedes_attribut_mit_wirkungsbereich():
+    """Jan: Optionen und Einblendungsparameter gut dokumentieren. Jedes Attribut, das Elemente, App
+    oder iframe-Seite verstehen, steht in der Übersichtstabelle von docs/widgets.md."""
+    import re
+    from pathlib import Path
+
+    import embed
+    root = Path(__file__).resolve().parents[2]
+    app_ts = (root / "frontend/src/app/app.component.ts").read_text(encoding="utf-8")
+    el_ts = (root / "frontend/src/widgets/elements.ts").read_text(encoding="utf-8")
+    namen = set(embed.ATTRIBUTE) | set(re.findall(r"@Input\('([a-z-]+)'\)", app_ts))
+    namen |= set(re.findall(r"'([a-z-]+)'", el_ts.split("observedAttributes", 1)[1].split("]", 1)[0]))
+    doku = (root / "docs/widgets.md").read_text(encoding="utf-8")
+    teil = doku.split("### Alle Optionen auf einen Blick", 1)[1].split("\n### ", 1)[0]
+    zeilen = {m.group(1) for m in re.finditer(r"^\| `([a-z-]+)`", teil, re.M)}
+    assert sorted(namen - zeilen) == []

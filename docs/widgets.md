@@ -46,32 +46,50 @@ Das Skript erkennt seine Herkunft über `document.currentScript`. Wird es nicht 
 `<script src>` eingebunden (zum Beispiel über einen Tag-Manager oder als Modul), muss `api-base`
 gesetzt werden. Doppeltes Einbinden schadet nicht.
 
-### Attribute
+### Alle Optionen auf einen Blick
 
-| Attribut | Bedeutung |
-|---|---|
-| `fach` | Vorbelegung Fach, z. B. `Mathematik` |
-| `bildungsstufe` | Vorbelegung Bildungsstufe, z. B. `Primarstufe`, `Sekundarstufe I` |
-| `suche` | Vorbelegung Suchbegriff; bei der Liste blendet `suche="aus"` das Suchfeld aus |
-| `nur-oer` | nur Quellen mit offener Lizenz (OER) |
-| `max` | Anzahl der Einträge (Liste und Top: Standard 10, höchstens 50) |
-| `sprache` | `de` (Standard) oder `en` |
-| `variante` | `schlicht`: ohne Rahmen und Hintergrund |
-| `api-base` | API einer anderen Instanz |
-| `quelle` | nur `<wlo-quelle>`: Kennung der Quelle (Feld `id` der API, z. B. `crawler:bpb_spider`) |
-| `link` | nur `<wlo-quellen-zahl>`: Ziel des Links „Zum Quellenverzeichnis“ |
-| `farbe` | Markenfarbe als `#rrggbb` (Links, Rang, Balken; in Kacheln und App auch Knöpfe und Fokus) |
-| `hintergrund` | Hintergrundfarbe als `#rrggbb`, z. B. `#ffffff` für eine weiße Seite |
-| `rahmen` | `aus`: ohne Rahmen und Außenabstand, nahtlos in der Seite |
-| `kopf`, `fuss`, `filter` | nur Kacheln und App: `aus` blendet Kopfzeile, Fußzeile bzw. Filterleiste aus |
-| `ansicht` | nur Kacheln und App: `kacheln` oder `liste` (fest, wenn der Kopf ausgeblendet ist) |
+Spalten: **L** = leichte Elemente (`wlo-quellen-liste`, `-top`, `-zahl`, `wlo-quelle`,
+`-statistik`), **K** = Kacheln und App (`wlo-quellen-kacheln`, `wlo-quellenpanel`),
+**i** = iframe-Seite `/embed/<name>?…`, **A** = Link auf die App `https://<host>/?…`.
 
-Ungültige Farben (alles außer `#rrggbb`) werden ignoriert. `aus`, `off`, `false`, `0` und `nein`
-schalten aus; jeder andere Wert lässt den Teil an.
+| Attribut | Werte | Standard | L | K | i | A | Wirkung |
+|---|---|---|---|---|---|---|---|
+| `fach` | Fachname, z. B. `Mathematik` | alle | ✓ | ✓ | ✓ | – | Vorbelegung Fach |
+| `bildungsstufe` | z. B. `Primarstufe`, `Sekundarstufe I` | alle | ✓ | ✓ | ✓ | – | Vorbelegung Bildungsstufe |
+| `suche` | Suchbegriff, oder `aus` | leer | ✓ | ✓ | ✓ | – | Vorbelegung Suche; bei der Liste blendet `aus` das Suchfeld aus |
+| `nur-oer` | ohne Wert | aus | ✓ | ✓ | ✓ | – | nur Quellen mit offener Lizenz |
+| `max` | Zahl 1–50 | 10 (Statistik 8) | ✓ | – | ✓ | – | Anzahl Einträge (Liste, Top, Statistik) |
+| `sprache` | `de`, `en` | `de` | ✓ | ✓ | ✓ | – | Sprache der Texte |
+| `variante` | `schlicht` | – | ✓ | – | ✓ | – | Liste ohne Rahmen und Hintergrund, für helle Seiten |
+| `quelle` | Kennung, z. B. `crawler:bpb_spider` | – | ✓ | – | ✓ | – | nur `wlo-quelle`: welche Quelle (Feld `id` der API) |
+| `link` | URL | Quellenverzeichnis | ✓ | – | – | – | nur `wlo-quellen-zahl`: Ziel des Links |
+| `farbe` | `#rrggbb` | Markenfarbe des Profils | ✓ | ✓ | ✓ | ✓ | Markenfarbe: Links, Rang, Balken; in K auch Knöpfe, Fokus, Tönungen |
+| `hintergrund` | `#rrggbb` | Weiß bzw. Hellgrau (K) | ✓ | ✓ | ✓ | ✓ | Hintergrund des Widgets bzw. der Fläche um Kacheln und Liste |
+| `rahmen` | `aus` | an | ✓ | ✓ | ✓ | ✓ | ohne Rahmen, Rundung und Außenabstand, nahtlos in der Seite |
+| `kopf` | `aus` | an | – | ✓ | ✓ | ✓ | Kopfzeile mit Logo, Ansicht, Stufe und Sprache ausblenden |
+| `fuss` | `aus` | an | – | ✓ | ✓ | ✓ | Fußzeile mit Impressum und Links ausblenden |
+| `filter` | `aus` | an | – | ✓ | ✓ | ✓ | Such- und Filterleiste ausblenden (Blättern bleibt) |
+| `ansicht` | `kacheln`, `liste` | `kacheln` | – | ✓ | ✓ | ✓ | Ansicht festlegen (wichtig, wenn der Kopf fehlt) |
+| `api-base` | URL der API | Herkunft des Skripts | ✓ | ✓ | – | – | API einer anderen Instanz |
+| `with-credentials` | `true` | aus | – | ✓ | – | – | Team-Login aus einer fremden Seite (nur mit `QE_ALLOWED_ORIGINS`) |
 
-Die Attribute lassen sich nachträglich per JavaScript ändern; das Element lädt dann neu.
+Regeln:
 
-### Schlanke Einbettung (Kacheln oder Liste ohne Kopf und Fuß)
+- **Ausschalten** mit `aus`, `off`, `false`, `0` oder `nein`; jeder andere Wert und das Fehlen des
+  Attributs lassen den Teil an.
+- **Farben** nur als `#rrggbb`; im Query-String `%23` statt `#` oder die Raute weglassen
+  (`hintergrund=ffffff`). Andere Angaben werden ignoriert. Ist die Markenfarbe als Schrift zu hell,
+  dunkelt die App sie für Text und Fokus selbst ab, damit der Kontrast reicht.
+- **Ohne Kopf** gilt die Basisansicht (Stufe 0), die Ansicht aus `ansicht` und die Sprache aus
+  `sprache`; Umschalter gibt es dann nicht.
+- **Ändern zur Laufzeit:** Die Attribute lassen sich per JavaScript ändern; leichte Elemente laden
+  dann neu.
+- **Vorbelegungen** (`fach`, `suche` …) gelten in der App nicht als Query-Parameter, nur als
+  Attribut und in der iframe-Seite.
+
+### Rezepte: schlanke Einbettung
+
+Kacheln oder Liste ohne Kopf und Fuß, so dass sich das Verzeichnis wie ein Teil der Seite liest.
 
 Für eine ruhige Einbindung in eine Webseite, etwa auf weißem Hintergrund:
 
@@ -84,7 +102,25 @@ Für eine ruhige Einbindung in eine Webseite, etwa auf weißem Hintergrund:
 <!-- dieselbe Ansicht als Liste, ohne Filterleiste, Fach vorbelegt -->
 <wlo-quellen-kacheln ansicht="liste" kopf="aus" fuss="aus" filter="aus" rahmen="aus"
                      hintergrund="#ffffff" fach="Chemie"></wlo-quellen-kacheln>
+
+<!-- Fachportal: Top 10 Biologie in der Portalfarbe, ohne Rahmen -->
+<wlo-quellen-top fach="Biologie" max="10" farbe="#00508c" rahmen="aus"></wlo-quellen-top>
+
+<!-- schlichte Liste ohne Suchfeld auf hellem Grund -->
+<wlo-quellen-liste variante="schlicht" suche="aus" fach="Physik" max="8"></wlo-quellen-liste>
 ```
+
+Als iframe (zum Beispiel in einem CMS ohne Skripte):
+
+```html
+<iframe title="Quellen Mathematik" style="width:100%; border:0; height:900px"
+  src="https://<host>/embed/quellen-kacheln?fach=Mathematik&kopf=aus&fuss=aus&rahmen=aus&hintergrund=%23ffffff"></iframe>
+```
+
+Als Link auf die ganze App, etwa für einen Menüpunkt:
+`https://<host>/?kopf=aus&fuss=aus&ansicht=liste&farbe=%23003b7c`.
+
+Testseite mit diesen Beispielen: `/widgets/beispiele/schlank.html`.
 
 Ohne Kopf gibt es keinen Umschalter für Ansicht, Stufe und Sprache: Es gilt die Basisansicht
 (Stufe 0), die Ansicht aus `ansicht` und die Sprache aus `sprache`. Suche und Filter bleiben, solange
@@ -137,8 +173,8 @@ Jedes Element gibt es auch als Seite: `https://<host>/embed/<name>?<attribute>`,
 ```
 
 `<name>` ist der Elementname ohne `wlo-` (`quellen-liste`, `quellen-top`, `quellen-zahl`, `quelle`,
-`quellen-statistik`, `quellen-kacheln`, `quellenpanel`). Erlaubt sind die Attribute aus der Tabelle
-oben (außer `api-base` und `link`).
+`quellen-statistik`, `quellen-kacheln`, `quellenpanel`). Erlaubt sind die Attribute mit ✓ in Spalte **i** der
+Tabelle oben.
 
 **Höhe automatisch anpassen:** Die iframe-Seite meldet ihre Höhe erst, wenn die Gastseite danach
 fragt, und danach bei jeder Änderung:
@@ -160,8 +196,10 @@ Leerzeichen-getrennt, Standard `*`; auf der Team-Instanz nur `'self'`).
 
 ## 3. Testseiten
 
-Die Instanz liefert zwei Testseiten aus:
+Die Instanz liefert drei Testseiten aus:
 
+- `https://<host>/widgets/beispiele/schlank.html`: schlanke Einbettung auf Weiß (Kacheln und
+  Liste ohne Kopf, Fuß und Rahmen, leichte Liste in eigener Farbe).
 - `https://<host>/widgets/beispiele/leer.html`: alle Elemente auf einer leeren Seite mit strenger
   CSP, dazu ein iframe mit Höhenanpassung.
 - `https://<host>/widgets/beispiele/gast.html`: eine Gastseite mit absichtlich aggressiven eigenen
