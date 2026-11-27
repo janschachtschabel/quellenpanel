@@ -47,7 +47,7 @@ jobs:
     # Publish only when the credentials are present (skips cleanly otherwise).
     if: ${{ needs.check-secrets.outputs.present == 'true' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
