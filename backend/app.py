@@ -212,6 +212,7 @@ def capabilities(request: Request, x_team_password: str | None = Header(None),
         "tier1Gated": True,   # tier 1 always needs its password (fail-closed)
         "teamAvailable": bool(config.TEAM_PW) and config.role() == "team",
         "repoUrl": config.REPO_URL,   # which edu-sharing repo the data refers to (repo-neutral)
+        "revision": config.REVISION,  # git commit of the running image ("" for a local build)
         "branding": _branding(),
     }
 

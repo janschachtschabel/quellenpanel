@@ -189,17 +189,15 @@ def test_server_compose_one_instance_by_default():
     _, doc = _server()
     svc = doc["services"]
     assert set(svc) == {"team", "partner", "public"}
-    assert svc["team"]["build"]["context"].startswith("${QE_GIT_URL:-https://github.com/")
-    # The host pulls before it deploys: the team image is never pulled (no registry) but rebuilt from
-    # the repository on every deploy, otherwise an old local image keeps running.
-    assert svc["team"]["pull_policy"] == "build"
+    # A deploy always pulls the image CI built from main (no local build that a host may skip or
+    # cache): every deploy runs the latest main, QE_IMAGE pins a version.
+    assert "build" not in svc["team"]
     # One port serves every tier; tier 1 and 2 need their passwords (fail-closed).
     assert svc["team"]["ports"] == ["${BIND:-0.0.0.0}:${PORT:-18080}:8080"]
     assert "deploy" not in svc["team"]
     # Separate instances are optional: off unless SEPARATE_INSTANCES=1, so equal ports never clash.
     for name in ("partner", "public"):
         assert svc[name]["deploy"]["replicas"] == "${SEPARATE_INSTANCES:-0}", name
-        assert svc[name]["pull_policy"] == "never"
         assert svc[name]["environment"]["QE_EXPORT_SOURCE"] == "http://team:9090/internal/exports/stufe{tier}.json"
     assert svc["partner"]["ports"] == ["${PARTNER_PORT:-18081}:8080"]
     assert svc["public"]["ports"] == ["${PUBLIC_PORT:-18082}:8080"]
@@ -207,7 +205,8 @@ def test_server_compose_one_instance_by_default():
         s = svc[name]
         assert all(":80:" not in p and ":443:" not in p for p in s["ports"]), name   # 80/443: proxy
         assert all("9090" not in p for p in s["ports"]), name                       # metrics stay inside
-        assert s["image"] == "quellenpanel:server", name
+        assert s["image"] == "${QE_IMAGE:-ghcr.io/janschachtschabel/quellenpanel:main}", name
+        assert s["pull_policy"] == "always", name
         assert s["read_only"] is True and str(s["user"]) == "10001", name
         assert s["environment"]["TRUST_PROXY"] == "1", name
         labels = "\n".join(s["labels"])
@@ -244,3 +243,15 @@ def test_release_workflow_nur_von_hand_und_prueft_version():
     assert job["permissions"]["contents"] == "write"
     run = " ".join(s.get("run", "") for s in job["steps"])
     assert "pyproject.toml" in run and "refs/heads/main" in run and "gh release create" in run
+
+
+def test_github_veroeffentlicht_image_fuer_compose_mit_revision():
+    import yaml as _yaml
+    doc = _yaml.safe_load((ROOT / ".github/workflows/docker-publish.yml").read_text(encoding="utf-8"))
+    assert doc["permissions"] == {"contents": "read"}
+    job = doc["jobs"]["ghcr"]
+    assert job["permissions"]["packages"] == "write"
+    text = (ROOT / ".github/workflows/docker-publish.yml").read_text(encoding="utf-8")
+    assert "ghcr.io/${{ github.repository }}" in text
+    assert "QE_REVISION=${{ github.sha }}" in text
+    assert "ARG QE_REVISION" in (ROOT / "Dockerfile").read_text(encoding="utf-8")
