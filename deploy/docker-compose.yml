@@ -1,30 +1,75 @@
-# WLO Quellenpanel — deployment (3-tier API + built SPA in one container).
-# Config comes from .env (see below).  Start:  docker compose up -d
+# WLO Quellenpanel — reference deployment: three instances from ONE image (see README "Three
+# instances from one image"). Config comes from .env.  Start:  docker compose up -d
+#
+#   team     tier 2 (Audit). Builds/holds the data in the volume, publishes the tier exports on its
+#            internal port 9090. Reachable only from this host (127.0.0.1) — put it behind VPN/SSO.
+#   partner  tier 1 (Steckbrief, password QE_TIER1_PASSWORD). Holds only the tier-0/1 exports.
+#   public   tier 0 (public source list / widgets). Holds only the tier-0 export.
+#
+# All three run read-only with a tmpfs /tmp and as uid 10001; only the team writes, to /data.
+x-common: &common
+  image: ${IMAGE:?please set IMAGE in .env (e.g. youruser/quellenpanel:0.3.0)}
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+    - /tmp
+  user: "10001"
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
 services:
-  quellenpanel:
-    image: ${IMAGE:?please set IMAGE in .env (e.g. youruser/quellenpanel:latest)}
-    container_name: quellenpanel
-    restart: unless-stopped
+  team:
+    <<: *common
+    container_name: quellenpanel-team
+    ports:
+      - "127.0.0.1:${TEAM_PORT:-8082}:8080"
+    volumes:
+      - quellenpanel-data:/data
+    environment:
+      - QE_ROLE=team
+      # Tier 2 login. Unset ⇒ no team access (fail-closed).
+      - QE_TEAM_PASSWORD=${QE_TEAM_PASSWORD:-}
+      # HMAC key for team sessions; set it so logins survive restarts (openssl rand -hex 32).
+      - QE_SESSION_SECRET=${QE_SESSION_SECRET:-}
+      # First start with an empty volume: crawler.csv / korrekturen.csv / truth.json from here.
+      # Empty ⇒ the team builds the data from the live repository (takes a while; API answers 503).
+      - QE_SEED_URL=${QE_SEED_URL:-}
+      # Optional nightly rebuild (hour 0–23; empty = off).
+      - QE_AUTO_REFRESH_HOUR=${QE_AUTO_REFRESH_HOUR:-}
+      - QE_ALLOWED_ORIGINS=${QE_ALLOWED_ORIGINS:-}
+      - QE_REPO_URL=${QE_REPO_URL:-https://redaktion.openeduhub.net}
+      - QE_SEARCH_URL=${QE_SEARCH_URL:-https://suche.wirlernenonline.de}
+
+  partner:
+    <<: *common
+    container_name: quellenpanel-partner
+    ports:
+      - "${PARTNER_PORT:-8081}:8080"
+    environment:
+      - QE_ROLE=partner
+      - QE_TIER1_PASSWORD=${QE_TIER1_PASSWORD:-}
+      - QE_EXPORT_SOURCE=http://team:9090/internal/exports/stufe{tier}.json
+      - QE_EXPORT_POLL_MINUTES=${QE_EXPORT_POLL_MINUTES:-10}
+      - QE_REPO_URL=${QE_REPO_URL:-https://redaktion.openeduhub.net}
+      - QE_SEARCH_URL=${QE_SEARCH_URL:-https://suche.wirlernenonline.de}
+    depends_on:
+      - team
+
+  public:
+    <<: *common
+    container_name: quellenpanel-public
     ports:
       - "${PORT:-8080}:8080"
     environment:
-      # --- Access tiers (all optional; unset = end-user-only, fail-closed) ---
-      # Tier 2 (Audit / team): a password enables team login. Unset ⇒ no team access.
-      - QE_TEAM_PASSWORD=${QE_TEAM_PASSWORD:-}
-      # Tier 1 (Details): optional password gate. Unset ⇒ tier 1 open to everyone.
-      - QE_TIER1_PASSWORD=${QE_TIER1_PASSWORD:-}
-      # Hard public cap: "1" forces every request to tier 0 (public / embedded deployment).
-      - QE_PUBLIC_ONLY=${QE_PUBLIC_ONLY:-}
-      # Cross-origin team login: comma-separated origins allowed to use the credentialed session
-      # cookie (embedded widget on another origin). Empty = same-origin only. Requires HTTPS.
-      - QE_ALLOWED_ORIGINS=${QE_ALLOWED_ORIGINS:-}
-      # --- Operations ---
-      # Optional nightly auto-refresh (hour 0–23; empty = off). Needs a writable filesystem and
-      # the live-API raw cache, so leave it empty unless that is provided.
-      - QE_AUTO_REFRESH_HOUR=${QE_AUTO_REFRESH_HOUR:-}
-      # --- Repository neutrality (live queries + "view in search" link) ---
-      # Defaults = production. NOTE: the bundled data + curated blacklists/overlays still reflect
-      # production and must be regenerated/adjusted when pointing at another repo.
+      - QE_ROLE=public
+      - QE_EXPORT_SOURCE=http://team:9090/internal/exports/stufe{tier}.json
+      - QE_EXPORT_POLL_MINUTES=${QE_EXPORT_POLL_MINUTES:-10}
       - QE_REPO_URL=${QE_REPO_URL:-https://redaktion.openeduhub.net}
       - QE_SEARCH_URL=${QE_SEARCH_URL:-https://suche.wirlernenonline.de}
-    # Healthcheck is already defined in the image (Dockerfile) and is inherited.
+    depends_on:
+      - team
+
+volumes:
+  quellenpanel-data:

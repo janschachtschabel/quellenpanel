@@ -5,11 +5,26 @@ shared constants and paths. Imported by all other backend modules as a
 dependency-free leaf module (avoids cycles).
 """
 import hmac
+import logging
 import os
+import secrets
+import tomllib
 from pathlib import Path
 
+import repo_profile
+
 HERE = Path(__file__).parent
-TRUTH = HERE / "data" / "truth.json"
+
+
+def _read_version(path: Path) -> str:
+    """[project].version from backend/pyproject.toml (the one version source); "0.0.0" if missing."""
+    try:
+        return tomllib.loads(path.read_text(encoding="utf-8"))["project"]["version"]
+    except (OSError, KeyError, tomllib.TOMLDecodeError):
+        return "0.0.0"
+
+
+VERSION = _read_version(HERE / "pyproject.toml")
 FRONTEND = HERE.parent / "frontend"
 
 
@@ -30,6 +45,42 @@ def _load_dotenv(path):
 
 
 _load_dotenv(HERE / ".env")
+
+
+# --- Data paths ---------------------------------------------------------------------------
+# Read on every call (not frozen at import), so a deployment or a test can repoint them via env.
+def data_dir() -> Path:
+    """Writable data directory: truth.json, raw/ caches, and team-maintained crawler.csv /
+    korrekturen.csv (which take precedence over the profile's starting data)."""
+    return Path(os.environ.get("QE_DATA_DIR", "").strip() or HERE / "data")
+
+
+def raw_dir() -> Path:
+    """Live-fetch caches (written by fetcher, read by truth_loaders)."""
+    return data_dir() / "raw"
+
+
+def truth_path() -> Path:
+    return data_dir() / "truth.json"
+
+
+def _curated(name: str) -> Path | None:
+    for p in (data_dir() / name, repo_profile.get().daten_dir / name):
+        if p.is_file():
+            return p
+    return None
+
+
+def crawler_csv_path() -> Path | None:
+    """The crawler table: data dir first (team upload), else the profile's starting copy."""
+    return _curated("crawler.csv")
+
+
+def korrekturen_csv_path() -> Path | None:
+    """The corrections CSV: data dir first (team edits), else the profile's starting copy."""
+    return _curated("korrekturen.csv")
+
+
 # No default password: if QE_TEAM_PASSWORD is unset, TEAM_PW is empty and check_pw
 # always fails (fail closed) — team features are disabled rather than guarded by a
 # known default. Set the variable in .env (dev) or via -e (deploy) to enable them.
@@ -39,13 +90,93 @@ TEAM_PW = os.environ.get("QE_TEAM_PASSWORD", "").strip()
 # Set QE_TIER1_PASSWORD to gate it behind a lighter, separate password (below the team password).
 TIER1_PW = os.environ.get("QE_TIER1_PASSWORD", "").strip()
 
-# Hard public lock: when truthy, the app serves ONLY tier 0 (end-user) and the tier 1/2 routes
-# refuse regardless of any password — for the embedded / public deployment, so internal data is
-# unreachable even if an auth check were wrong.
-PUBLIC_ONLY = os.environ.get("QE_PUBLIC_ONLY", "").strip().lower() in ("1", "true", "yes", "on")
+# Role of this instance (one image, three deployments). The role caps the access tier:
+#   team     tier 2 — builds truth.json + the per-tier exports (internal only)
+#   partner  tier 1 — serves only the tier-0/1 exports; tier 1 needs QE_TIER1_PASSWORD (fail-closed)
+#   public   tier 0 — serves only the tier-0 export (embeddable)
+# QE_PUBLIC_ONLY=1 is the transitional alias for QE_ROLE=public.
+ROLES = ("team", "partner", "public")
+ROLE_MAX_TIER = {"team": 2, "partner": 1, "public": 0}
 
-# "Spiders" that are NOT real content crawlers but WLO migration/import.
-WLO_SPIDERS = {"wirlernenonline_spider", "wirlernenonline_gsheet_spider"}
+
+def role() -> str:
+    """The instance role, read from the environment on every call (tests/deployments switch it)."""
+    raw = os.environ.get("QE_ROLE", "").strip().lower()
+    alias = os.environ.get("QE_PUBLIC_ONLY", "").strip().lower() in ("1", "true", "yes", "on")
+    if not raw:
+        return "public" if alias else "team"
+    if alias and raw != "public":
+        # Never fail open: an old public deployment that gains QE_ROLE=team must not unlock tiers.
+        raise ValueError(f"QE_PUBLIC_ONLY=1 widerspricht QE_ROLE='{raw}'")
+    if raw not in ROLES:
+        raise ValueError(f"QE_ROLE='{raw}' ungültig (erlaubt: {', '.join(ROLES)})")
+    return raw
+
+
+def frame_ancestors() -> str:
+    """CSP frame-ancestors for the /embed/* pages: QE_FRAME_ANCESTORS (space-separated sources),
+    default '*' (public widgets embeddable anywhere); the internal team instance only 'self'."""
+    raw = os.environ.get("QE_FRAME_ANCESTORS", "").strip()
+    if raw:
+        # one header value: keep only plain source tokens (no ';', quotes only around keywords)
+        tokens = [t for t in raw.split() if all(c not in t for c in ";,\r\n") and len(t) < 200]
+        if tokens:
+            return " ".join(tokens)
+    return "'self'" if role() == "team" else "*"
+
+
+def public_only() -> bool:
+    """Hard public lock: only tier 0 is served, whatever password is sent."""
+    return role() == "public"
+
+
+def export_source() -> str:
+    """Partner/public: where the tier export comes from — URL or file path with '{tier}',
+    e.g. http://quellenpanel-team-internal:9090/internal/exports/stufe{tier}.json (QE_EXPORT_SOURCE)."""
+    return os.environ.get("QE_EXPORT_SOURCE", "").strip()
+
+
+def export_poll_minutes() -> int:
+    """Partner/public: re-fetch interval of the export in minutes (QE_EXPORT_POLL_MINUTES, 0 = off)."""
+    raw = os.environ.get("QE_EXPORT_POLL_MINUTES", "").strip()
+    return int(raw) if raw.isdigit() else 10
+
+
+def thumb_cache_bytes() -> int:
+    """Memory budget of the preview-image cache (QE_THUMB_CACHE_MB, default 16, 0 = off)."""
+    raw = os.environ.get("QE_THUMB_CACHE_MB", "").strip()
+    return (int(raw) if raw.isdigit() else 16) * 1024 * 1024
+
+
+def seed_url() -> str:
+    """QE_SEED_URL: base URL holding crawler.csv, korrekturen.csv and optionally truth.json."""
+    return os.environ.get("QE_SEED_URL", "").strip()
+
+
+_GENERATED_SECRET: bytes | None = None
+_TRUE = ("1", "true", "yes", "on")
+
+
+def session_secret() -> bytes:
+    """HMAC key for team sessions (QE_SESSION_SECRET). Without it: one random key per process."""
+    global _GENERATED_SECRET
+    raw = os.environ.get("QE_SESSION_SECRET", "").strip()
+    if raw:
+        return raw.encode("utf-8")
+    if _GENERATED_SECRET is None:
+        _GENERATED_SECRET = secrets.token_bytes(32)
+        logging.getLogger("quellenpanel").warning(
+            "QE_SESSION_SECRET fehlt: zufälliger Schlüssel, Sitzungen überleben keinen Neustart")
+    return _GENERATED_SECRET
+
+
+def trust_proxy() -> bool:
+    """TRUST_PROXY: take the client IP from the rightmost X-Forwarded-For entry (set by our proxy)."""
+    return os.environ.get("TRUST_PROXY", "").strip().lower() in _TRUE
+
+
+# Kept for compatibility (read once at import); code paths use public_only()/role().
+PUBLIC_ONLY = public_only()
 
 
 def _auto_refresh_hour():
@@ -63,8 +194,9 @@ AUTO_REFRESH_HOUR = _auto_refresh_hour()
 # built from these. NOT covered: the bundled data snapshot (truth.json) and the curated
 # blacklists / overlay lists, which reflect their source repository and must be
 # regenerated / adjusted manually when switching repositories.
-REPO_URL = os.environ.get("QE_REPO_URL", "https://redaktion.openeduhub.net").rstrip("/")
-SEARCH_URL = os.environ.get("QE_SEARCH_URL", "https://suche.wirlernenonline.de").rstrip("/")
+# Defaults come from the active repository profile; QE_REPO_URL / QE_SEARCH_URL override them.
+REPO_URL = (os.environ.get("QE_REPO_URL", "").strip() or repo_profile.get().repo_url).rstrip("/")
+SEARCH_URL = (os.environ.get("QE_SEARCH_URL", "").strip() or repo_profile.get().search_url).rstrip("/")
 
 
 def _allowed_origins():
@@ -79,7 +211,7 @@ def _allowed_origins():
 # log in from an embedded widget on a DIFFERENT origin, list those origins here: they receive an
 # origin-specific, credentialed CORS grant and the login cookie is issued cross-site (SameSite=None;
 # Secure → HTTPS required). Public wildcard access for every other origin is unchanged.
-# Example: QE_ALLOWED_ORIGINS=https://wirlernenonline.de,https://www.wirlernenonline.de
+# Example: QE_ALLOWED_ORIGINS=https://portal.example.org,https://www.portal.example.org
 ALLOWED_ORIGINS = _allowed_origins()
 
 

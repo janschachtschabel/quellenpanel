@@ -6,7 +6,7 @@ other modules that have imported it keep the same reference.
 """
 import json
 
-from config import TRUTH
+import config
 from truth_text import _norm
 
 _DATA = {"meta": {}, "records": [], "byId": {}, "byFamily": {}}
@@ -35,9 +35,10 @@ def _family_key(r):
 
 
 def load():
-    if not TRUTH.exists():
+    truth_file = config.truth_path()
+    if not truth_file.exists():
         raise RuntimeError("data/truth.json fehlt – erst truth.py laufen lassen.")
-    d = json.loads(TRUTH.read_text(encoding="utf-8"))
+    d = json.loads(truth_file.read_text(encoding="utf-8"))
     records = d["records"]
     by_id = {r["id"]: r for r in records}     # build the indexes first (the slow part)
     by_family = {}

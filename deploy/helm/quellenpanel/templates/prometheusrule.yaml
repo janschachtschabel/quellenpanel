@@ -1,0 +1,59 @@
+{{- if .Values.metrics.prometheusRule.enabled }}
+{{- $job := printf "%s-internal" (include "quellenpanel.fullname" .) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "quellenpanel.fullname" . }}
+  labels:
+    {{- include "quellenpanel.labels" . | nindent 4 }}
+    {{- with .Values.metrics.prometheusRule.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+  - name: {{ include "quellenpanel.fullname" . }}
+    rules:
+    # Keep in sync with tests/rules.yaml (rendered for job quellenpanel-team-internal / -public-internal).
+    {{- if eq .Values.config.role "team" }}
+    - alert: QuellenpanelRebuildStale
+      # Age of the served data (from its generatedAt), so a pod restart does not reset it.
+      expr: quellenpanel_data_age_seconds{job="{{ $job }}"} > 26 * 3600
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Quellenpanel-Daten älter als 26 Stunden"
+        description: "Der nächtliche Datenaufbau ist ausgeblieben oder fehlgeschlagen (Status: GET /health auf Port 9090)."
+    - alert: QuellenpanelNoData
+      # No data at all (age NaN, or no scrape): the first build has not finished or failed.
+      expr: absent(quellenpanel_data_age_seconds{job="{{ $job }}"} >= 0)
+      for: 6h
+      labels:
+        severity: warning
+      annotations:
+        summary: "Quellenpanel-Team hat seit 6 Stunden keine Daten"
+        description: "Erster Datenaufbau läuft noch oder ist fehlgeschlagen: GET /health auf Port 9090 (rebuild.last), dann „Daten aktualisieren“ oder QE_SEED_URL prüfen."
+    {{- else }}
+    - alert: QuellenpanelExportFetchFailing
+      expr: |
+        sum(increase(quellenpanel_export_fetch_total{job="{{ $job }}",result="error"}[30m])) > 0
+        unless
+        sum(increase(quellenpanel_export_fetch_total{job="{{ $job }}",result=~"ok|not_modified"}[30m])) > 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Quellenpanel ({{ .Values.config.role }}) holt den Export seit 30 Minuten nicht"
+        description: "Die Instanz liefert den letzten gültigen Stand weiter aus; prüfen, ob die Team-Instanz erreichbar ist."
+    {{- end }}
+    - alert: QuellenpanelHigh5xx
+      expr: |
+        sum(rate(http_requests_total{job="{{ $job }}",status=~"5.."}[10m]))
+          / sum(rate(http_requests_total{job="{{ $job }}"}[10m])) > 0.05
+      for: 10m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Quellenpanel ({{ .Values.config.role }}): mehr als 5 % Serverfehler"
+        description: "Mehr als 5 % der Anfragen enden mit 5xx (Logs nach trace_id durchsuchen)."
+{{- end }}

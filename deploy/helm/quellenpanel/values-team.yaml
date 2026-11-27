@@ -1,0 +1,26 @@
+# Team instance (tier 2): audit, data owner. One replica, Recreate, data volume at /data.
+# Put the ingress behind VPN/SSO (e.g. an oauth2-proxy annotation) — it is internal.
+#   helm upgrade --install quellenpanel-team deploy/helm/quellenpanel -f deploy/helm/quellenpanel/values-team.yaml \
+#     --set config.existingSecret=quellenpanel-team-secrets
+config:
+  role: team
+  autoRefreshHour: "3"
+  seedUrl: ""
+persistence:
+  size: 2Gi
+# Port 9090 (exports, metrics) only from quellenpanel pods and monitoring — on for the data owner.
+networkPolicy:
+  enabled: true
+ingress:
+  annotations:
+    # Team uploads (crawler table, correction import) up to 5 MB; the API caps them at 5 MB.
+    nginx.ingress.kubernetes.io/proxy-body-size: "6m"
+  hosts:
+  - quellenpanel-team.intern.example.de
+resources:   # gemessen, siehe docs/messung.md (Limit mit Reserve für den noch nicht gemessenen Live-Abruf)
+  requests:
+    cpu: 100m
+    memory: 448Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi

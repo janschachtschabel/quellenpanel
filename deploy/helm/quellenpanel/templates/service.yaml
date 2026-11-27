@@ -10,3 +10,19 @@ spec:
   - name: http
     port: {{ .Values.service.port }}
     targetPort: http
+---
+# Internal port 9090 (/health, /ready, /metrics, /internal/exports): cluster-internal only, never
+# behind an ingress. Partner/public fetch the team export here; Prometheus scrapes it.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "quellenpanel.fullname" . }}-internal
+  labels: {{ include "quellenpanel.labels" . | nindent 4 }}
+    app.kubernetes.io/part: internal
+spec:
+  type: ClusterIP
+  selector: {{ include "quellenpanel.selectorLabels" . | nindent 4 }}
+  ports:
+  - name: internal
+    port: {{ .Values.service.internalPort }}
+    targetPort: internal

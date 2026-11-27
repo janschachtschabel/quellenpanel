@@ -17,12 +17,12 @@ No ingress enabled. Reach the app via port-forward:
   open http://localhost:8080
 {{- end }}
 
-Health check: GET /api/health
-
-Access tiers (all optional; unset ⇒ end-user-only, fail-closed):
-{{- if .Values.config.publicOnly }}
-  PUBLIC_ONLY is ON — every request is hard-capped at tier 0.
+Role: {{ .Values.config.role }} (tier {{ index (dict "public" "0" "partner" "1" "team" "2") .Values.config.role }})
+Internal port 9090 (Service {{ include "quellenpanel.fullname" . }}-internal): /health (liveness), /ready (readiness), /metrics
+{{- if eq .Values.config.role "team" }}
+  tier 2 (Audit): {{ if or .Values.config.teamPassword .Values.config.existingSecret }}enabled{{ else }}DISABLED — set config.teamPassword or config.existingSecret{{ end }}
+  Partner/public fetch: http://{{ include "quellenpanel.fullname" . }}-internal:{{ .Values.service.internalPort }}/internal/exports/stufe{tier}.json
+  First start with an empty volume builds the data (API answers 503 until /ready is 200).
 {{- else }}
-  tier 2 (Audit/team): {{ if .Values.config.teamPassword }}enabled (team password set){{ else }}DISABLED — set config.teamPassword to enable{{ end }}
-  tier 1 (Details):    {{ if .Values.config.tier1Password }}password-gated{{ else }}open{{ end }}
+  Export source: {{ .Values.config.exportSource }}
 {{- end }}

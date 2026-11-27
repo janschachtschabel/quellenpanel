@@ -1,0 +1,4 @@
+﻿Titel;Url;Crawler (Spider);Prio;Zustand;Spider Bemerkungen;Quelldatensatz (Prod);robots.txt;Urheber;Vereinb. neu;Bezugsquelle;LomGeneralItem - title — Status;LomGeneralItem - description — Status
+Alpha;https://alpha.test;alpha_spider;1;aktiv;läuft;;Allow: /;Alpha GmbH;ja;Alpha Verlag;aktiv | Crawler;inaktiv
+Beta;https://beta.test;beta_spider;2;aktiv;;https://repo.test/edu-sharing/components/render/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb;;;;0;aktiv | KI;aktiv
+Gamma;https://gamma.test;gamma_spider;3;outdated;alt;;;Gamma e.V.;nein;Gamma Org;;

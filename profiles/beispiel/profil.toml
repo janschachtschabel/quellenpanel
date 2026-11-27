@@ -1,0 +1,64 @@
+# Beispielprofil: ein edu-sharing ohne WLO-Metadatensatz (nur Standard-Properties).
+# Dient als Neutralitätsbeweis für den Kern (tests/test_beispiel_profil.py) und als Vorlage.
+id = "beispiel"
+name = "Beispiel-Repository"
+
+[repository]
+url = "https://repo.example.org"
+search_url = "https://suche.example.org"
+mds = "mds"
+vocab_sources_url = "https://vocabs.example.org/sources/index.json"
+quelle_property = "ccm:objecttype"
+quelle_werte = ["SOURCE"]
+
+[felder]
+node_uuid = "sys:node-uuid"
+title = "cclom:title"
+www_url = "ccm:wwwurl"
+description = "cclom:general_description"
+publisher = "ccm:publisher"
+license = "ccm:commonlicense_key"
+license_oer = "ccm:license_oer"
+subjects = "ccm:taxonid_DISPLAYNAME"
+subjects_entry = "ccm:taxonentry_DISPLAYNAME"
+educational_context = "ccm:educationalcontext_DISPLAYNAME"
+lrt = "ccm:educationallearningresourcetype_DISPLAYNAME"
+language = "cclom:general_language_DISPLAYNAME"
+language_fallback = "cclom:general_language"
+keywords = "cclom:general_keyword"
+author = "ccm:author_freetext"
+target_group = "ccm:educationalintendedenduserrole_DISPLAYNAME"
+language_level = "ccm:none"
+language_target = "ccm:none"
+curriculum = "ccm:curriculum_DISPLAYNAME"
+fsk = "ccm:fskRating_DISPLAYNAME"
+age_from = "ccm:educationaltypicalagerange_from"
+age_to = "ccm:educationaltypicalagerange_to"
+replication_source = "ccm:replicationsource"
+general_identifier = "ccm:general_identifier"
+editorial_status = "ccm:editorial_checklist_DISPLAYNAME"
+wf_status = "ccm:wf_status"
+
+[qualitaet]
+felder = []
+
+[spider]
+kennung_enthaelt = "spider"
+ignorieren = []
+migration = []
+migration_quelle = ""
+platzhalter_bezugsquellen = []
+lrt_quelle_stichwort = "quelle"
+publiziert_wf_status = ["published"]
+
+[crawler_tabelle]
+spider_spalte = "Crawler (Spider)"
+quelldatensatz_spalte = "Quelldatensatz (Prod)"
+
+[crawler_tabelle.spalten]
+"Titel" = "titel"
+"Url" = "url"
+"Crawler (Spider)" = "spider"
+
+[branding]
+primary = "#48708e"

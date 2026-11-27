@@ -105,7 +105,7 @@ import { I18n } from './i18n.service';
           <div class="donut-wrap">
             <svg class="donut" viewBox="0 0 120 120">
               <circle cx="60" cy="60" r="46" fill="none" stroke="var(--wlo-border)" stroke-width="14"/>
-              <circle cx="60" cy="60" r="46" fill="none" stroke="#16a34a" stroke-width="14"
+              <circle cx="60" cy="60" r="46" fill="none" stroke="var(--colorStatusPositiveText)" stroke-width="14"
                 [attr.stroke-dasharray]="oerDash(stats.oer.percent)" transform="rotate(-90 60 60)"/>
             </svg>
             <div class="donut-lbl">
@@ -124,7 +124,7 @@ import { I18n } from './i18n.service';
     .kpi-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
     .kpi { flex: 1; min-width: 120px; background: var(--wlo-card); border: 1px solid var(--wlo-border); border-radius: 12px; padding: 16px; text-align: center; }
     .kpi.accent { background: var(--wlo-primary-light); border-color: transparent; }
-    .kpi-val { font-size: 24px; font-weight: 700; color: var(--wlo-primary); }
+    .kpi-val { font-size: 24px; font-weight: 700; color: var(--primaryText); }
     .kpi-lbl { font-size: 12px; color: var(--wlo-text-muted); margin-top: 4px; }
     .lane { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
     .lane-lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--wlo-text-muted); }
@@ -138,7 +138,7 @@ import { I18n } from './i18n.service';
     .b-lbl { width: 120px; font-size: 11px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--wlo-text); }
     .b-lbl.mono { width: 64px; font-family: ui-monospace, monospace; font-size: 10px; }
     .b-track { flex: 1; height: 8px; background: var(--wlo-bg); border-radius: 4px; overflow: hidden; }
-    .b-fill { height: 100%; border-radius: 4px; background: #16a34a; transition: width .4s; }
+    .b-fill { height: 100%; border-radius: 4px; background: var(--colorStatusPositiveText); transition: width .4s; }
     .b-val { width: 48px; font-size: 10px; text-align: right; color: var(--wlo-text-muted); flex-shrink: 0; }
     .donut-wrap { position: relative; display: flex; align-items: center; justify-content: center; padding: 16px; }
     .donut { width: 120px; height: 120px; }

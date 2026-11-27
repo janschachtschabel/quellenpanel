@@ -3,6 +3,7 @@ import { createCustomElement } from '@angular/elements';
 
 import { AppComponent } from './app/app.component';
 import { appConfig } from './app/app.config';
+import { elementApiBase, mitStandardApi } from './element-base';
 
 /**
  * Custom-element entry point. Wraps the same AppComponent the standalone SPA uses as a
@@ -22,7 +23,11 @@ import { appConfig } from './app/app.config';
  */
 createApplication(appConfig)
   .then((appRef) => {
-    const element = createCustomElement(AppComponent, { injector: appRef.injector });
-    customElements.define('wlo-quellenpanel', element);
+    const base = elementApiBase(import.meta.url);
+    const element = mitStandardApi(createCustomElement(AppComponent, { injector: appRef.injector }), base);
+    // The same app under two names: the whole panel and the tiles widget (see docs/widgets.md).
+    if (!customElements.get('wlo-quellenpanel')) customElements.define('wlo-quellenpanel', element);
+    const kacheln = mitStandardApi(createCustomElement(AppComponent, { injector: appRef.injector }), base);
+    if (!customElements.get('wlo-quellen-kacheln')) customElements.define('wlo-quellen-kacheln', kacheln);
   })
   .catch((err) => console.error(err));

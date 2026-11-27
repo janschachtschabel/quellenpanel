@@ -195,8 +195,37 @@ export interface TeamStats {
 /** What the backend allows this client — drives the header tier controls (see /api/capabilities). */
 export interface Capabilities {
   maxTier: number;       // highest tier reachable (0 end user, 1 Steckbrief, 2 team)
-  publicOnly: boolean;   // QE_PUBLIC_ONLY — everything hard-capped at tier 0
+  publicOnly: boolean;   // QE_ROLE=public — everything hard-capped at tier 0
   tier1Gated: boolean;   // tier 1 requires a password
   teamAvailable: boolean;// a team password is configured (tier 2 reachable via login)
   repoUrl: string;       // edu-sharing repo the data refers to (repo-neutral; shown in detail + PDF)
+  role?: 'team' | 'partner' | 'public'; // instance role (QE_ROLE)
+  branding?: { primary?: string; accent?: string }; // profile brand colours (valid #rrggbb only)
+}
+
+// ---- Etappe 4: team correction management -------------------------------------------------------
+export interface KorrekturFelder {
+  typ: string; schluessel: string; aktion: string; wert: string; kommentar: string;
+}
+export interface Korrektur extends KorrekturFelder {
+  id: number; geaendert_von: string; geaendert_am: string;
+}
+export interface Meldung { zeile: number; text: string; }
+export interface Anwenden { neuBerechnet: boolean; wirktBeimNaechstenAufbau: boolean; }
+export interface KorrekturStand {
+  version: string; eintraege: Korrektur[]; fehler: Meldung[]; warnungen: Meldung[]; anwenden?: Anwenden;
+}
+export interface VerlaufEintrag { zeitpunkt: string; wer: string; vorgang: string; alt: string; neu: string; }
+export type Zuordnung = Partial<Record<'typ' | 'schluessel' | 'aktion' | 'wert' | 'kommentar', string | null>>;
+export interface ImportVorschau {
+  spalten: string[];
+  zuordnung: Zuordnung;
+  anzahl: { neu: number; geaendert: number; unveraendert: number; fehlerhaft: number; entfallen: number; ergebnis: number };
+  vorschau: { neu: KorrekturFelder[]; geaendert: { alt: KorrekturFelder; neu: KorrekturFelder }[];
+              fehlerhaft: Meldung[]; entfallen: KorrekturFelder[] };
+}
+export interface CrawlerVorschau {
+  ok: boolean; zeilen: number; spalten: string[]; fehlendePflicht: string[];
+  spider: { neu: string[]; entfallen: string[]; geaendert: string[]; gleich: number };
+  anwenden?: Anwenden;
 }

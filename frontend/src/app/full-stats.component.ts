@@ -46,7 +46,7 @@ import { I18n } from './i18n.service';
   `,
   styles: [`
     :host { display: block; padding: 0 16px 8px; }
-    .tier-head { font-size: 13px; font-weight: 700; color: var(--wlo-primary); margin: 22px 0 4px; padding-top: 14px; border-top: 2px solid var(--wlo-border); }
+    .tier-head { font-size: 13px; font-weight: 700; color: var(--primaryText); margin: 22px 0 4px; padding-top: 14px; border-top: 2px solid var(--wlo-border); }
     .sec { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--wlo-text-muted); margin: 16px 0 8px; }
     /* Flex lanes whose cards grow to fill the row (matches the base stats lane optics). */
     .grid { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; }

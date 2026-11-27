@@ -22,6 +22,16 @@ export class SourcesService {
     if (trimmed) this.base = trimmed.replace(/\/+$/, '');
   }
 
+  /** URL of a static app asset (logo …): next to the backend when embedded with an absolute base. */
+  assetUrl(name: string): string {
+    return /^https?:\/\//.test(this.base) ? new URL('/' + name, this.base).href : name;
+  }
+
+  /** The current API base ('/api' or the embedded backend's URL). */
+  apiBase(): string {
+    return this.base;
+  }
+
   /** Access tier sent with subsequent list/detail requests (set by TierService). */
   setTier(tier: number): void {
     this.tier = tier;
@@ -39,6 +49,17 @@ export class SourcesService {
 
   useCredentials(): boolean {
     return this.creds;
+  }
+
+  /** Tier-1 (partner) password, held in memory only and sent as X-Tier1-Password on API calls. */
+  private tier1Pw = '';
+
+  setTier1Password(pw: string): void {
+    this.tier1Pw = pw.trim();
+  }
+
+  tier1Password(): string {
+    return this.tier1Pw;
   }
 
   sources(query: Record<string, string | number | boolean>): Observable<SourcesPage> {
@@ -84,8 +105,10 @@ export class SourcesService {
     return obs;
   }
 
+  /** Filter options of the current tier (the exact cataloguing status list is team-only). */
   filterOptions(): Observable<FilterOptions> {
-    return this.http.get<FilterOptions>(`${this.base}/meta/filters`);
+    const params = new HttpParams().set('tier', String(this.tier));
+    return this.http.get<FilterOptions>(`${this.base}/meta/filters`, { params });
   }
 
   /** Tier-0 end-user statistics overview. */

@@ -1,16 +1,18 @@
 """
-fetcher.py — live fetch from WLO production for the refresh job.
+fetcher.py — live fetch from the edu-sharing repository for the refresh job.
 
-Pulls the current live/facet data and writes it into the caches from which
-truth.py builds the data truth:
-  raw/cache_facet_bezugsquellen.json   Bezugsquelle -> content count (facet)
-  raw/cache_facet_spider.json          Spider -> content count (facet)
-  raw/quellen_nodes.json               all source datasets (LRT=Quelle)
-  raw/vocab_sources.json               Skohub vocabulary
-  data/replication_publisher_gap.csv   dominant publisher per Spider
+Pulls the current live/facet data and writes it into the caches (config.raw_dir()) from
+which truth.py builds the data truth:
+  cache_facet_bezugsquellen.json   Bezugsquelle -> content count (facet)
+  cache_facet_spider.json          Spider -> content count (facet)
+  quellen_nodes.json               all source datasets (profile: repository.quelle_*)
+  extra_nodes.json                 search-invisible source datasets (node API)
+  vocab_sources.json               sources vocabulary (profile: repository.vocab_sources_url)
+  replication_publisher_gap.csv    dominant publisher per Spider
+  bq_previews.json, cache_meta.json
 
-Static inputs (datencrawler.csv, quellen_korrektur.csv) are NOT overwritten –
-they are maintained manually.
+Endpoints and property names come from the repository profile. The curated inputs
+(crawler.csv, korrekturen.csv) are NOT touched – they are maintained by the team.
 """
 from __future__ import annotations
 import csv
@@ -18,11 +20,12 @@ import json
 import re
 import time
 import unicodedata
-from pathlib import Path
 
 import requests
 
 import config
+import obs
+import repo_profile
 
 
 def _norm(t):
@@ -30,30 +33,20 @@ def _norm(t):
     t = "".join(c for c in t if unicodedata.category(c) != "Mn")
     return re.sub(r"\s+", " ", t)
 
-HERE = Path(__file__).parent
-# Cache root for the live fetch, derived from the repo layout: …/wlo-suche on dev,
-# /app in the container (where backend/data/inputs/ provides the bundled CSVs).
-ROOT = HERE.parents[1]                       # wlo-suche (dev) / /app (container)
-RAW = ROOT / "quellen-analyse" / "raw"
-DATADIR = ROOT / "quellen-analyse" / "data"
-# Best-effort at import on a writable host (dev/container). On a read-only serverless filesystem
-# (e.g. Vercel) this would raise and crash app import — swallow it; the refresh job (the only code
-# that writes here) is not used on such hosts, and ensure_dirs() recreates them when it runs.
+
 def ensure_dirs() -> None:
-    RAW.mkdir(parents=True, exist_ok=True)
-    DATADIR.mkdir(parents=True, exist_ok=True)
+    config.raw_dir().mkdir(parents=True, exist_ok=True)
 
 
-try:
-    ensure_dirs()
-except OSError:
-    pass
+def ngsearch_url() -> str:
+    """NGSearch endpoint of the configured repository and metadata set (profile: repository.mds)."""
+    return f"{config.REPO_URL}/edu-sharing/rest/search/v1/queries/-home-/{repo_profile.get().mds}/ngsearch"
 
-BASE = f"{config.REPO_URL}/edu-sharing/rest"  # configurable repository base (see config.REPO_URL)
-NG = f"{BASE}/search/v1/queries/-home-/mds_oeh/ngsearch"
-LRT_QUELLE = ("http://w3id.org/openeduhub/vocabs/new_lrt_aggregated/"
-              "2e678af3-1026-4171-b88e-3b3a915d1673")
-VOCAB_URL = "https://vocabs.openeduhub.de/w3id.org/openeduhub/vocabs/sources/index.json"
+
+def node_metadata_url(node_id: str) -> str:
+    return f"{config.REPO_URL}/edu-sharing/rest/node/v1/nodes/-home-/{node_id}/metadata?propertyFilter=-all-"
+
+
 H = {"Content-Type": "application/json", "Accept": "application/json"}
 TIMEOUT = 90
 
@@ -63,7 +56,7 @@ def _facet(prop: str) -> tuple[dict, int]:
     (pagination.total of the ngsearchword=* query = total WLO prod inventory)."""
     body = {"criteria": [{"property": "ngsearchword", "values": ["*"]}],
             "facetLimit": 100_000, "facetMinCount": 1, "facets": [{"property": prop}]}
-    r = requests.post(f"{NG}?contentType=ALL&maxItems=1&skipCount=0", json=body, headers=H, timeout=TIMEOUT)
+    r = requests.post(f"{ngsearch_url()}?contentType=ALL&maxItems=1&skipCount=0", json=body, headers={**H, **obs.outgoing_headers()}, timeout=TIMEOUT)
     r.raise_for_status()
     d = r.json()
     groups = d.get("facets", [])
@@ -77,8 +70,9 @@ def _fetch_quellen(progress) -> list:
     while True:
         params = (f"contentType=ALL&maxItems=500&skipCount={skip}"
                   f"&propertyFilter=-all-&sortProperties=sys%3Anode-uuid&sortAscending=true")
-        body = {"criteria": [{"property": "ccm:oeh_lrt_aggregated", "values": [LRT_QUELLE]}]}
-        r = requests.post(f"{NG}?{params}", json=body, headers=H, timeout=TIMEOUT)
+        prof = repo_profile.get()
+        body = {"criteria": [{"property": prof.quelle_property, "values": list(prof.quelle_werte)}]}
+        r = requests.post(f"{ngsearch_url()}?{params}", json=body, headers={**H, **obs.outgoing_headers()}, timeout=TIMEOUT)
         r.raise_for_status()
         d = r.json()
         if total is None:
@@ -127,8 +121,7 @@ def _fetch_extra_nodes(existing_ids: set, progress) -> list:
     out = []
     for k, nid in enumerate(ids, 1):
         try:
-            u = f"{BASE}/node/v1/nodes/-home-/{nid}/metadata?propertyFilter=-all-"
-            r = requests.get(u, headers=H, timeout=TIMEOUT)
+            r = requests.get(node_metadata_url(nid), headers={**H, **obs.outgoing_headers()}, timeout=TIMEOUT)
             if r.status_code == 200:
                 n = r.json().get("node")
                 if n:
@@ -143,13 +136,14 @@ def _fetch_extra_nodes(existing_ids: set, progress) -> list:
 
 def _spider_top_publisher(spiders: dict, progress) -> None:
     items = list(spiders.keys())
+    f = repo_profile.get().felder
     rows = []
     for i, sp in enumerate(items, 1):
         try:
-            body = {"criteria": [{"property": "ccm:replicationsource", "values": [sp]}],
+            body = {"criteria": [{"property": f["replication_source"], "values": [sp]}],
                     "facetLimit": 100_000, "facetMinCount": 1,
-                    "facets": [{"property": "ccm:oeh_publisher_combined"}]}
-            r = requests.post(f"{NG}?contentType=ALL&maxItems=1&skipCount=0", json=body, headers=H, timeout=TIMEOUT)
+                    "facets": [{"property": f["publisher"]}]}
+            r = requests.post(f"{ngsearch_url()}?contentType=ALL&maxItems=1&skipCount=0", json=body, headers={**H, **obs.outgoing_headers()}, timeout=TIMEOUT)
             if r.status_code == 200:
                 groups = r.json().get("facets", [])
                 vals = sorted(groups[0].get("values", []) if groups else [],
@@ -160,21 +154,22 @@ def _spider_top_publisher(spiders: dict, progress) -> None:
         if i % 10 == 0:
             progress(i, len(items))
         time.sleep(0.03)
-    with open(DATADIR / "replication_publisher_gap.csv", "w", encoding="utf-8-sig", newline="") as f:
+    with open(config.raw_dir() / "replication_publisher_gap.csv", "w", encoding="utf-8-sig", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["spider", "topPublisher"], delimiter=";")
         w.writeheader(); w.writerows(rows)
 
 
 def _vocab() -> None:
-    d = requests.get(VOCAB_URL, timeout=TIMEOUT).json()
-    (RAW / "vocab_sources.json").write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+    d = requests.get(repo_profile.get().vocab_sources_url, headers=obs.outgoing_headers(), timeout=TIMEOUT).json()
+    (config.raw_dir() / "vocab_sources.json").write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
 
 
 def enrich_bq_previews(bq_facet: dict, quelle_publishers: set, progress,
                        min_count: int = 5, max_new: int = 400) -> int:
     """Fetches 1 example item per facets-only Bezugsquelle for a preview image.
-    Cached incrementally in raw/bq_previews.json (only missing ones are fetched)."""
-    fp = RAW / "bq_previews.json"
+    Cached incrementally in <raw>/bq_previews.json (only missing ones are fetched)."""
+    fp = config.raw_dir() / "bq_previews.json"
+    publisher = repo_profile.get().felder["publisher"]
     cache = {}
     if fp.exists():
         try:
@@ -188,9 +183,9 @@ def enrich_bq_previews(bq_facet: dict, quelle_publishers: set, progress,
     done = 0
     for i, (bq, _c) in enumerate(cand, 1):
         try:
-            body = {"criteria": [{"property": "ccm:oeh_publisher_combined", "values": [bq]}]}
-            r = requests.post(f"{NG}?contentType=FILES&maxItems=1&skipCount=0&propertyFilter=-all-",
-                              json=body, headers=H, timeout=TIMEOUT)
+            body = {"criteria": [{"property": publisher, "values": [bq]}]}
+            r = requests.post(f"{ngsearch_url()}?contentType=FILES&maxItems=1&skipCount=0&propertyFilter=-all-",
+                              json=body, headers={**H, **obs.outgoing_headers()}, timeout=TIMEOUT)
             if r.status_code == 200:
                 nodes = r.json().get("nodes", [])
                 pv = ((nodes[0].get("preview") or {}).get("url") if nodes else "") or ""
@@ -208,29 +203,31 @@ def enrich_bq_previews(bq_facet: dict, quelle_publishers: set, progress,
 
 def refresh_all(progress=lambda p, m: None) -> None:
     """Full live refresh. progress(percent:int, message:str)."""
-    ensure_dirs()   # (re)create the cache dirs in case import-time creation was skipped
+    ensure_dirs()
+    raw = config.raw_dir()
+    f = repo_profile.get().felder
     progress(4, "Bezugsquellen-Facette abrufen …")
-    bq, prod_total = _facet("ccm:oeh_publisher_combined")
-    (RAW / "cache_facet_bezugsquellen.json").write_text(json.dumps(bq, ensure_ascii=False), encoding="utf-8")
+    bq, prod_total = _facet(f["publisher"])
+    (raw / "cache_facet_bezugsquellen.json").write_text(json.dumps(bq, ensure_ascii=False), encoding="utf-8")
     # record the real WLO prod total + data timestamp
-    (RAW / "cache_meta.json").write_text(json.dumps(
+    (raw / "cache_meta.json").write_text(json.dumps(
         {"wloProdContentTotal": prod_total, "fetchedAt": time.strftime("%Y-%m-%d %H:%M")},
         ensure_ascii=False), encoding="utf-8")
 
     progress(12, "Spider-Facette abrufen …")
-    sp, _sp_total = _facet("ccm:replicationsource")
-    (RAW / "cache_facet_spider.json").write_text(json.dumps(sp, ensure_ascii=False), encoding="utf-8")
+    sp, _sp_total = _facet(f["replication_source"])
+    (raw / "cache_facet_spider.json").write_text(json.dumps(sp, ensure_ascii=False), encoding="utf-8")
 
     progress(14, "Quelldatensätze abrufen …")
     nodes = _fetch_quellen(lambda done, total: progress(14 + int(28 * done / max(1, total)),
                                                         f"Quelldatensätze {done}/{total}"))
-    (RAW / "quellen_nodes.json").write_text(json.dumps(nodes, ensure_ascii=False), encoding="utf-8")
+    (raw / "quellen_nodes.json").write_text(json.dumps(nodes, ensure_ascii=False), encoding="utf-8")
 
     progress(44, "Versteckte Quelldatensätze (Node-API) …")
     existing = {_node_uuid(n) for n in nodes}
     extra = _fetch_extra_nodes(existing, lambda i, n: progress(44 + int(6 * i / max(1, n)),
                                                               f"Versteckte Nodes {i}/{n}"))
-    (RAW / "extra_nodes.json").write_text(json.dumps(extra, ensure_ascii=False), encoding="utf-8")
+    (raw / "extra_nodes.json").write_text(json.dumps(extra, ensure_ascii=False), encoding="utf-8")
 
     progress(52, "Dominanten Publisher je Spider ermitteln …")
     _spider_top_publisher(sp, lambda i, n: progress(52 + int(14 * i / max(1, n)), f"Spider {i}/{n}"))
@@ -238,7 +235,7 @@ def refresh_all(progress=lambda p, m: None) -> None:
     progress(66, "Vorschaubilder für Bezugsquellen …")
     qpubs = set()
     for n in nodes:
-        p = n.get("properties", {}).get("ccm:oeh_publisher_combined")
+        p = n.get("properties", {}).get(f["publisher"])
         pv = (p[0] if isinstance(p, list) and p else p) if p else ""
         if pv:
             qpubs.add(_norm(pv))

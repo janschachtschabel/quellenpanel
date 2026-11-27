@@ -1,0 +1,60 @@
+[
+ {
+  "ref": {
+   "id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+  },
+  "title": "Beta Portal",
+  "properties": {
+   "cclom:title": [
+    "Beta Portal"
+   ],
+   "ccm:oeh_lrt_aggregated_DISPLAYNAME": [
+    "Quelle"
+   ],
+   "ccm:editorial_checklist_DISPLAYNAME": [
+    "9 Fertig"
+   ],
+   "ccm:wf_status": [
+    "150_PUBLISH_IN_SEARCH"
+   ],
+   "cclom:general_description": [
+    "Beschreibung"
+   ],
+   "ccm:taxonid_DISPLAYNAME": [
+    "Mathematik"
+   ],
+   "ccm:educationalcontext_DISPLAYNAME": [
+    "Sekundarstufe I"
+   ],
+   "ccm:commonlicense_key": [
+    "CC_BY"
+   ],
+   "ccm:license_oer": [
+    "true"
+   ],
+   "cclom:general_language": [
+    "de"
+   ],
+   "cclom:general_keyword": [
+    "k1",
+    "k2"
+   ],
+   "ccm:author_freetext": [
+    "Autor A\nAutor B"
+   ],
+   "ccm:oeh_publisher_combined": [
+    "Beta Portal"
+   ],
+   "ccm:wwwurl": [
+    "https://beta.test"
+   ]
+  },
+  "preview": {
+   "url": "https://repo.test/preview/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+  },
+  "content": {
+   "url": "https://beta.test"
+  },
+  "modifiedAt": "2026-10-01T10:00:00Z"
+ }
+]

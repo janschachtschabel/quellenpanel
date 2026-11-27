@@ -1,0 +1,313 @@
+[
+ {
+  "bezugsquelle": "Alpha Verlag",
+  "contentCount": 120,
+  "contentTypes": [
+   "Quelle"
+  ],
+  "description": "Beschreibung",
+  "educationalContext": [
+   "Sekundarstufe I"
+  ],
+  "erschliessungsstatus": "im Bestand verfuegbar",
+  "id": "crawler:alpha_spider",
+  "language": "de",
+  "license": "CC_BY",
+  "name": "Alpha Verlag",
+  "oer": true,
+  "previewUrl": "https://repo.test/preview/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "quality": {},
+  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22Alpha%20Verlag%22%5D%7D",
+  "subjects": [
+   "Mathematik"
+  ],
+  "url": "https://alpha.test"
+ },
+ {
+  "bezugsquelle": "Beta Portal",
+  "contentCount": 40,
+  "contentTypes": [
+   "Quelle"
+  ],
+  "description": "Beschreibung",
+  "educationalContext": [
+   "Sekundarstufe I"
+  ],
+  "erschliessungsstatus": "im Bestand verfuegbar",
+  "id": "crawler:beta_spider",
+  "language": "de",
+  "license": "CC_BY",
+  "name": "Beta Portal",
+  "oer": true,
+  "previewUrl": "https://repo.test/preview/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+  "quality": {},
+  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22Beta%20Portal%22%5D%7D",
+  "subjects": [
+   "Mathematik"
+  ],
+  "url": "https://beta.test"
+ },
+ {
+  "bezugsquelle": "Gamma Org",
+  "contentCount": 0,
+  "contentTypes": [],
+  "description": "",
+  "educationalContext": [],
+  "erschliessungsstatus": "nur als Bezugsquelle bekannt",
+  "id": "crawler:gamma_spider",
+  "language": "",
+  "license": "",
+  "name": "Gamma Org",
+  "oer": false,
+  "previewUrl": "https://img.test/g.png",
+  "quality": {},
+  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22Gamma%20Org%22%5D%7D",
+  "subjects": [],
+  "url": "https://gamma.test"
+ },
+ {
+  "bezugsquelle": "Delta Medien",
+  "contentCount": 0,
+  "contentTypes": [
+   "Quelle",
+   "Video"
+  ],
+  "description": "Beschreibung",
+  "educationalContext": [
+   "Sekundarstufe I"
+  ],
+  "erschliessungsstatus": "Quelle erfasst, (noch) keine Inhalte",
+  "id": "node:eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+  "language": "de",
+  "license": "CC_BY",
+  "name": "Einzelnes Video über Bienen",
+  "oer": true,
+  "previewUrl": "https://repo.test/preview/eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+  "quality": {},
+  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22Einzelnes%20Video%20%5Cu00fcber%20Bienen%22%5D%7D",
+  "subjects": [
+   "Mathematik"
+  ],
+  "url": "https://delta.test/bienen"
+ },
+ {
+  "bezugsquelle": "Delta Medien",
+  "contentCount": 60,
+  "contentTypes": [
+   "Quelle"
+  ],
+  "description": "Beschreibung",
+  "educationalContext": [
+   "Sekundarstufe I"
+  ],
+  "erschliessungsstatus": "im Bestand verfuegbar",
+  "id": "node:dddddddd-dddd-dddd-dddd-dddddddddddd",
+  "language": "de",
+  "license": "CC_BY",
+  "name": "Delta Medien Mediathek",
+  "oer": true,
+  "previewUrl": "https://repo.test/preview/dddddddd-dddd-dddd-dddd-dddddddddddd",
+  "quality": {},
+  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22Delta%20Medien%20Mediathek%22%5D%7D",
+  "subjects": [
+   "Mathematik"
+  ],
+  "url": "https://delta.test"
+ },
+ {
+  "bezugsquelle": "Epsilon",
+  "contentCount": 20,
+  "contentTypes": [
+   "Quelle"
+  ],
+  "description": "",
+  "educationalContext": [
+   "Sekundarstufe I"
+  ],
+  "erschliessungsstatus": "im Bestand verfuegbar",
+  "id": "node:00000000-0000-0000-0000-000000000000",
+  "language": "de",
+  "license": "CC_BY",
+  "name": "Epsilon",
+  "oer": true,
+  "previewUrl": "https://repo.test/preview/00000000-0000-0000-0000-000000000000",
+  "quality": {},
+  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22Epsilon%22%5D%7D",
+  "subjects": [
+   "Mathematik"
+  ],
+  "url": "https://eps.test/ab"
+ },
+ {
+  "bezugsquelle": "WirLernenOnline",
+  "contentCount": 900,
+  "contentTypes": [
+   "Quelle"
+  ],
+  "description": "Beschreibung",
+  "educationalContext": [
+   "Sekundarstufe I"
+  ],
+  "erschliessungsstatus": "im Bestand verfuegbar",
+  "id": "node:ffffffff-ffff-ffff-ffff-ffffffffffff",
+  "language": "de",
+  "license": "CC_BY",
+  "name": "Migrierte Quelle",
+  "oer": true,
+  "previewUrl": "https://repo.test/preview/ffffffff-ffff-ffff-ffff-ffffffffffff",
+  "quality": {},
+  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22Migrierte%20Quelle%22%5D%7D",
+  "subjects": [
+   "Mathematik"
+  ],
+  "url": "https://migr.test"
+ },
+ {
+  "bezugsquelle": "Eta Stiftung",
+  "contentCount": 15,
+  "contentTypes": [
+   "Quelle"
+  ],
+  "description": "Beschreibung",
+  "educationalContext": [
+   "Sekundarstufe I"
+  ],
+  "erschliessungsstatus": "im Bestand verfuegbar",
+  "id": "node:11111111-1111-1111-1111-111111111111",
+  "language": "de",
+  "license": "CC_BY",
+  "name": "Eta Stiftung",
+  "oer": true,
+  "previewUrl": "https://repo.test/preview/11111111-1111-1111-1111-111111111111",
+  "quality": {},
+  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22Eta%20Stiftung%22%5D%7D",
+  "subjects": [
+   "Mathematik"
+  ],
+  "url": "https://eta.test"
+ },
+ {
+  "bezugsquelle": "",
+  "contentCount": 0,
+  "contentTypes": [
+   "Arbeitsblatt"
+  ],
+  "description": "Beschreibung",
+  "educationalContext": [
+   "Sekundarstufe I"
+  ],
+  "erschliessungsstatus": "Quelle erfasst, (noch) keine Inhalte",
+  "id": "crawler:theta_spider",
+  "language": "de",
+  "license": "CC_BY",
+  "name": "Theta Arbeitsblätter",
+  "oer": true,
+  "previewUrl": "https://repo.test/preview/22222222-2222-2222-2222-222222222222",
+  "quality": {
+   "Aktualität": "aktuell",
+   "Datenschutz (rechtl.)": "unbedenklich",
+   "Sachrichtigkeit": "sehr gut"
+  },
+  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22Theta%20Arbeitsbl%5Cu00e4tter%22%5D%7D",
+  "subjects": [
+   "Mathematik"
+  ],
+  "url": "https://theta.test"
+ },
+ {
+  "bezugsquelle": "YouTube - Kanal X",
+  "contentCount": 30,
+  "contentTypes": [
+   "Quelle"
+  ],
+  "description": "Beschreibung",
+  "educationalContext": [
+   "Sekundarstufe I"
+  ],
+  "erschliessungsstatus": "im Bestand verfuegbar",
+  "id": "node:33333333-3333-3333-3333-333333333333",
+  "language": "de",
+  "license": "CC_BY",
+  "name": "Kanal X",
+  "oer": true,
+  "previewUrl": "https://repo.test/preview/33333333-3333-3333-3333-333333333333",
+  "quality": {},
+  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22Kanal%20X%22%5D%7D",
+  "subjects": [
+   "Mathematik"
+  ],
+  "url": "https://youtube.test/x"
+ },
+ {
+  "bezugsquelle": "Klicksafe",
+  "contentCount": 3,
+  "contentTypes": [],
+  "description": "EU-Initiative.",
+  "educationalContext": [],
+  "erschliessungsstatus": "im Bestand verfuegbar",
+  "id": "bq:klicksafe",
+  "language": "",
+  "license": "",
+  "name": "Klicksafe",
+  "oer": false,
+  "previewUrl": "",
+  "quality": {},
+  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22Klicksafe%22%5D%7D",
+  "subjects": [],
+  "url": ""
+ },
+ {
+  "bezugsquelle": "klicksafe",
+  "contentCount": 2,
+  "contentTypes": [],
+  "description": "EU-Initiative.",
+  "educationalContext": [],
+  "erschliessungsstatus": "im Bestand verfuegbar",
+  "id": "bq:klicksafe#2",
+  "language": "",
+  "license": "",
+  "name": "klicksafe",
+  "oer": false,
+  "previewUrl": "",
+  "quality": {},
+  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22klicksafe%22%5D%7D",
+  "subjects": [],
+  "url": ""
+ },
+ {
+  "bezugsquelle": "YouTube",
+  "contentCount": 500,
+  "contentTypes": [],
+  "description": "Videoplattform.",
+  "educationalContext": [],
+  "erschliessungsstatus": "im Bestand verfuegbar",
+  "id": "bq:youtube",
+  "language": "",
+  "license": "",
+  "name": "YouTube",
+  "oer": false,
+  "previewUrl": "https://img.test/yt.png",
+  "quality": {},
+  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22YouTube%22%5D%7D",
+  "subjects": [],
+  "url": ""
+ },
+ {
+  "bezugsquelle": "Zeta Einzel",
+  "contentCount": 1,
+  "contentTypes": [],
+  "description": "",
+  "educationalContext": [],
+  "erschliessungsstatus": "im Bestand verfuegbar",
+  "id": "bq:zeta einzel",
+  "language": "",
+  "license": "",
+  "name": "Zeta Einzel",
+  "oer": false,
+  "previewUrl": "",
+  "quality": {},
+  "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=%7B%22source%22:%5B%22Zeta%20Einzel%22%5D%7D",
+  "subjects": [],
+  "url": ""
+ }
+]

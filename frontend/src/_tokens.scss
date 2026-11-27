@@ -1,0 +1,57 @@
+// edu-sharing 11 design tokens (DESIGN.md of edu-sharing-11-ux-skills), light theme, as CSS variables
+// under the SAME names as in edu-sharing. Token source: the only place with colour literals.
+// Brand colours (--primary, --accent) come from the profile at runtime (branding.ts); the defaults
+// below are WLO's. Tints derive from --primary via color-mix, so any brand colour works.
+
+@mixin tokens {
+  --primary: #003b7c;
+  --accent: #e4f700;
+  --warn: #cd2457;
+  --colorStatusNegative: #cd2457;
+  --colorStatusPositiveText: #297a5b;
+  --colorStatusWarning: #e98c1b;
+
+  --primaryBackground50: color-mix(in srgb, var(--primary) 9%, #fff);
+  --primaryBackground100: color-mix(in srgb, var(--primary) 22%, #fff);
+  --primaryBackground300: color-mix(in srgb, var(--primary) 55%, #fff);
+  --primaryBackground700: color-mix(in srgb, var(--primary) 88%, #000);
+  --primaryForeground800: color-mix(in srgb, var(--primary) 78%, #000);
+  --primaryForeground900: color-mix(in srgb, var(--primary) 62%, #000);
+  --primaryText: var(--primary);   // primary used as text/icon colour; darker for light brand colours (branding.ts)
+  --focusColor: var(--primaryBackground300);
+
+  --textMain: #383838;
+  --textLight: #585858;
+  --textMediumLight: #767676;    // only on #fff
+  --textWhite: #fff;
+  --backgroundColor: #f3f3f3;
+  --backgroundElevatedColor: #fafafa;
+  --roundedContainerBackground: #fff;
+  --defaultBackground: #fff;
+  --borderLight: #eee;
+  --tableSeperatorLineColor: #e0e0e0;
+
+  // Quellenpanel additions (status surfaces, shadows as tokens: inline component styles cannot use mixins).
+  --colorStatusPositiveBackground: #e6f4ea;
+  --colorStatusWarningText: #8a4b00;
+  --colorStatusWarningBackground: #fff3e6;
+  --colorStatusNegativeBackground: #fde8e8;
+  --shadowSmall: 0 1px 3px rgba(0, 0, 0, .12);
+  --shadowBottom: 0 3px 6px rgba(0, 0, 0, .14);
+  --shadowMedium: 0 6px 18px rgba(0, 0, 0, .16);
+  --overlayDark: rgba(20, 24, 30, .78);
+
+  --borderRadiusBadges: 10px;
+  --borderRadiusButtons: 18px;
+  --borderRadiusCards: 20px;
+  --transitionNormal: 0.2s;
+  --cardWidth: 270px;
+
+  --fontFamily: 'Open Sans', Arial, sans-serif;
+}
+
+/// Keyboard focus as in edu-sharing (setGlobalKeyboardFocus): 2px --focusColor, offset 2px.
+@mixin keyboard-focus {
+  outline: 2px solid var(--focusColor);
+  outline-offset: 2px;
+}

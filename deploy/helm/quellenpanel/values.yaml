@@ -59,8 +59,8 @@ image:
 
 ########################################################################################################################
 
-## @param replicaCount Amount of replicas. Keep 1 — the team session store + rate-limit counters are
-##                     in-process (see backend/session.py); multiple replicas would split them.
+## @param replicaCount Replicas for the partner/public roles (they hold only the export). The team role
+##                     always runs exactly 1 replica with strategy Recreate (rebuild job + data volume).
 replicaCount: 1
 
 ########################################################################################################################
@@ -68,8 +68,11 @@ replicaCount: 1
 service:
   ## @param service.type Set service type
   type: ClusterIP
-  ## @param service.port Set service port (cluster-internal); the container listens on 8080
+  ## @param service.port Set service port (cluster-internal) of the API/SPA; the container listens on 8080
   port: 8080
+  ## @param service.internalPort Port of the second Service "<fullname>-internal" (container port 9090:
+  ##        /health, /ready, /metrics, /internal/exports). Never route an ingress to it.
+  internalPort: 9090
 
 ########################################################################################################################
 
@@ -105,20 +108,38 @@ ingress:
 ########################################################################################################################
 
 ## @section Application configuration
-## All access tiers are OPTIONAL; unset ⇒ end-user-only (tier 0), fail-closed. Passwords go into the
-## chart Secret (config.teamPassword / config.tier1Password); the rest into the ConfigMap.
+## One release per role. Secrets (passwords, session key) go into the chart Secret, or into an existing
+## Secret (config.existingSecret) with the keys QE_TEAM_PASSWORD, QE_TIER1_PASSWORD, QE_SESSION_SECRET.
 config:
 
-  ## @param config.publicOnly Hard-cap every request at tier 0 (public/embedded deployment)
-  publicOnly: false
-  ## @param config.teamPassword Enables tier 2 (Audit/team). Empty ⇒ team access disabled (fail-closed). Stored in the Secret.
+  ## @param config.role Instance role: public (tier 0), partner (tier 1, password) or team (tier 2, data owner)
+  role: public
+  ## @param config.profile Repository profile (profiles/<id>/profil.toml in the image)
+  profile: wlo
+  ## @param config.teamPassword Team role: enables tier 2 (Audit). Empty ⇒ no team access (fail-closed). Secret.
   teamPassword: ""
-  ## @param config.tier1Password Optional password gate for tier 1 (Details). Empty ⇒ tier 1 open. Stored in the Secret.
+  ## @param config.tier1Password Partner role: password for tier 1 (Steckbrief). Empty ⇒ tier 1 closed. Secret.
   tier1Password: ""
+  ## @param config.sessionSecret Team role: HMAC key for team sessions (e.g. openssl rand -hex 32). Empty ⇒ logins end on restart. Secret.
+  sessionSecret: ""
+  ## @param config.existingSecret Use this existing Secret for the three secret keys instead of the chart's Secret
+  existingSecret: ""
+  ## @param config.exportSource Partner/public: URL of the team's export, "{tier}" is replaced (e.g. http://quellenpanel-team-internal:9090/internal/exports/stufe{tier}.json)
+  exportSource: http://quellenpanel-team-internal:9090/internal/exports/stufe{tier}.json
+  ## @param config.exportPollMinutes Partner/public: re-fetch interval of the export in minutes (0 = off)
+  exportPollMinutes: 10
+  ## @param config.seedUrl Team: base URL with crawler.csv, korrekturen.csv, truth.json for the first start. Empty ⇒ build from the live repository
+  seedUrl: ""
+  ## @param config.autoRefreshHour Team: hour 0–23 for the nightly data rebuild. Empty ⇒ off (the RebuildStale alert then fires after 26 h)
+  autoRefreshHour: ""
   ## @param config.allowedOrigins Comma-separated origins allowed a credentialed cross-origin team login (embedded widget). Empty ⇒ same-origin only
   allowedOrigins: ""
-  ## @param config.autoRefreshHour Hour 0–23 for the optional nightly data rebuild. Empty ⇒ off
-  autoRefreshHour: ""
+  ## @param config.frameAncestors Who may embed the iframe widgets (/embed/…), space-separated CSP sources, e.g. "https://wirlernenonline.de". Empty ⇒ anywhere (team: 'self')
+  frameAncestors: ""
+  ## @param config.thumbCacheMB Memory budget of the preview-image cache in MiB (0 = off); counts toward the memory limit
+  thumbCacheMB: 16
+  ## @param config.trustProxy Take the client IP from X-Forwarded-For (rightmost entry). Only behind an ingress that OVERWRITES the header (ingress-nginx default)
+  trustProxy: true
   ## @param config.repoUrl edu-sharing repository base — all live queries + the thumbnail proxy
   repoUrl: https://redaktion.openeduhub.net
   ## @param config.searchUrl WLO search base — the per-source "contents in search" link
@@ -126,7 +147,54 @@ config:
   ## @param config.extraEnv Extra plain environment variables (map) injected into the container
   extraEnv: {}
 
+log:
+  ## @param log.format Log format: json (one JSON object per line, default) or text
+  format: json
+  ## @param log.level Log level (DEBUG, INFO, WARNING, ERROR)
+  level: INFO
+
 ########################################################################################################################
+
+## @section Data volume (team role only)
+persistence:
+  ## @param persistence.size Size of the team's data volume (/data: truth.json, raw caches, exports, CSVs)
+  size: 2Gi
+  ## @param persistence.storageClass Storage class of the volume ("" = cluster default)
+  storageClass: ""
+  ## @param persistence.existingClaim Use this existing PVC instead of creating one
+  existingClaim: ""
+
+########################################################################################################################
+
+## @section Network policy
+networkPolicy:
+  ## @param networkPolicy.enabled Restrict traffic: in 8080 (see ingressNamespace), 9090 only from quellenpanel pods and monitoring; out DNS, HTTPS 443, partner/public also team:9090
+  enabled: false
+  ## @param networkPolicy.monitoringNamespace Namespace of Prometheus (allowed to scrape 9090)
+  monitoringNamespace: monitoring
+  ## @param networkPolicy.ingressNamespace Namespace of the ingress controller; if set, only it reaches 8080 (empty = from anywhere)
+  ingressNamespace: ""
+  ## @param networkPolicy.extraEgress Additional egress rules (NetworkPolicy egress entries), e.g. an HTTP export source on another port
+  extraEgress: []
+
+########################################################################################################################
+
+## @section Metrics (Prometheus Operator)
+metrics:
+  serviceMonitor:
+    ## @param metrics.serviceMonitor.enabled Create a ServiceMonitor scraping /metrics on the internal Service
+    enabled: false
+    ## @param metrics.serviceMonitor.interval Scrape interval
+    interval: 30s
+    ## @param metrics.serviceMonitor.labels Extra labels (e.g. release: prometheus) so Prometheus selects it
+    labels: {}
+  prometheusRule:
+    ## @param metrics.prometheusRule.enabled Create the PrometheusRule with the alerts (RebuildStale, High5xx, ExportFetchFailing)
+    enabled: false
+    ## @param metrics.prometheusRule.labels Extra labels so Prometheus selects the rule
+    labels: {}
+
+########
 
 ## @param debug Enable debugging for this release (overrides global.debug)
 debug: false
@@ -147,29 +215,25 @@ podSecurityContext:
   fsGroup: 10001
   ## @param podSecurityContext.fsGroupChangePolicy Set change policy for fs group
   fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    ## @param podSecurityContext.seccompProfile.type Seccomp profile of the pod
+    type: RuntimeDefault
 
 securityContext:
-  ## @param securityContext.allowPrivilegeEscalation Allow privilege escalation
-  allowPrivilegeEscalation: false
-  ## @param securityContext.readOnlyRootFilesystem Mount the root filesystem read-only. Keep false — a
-  ##        manual/nightly data refresh writes to the container FS (ephemeral; see the chart README).
-  readOnlyRootFilesystem: false
-  capabilities:
-    ## @param securityContext.capabilities.drop Set drop capabilities
-    drop:
-    - ALL
-  ## @param securityContext.runAsNonRoot Require running as non-root
-  runAsNonRoot: true
-  ## @param securityContext.runAsUser User id to run as (image's "appuser", uid 10001)
+  ## @param securityContext.runAsUser User id to run as (image's "appuser", uid 10001). The rest of the
+  ##        container securityContext is fixed to the restricted profile (read-only root FS, no
+  ##        privilege escalation, all capabilities dropped, seccomp RuntimeDefault).
   runAsUser: 10001
 
 ########################################################################################################################
 
-## @param terminationGracePeriod Grace period for termination in seconds
+## @param terminationGracePeriod Grace period for termination in seconds (> preStopSleepSeconds + 20 s uvicorn)
 terminationGracePeriod: 30
+## @param preStopSleepSeconds Pause before SIGTERM so the pod leaves the Service first (0 = off)
+preStopSleepSeconds: 5
 
 startupProbe:
-  ## @param startupProbe.failureThreshold Failure threshold for startupProbe
+  ## @param startupProbe.failureThreshold Failure threshold for startupProbe (liveness of the process only; data may still be building)
   failureThreshold: 30
   ## @param startupProbe.initialDelaySeconds Initial delay seconds for startupProbe
   initialDelaySeconds: 5

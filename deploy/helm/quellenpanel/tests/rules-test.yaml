@@ -1,0 +1,74 @@
+# promtool test rules deploy/helm/quellenpanel/tests/rules-test.yaml
+rule_files:
+- rules.yaml
+evaluation_interval: 1m
+tests:
+# Data 25 h old, growing: no alert at 25 h, alert once 26 h (+15 m "for") are passed.
+- interval: 1m
+  input_series:
+  - series: 'quellenpanel_data_age_seconds{job="quellenpanel-team-internal"}'
+    values: '90000+60x120'
+  alert_rule_test:
+  - eval_time: 0m
+    alertname: QuellenpanelRebuildStale
+    exp_alerts: []
+  - eval_time: 50m
+    alertname: QuellenpanelRebuildStale
+    exp_alerts: []
+  - eval_time: 80m
+    alertname: QuellenpanelRebuildStale
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+        job: quellenpanel-team-internal
+# Never any data (NaN): no-data alert after 6 h, not before.
+- interval: 10m
+  input_series:
+  - series: 'quellenpanel_data_age_seconds{job="quellenpanel-team-internal"}'
+    values: 'NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN NaN'
+  alert_rule_test:
+  - eval_time: 5h
+    alertname: QuellenpanelNoData
+    exp_alerts: []
+  - eval_time: 7h
+    alertname: QuellenpanelNoData
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+  - eval_time: 7h
+    alertname: QuellenpanelRebuildStale
+    exp_alerts: []
+# Only errors for 30 min → export alert; errors next to successful fetches → none.
+- interval: 1m
+  input_series:
+  - series: 'quellenpanel_export_fetch_total{job="quellenpanel-public-internal",tier="0",result="error"}'
+    values: '0+1x60'
+  alert_rule_test:
+  - eval_time: 40m
+    alertname: QuellenpanelExportFetchFailing
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+- interval: 1m
+  input_series:
+  - series: 'quellenpanel_export_fetch_total{job="quellenpanel-public-internal",tier="0",result="error"}'
+    values: '0+1x60'
+  - series: 'quellenpanel_export_fetch_total{job="quellenpanel-public-internal",tier="0",result="not_modified"}'
+    values: '0+1x60'
+  alert_rule_test:
+  - eval_time: 40m
+    alertname: QuellenpanelExportFetchFailing
+    exp_alerts: []
+# 10 % errors for 20 min → 5xx alert.
+- interval: 1m
+  input_series:
+  - series: 'http_requests_total{job="quellenpanel-team-internal",route="/api/sources",method="GET",status="500"}'
+    values: '0+1x40'
+  - series: 'http_requests_total{job="quellenpanel-team-internal",route="/api/sources",method="GET",status="200"}'
+    values: '0+9x40'
+  alert_rule_test:
+  - eval_time: 25m
+    alertname: QuellenpanelHigh5xx
+    exp_alerts:
+    - exp_labels:
+        severity: critical

@@ -5,12 +5,12 @@ Merges ALL known information sources into a canonical source view
 Inputs are read by truth_loaders, helpers come from truth_text; this module
 now contains only the join/record-building logic and the build entry point.
 
-Inputs (see truth_loaders for details):
-  * Live API caches (quellen_nodes.json, facets, vocab_sources.json)
-  * Curated (datencrawler.csv, quellen_korrektur.csv)
+Inputs (see truth_loaders for details; paths via config, field names via the profile):
+  * Live API caches in <data dir>/raw (quellen_nodes.json, facets, vocab_sources.json, …)
+  * Curated: crawler.csv and korrekturen.csv (data dir first, else profiles/<id>/daten/)
 
 Output:
-  data/truth.json                   canonical records (public + internal separated)
+  <data dir>/truth.json             canonical records (public + internal separated)
 
 Join keys (precedence):
   1. Spider name  (general_identifier / replicationsource <-> Crawler(Spider) <-> Vocab)
@@ -23,13 +23,11 @@ import os
 import sys
 import time
 from collections import Counter, defaultdict
-from pathlib import Path
 
+import config
 import field_policy as fp
+import repo_profile
 from truth_loaders import (
-    DATENCRAWLER,
-    KORREKTUR,
-    RAW,
     load_bq_previews,
     load_crawler_profiles,
     load_facet,
@@ -40,15 +38,12 @@ from truth_loaders import (
 )
 from truth_record import make_record
 from truth_text import (
-    PLACEHOLDER_BQ,
     _is_junk_bq,
     _node_id_from_url,
     _norm,
     _represents,
 )
 
-HERE = Path(__file__).parent
-DATA = HERE / "data"; DATA.mkdir(exist_ok=True)
 
 
 def _pick_bq_reps(nodes, bq_norm, profiles, used_nodes, used_bq):
@@ -67,15 +62,12 @@ def _pick_bq_reps(nodes, bq_norm, profiles, used_nodes, used_bq):
             continue
         bq = bq_norm[_norm(pub)]
         nb = _norm(bq)
-        if nb in used_bq or nb in PLACEHOLDER_BQ or nb in reps:
+        if nb in used_bq or nb in repo_profile.get().platzhalter_bq or nb in reps:
             continue
         if _represents(n["title"], bq):
             reps[nb] = n["nodeId"]
     return reps
 
-
-# Workflow states in which a source dataset is published/visible in WLO search.
-_PUBLISHED_WF = ("150_PUBLISH_IN_SEARCH", "155_ELEMENT_UNLOCK_BUFFET")
 
 # Separators that introduce a sub-channel / sub-portal ("YouTube - Lehrerschmidt").
 _SUBCHANNEL_SEPS = (" - ", " – ", " — ", " | ")
@@ -144,7 +136,7 @@ def _mark_data_problems(records):
             elif st[:1].isdigit() and int(st[0]) < 9 and (
                     pub.get("Beschreibung") and pub.get("Faecher") and pub.get("Bildungsstufen")):
                 fl.append("STATUS_INKONSISTENT")               # fully filled, but status leading digit < 9
-            if (inT.get("Workflow-Status") or "").strip() not in _PUBLISHED_WF:
+            if (inT.get("Workflow-Status") or "").strip() not in repo_profile.get().publiziert_wf:
                 fl.append("NICHT_PUBLIZIERT")                  # source dataset not published in search
         gi = (inT.get("general_identifier") or "").strip()
         rs = (inT.get("replicationsource") or "").strip()
@@ -176,6 +168,7 @@ def build(rename_unrepresented=True):
     bq_prev = load_bq_previews()
 
     bq_norm = {_norm(k): k for k in bq_facet}
+    placeholder = repo_profile.get().platzhalter_bq
 
     # Indexes
     nodes_by_spider = defaultdict(list)
@@ -211,14 +204,14 @@ def build(rename_unrepresented=True):
         # Precedence: dominant publisher of the crawler content (the real data truth)
         if top_pub and _norm(top_pub) in bq_norm:
             bq = bq_norm[_norm(top_pub)]
-        elif bq_from_csv and _norm(bq_from_csv) in bq_norm and _norm(bq_from_csv) not in PLACEHOLDER_BQ:
+        elif bq_from_csv and _norm(bq_from_csv) in bq_norm and _norm(bq_from_csv) not in placeholder:
             bq = bq_norm[_norm(bq_from_csv)]
         elif node and node["publisher"] and _norm(node["publisher"]) in bq_norm \
-                and _norm(node["publisher"]) not in PLACEHOLDER_BQ:
+                and _norm(node["publisher"]) not in placeholder:
             bq = bq_norm[_norm(node["publisher"])]
         elif top_pub:
             bq = top_pub
-        elif bq_from_csv and _norm(bq_from_csv) not in PLACEHOLDER_BQ:
+        elif bq_from_csv and _norm(bq_from_csv) not in placeholder:
             bq = bq_from_csv
         # A crawler's content is its Spider facet (replicationsource count) — use it even
         # when 0 (a dead crawler genuinely has 0). `or` would wrongly fall back to the
@@ -261,7 +254,7 @@ def build(rename_unrepresented=True):
                 used_bq.add(nb)
                 # No node represents the Bezugsquelle: this individual item represents
                 # it -> list under the Bezugsquelle name instead of the item title (variant A).
-                repless = rename_unrepresented and nb not in bq_rep and nb not in PLACEHOLDER_BQ
+                repless = rename_unrepresented and nb not in bq_rep and nb not in placeholder
         content = 0 if secondary else (bq_facet.get(bq, 0) if bq else 0)
         prof = profiles.get(sp) if has_spider else None
         kind = "crawler" if has_spider else "manuell"
@@ -312,9 +305,10 @@ def main():
     # sort by content count
     records.sort(key=lambda r: -(r.get("contentCount") or 0))
     cmeta = {}
-    if RAW and (RAW / "cache_meta.json").exists():
+    meta_path = config.raw_dir() / "cache_meta.json"
+    if meta_path.exists():
         try:
-            cmeta = json.loads((RAW / "cache_meta.json").read_text(encoding="utf-8"))
+            cmeta = json.loads(meta_path.read_text(encoding="utf-8"))
         except Exception:
             cmeta = {}
     meta = {
@@ -331,13 +325,14 @@ def main():
     }
     # Atomic write (temp file + os.replace): a crash mid-write can't corrupt truth.json,
     # and store.load() never reads a half-written file.
-    out = DATA / "truth.json"
+    out = config.truth_path()
+    out.parent.mkdir(parents=True, exist_ok=True)
     tmp = out.with_suffix(".json.tmp")
     tmp.write_text(json.dumps({"meta": meta, "records": records}, ensure_ascii=False), encoding="utf-8")
     os.replace(tmp, out)
     print(json.dumps(meta, ensure_ascii=False, indent=2), file=sys.stderr)
-    print(f"Inputs: nodes={'ok' if RAW else 'FEHLT'} crawler={DATENCRAWLER and DATENCRAWLER.name} "
-          f"korrektur={KORREKTUR and KORREKTUR.name}", file=sys.stderr)
+    print(f"Inputs: raw={config.raw_dir()} crawler={config.crawler_csv_path()} "
+          f"korrekturen={config.korrekturen_csv_path()}", file=sys.stderr)
     return meta
 
 

@@ -1,44 +1,66 @@
-# quellenpanel — Helm chart
+# Helm chart `quellenpanel`
 
-Deploys the WLO Quellenpanel (3-tier FastAPI API + embedded Angular SPA in one image) to Kubernetes.
-
-The app is **stateless**: it serves the bundled `data/truth.json` snapshot from the image, so the
-chart runs a plain single-replica `Deployment` with **no PersistentVolume**.
-
-## Install
+One chart, one release per role. All three releases can share a namespace; resource names are
+`quellenpanel-<role>`.
 
 ```bash
-helm upgrade --install quellenpanel deploy/helm/quellenpanel \
-  --namespace quellenpanel --create-namespace \
-  --set image.name=docker.edu-sharing.com/projects/wlo/quellenpanel \
-  --set image.tag=main \
-  --set ingress.hosts[0]=quellenpanel.example.de \
-  --set config.teamPassword='<team-password>'
+# 1. Team (tier 2, data owner): one replica, Recreate, PVC at /data
+helm upgrade --install quellenpanel-team deploy/helm/quellenpanel \
+  -f deploy/helm/quellenpanel/values-team.yaml --set config.existingSecret=quellenpanel-team-secrets
+
+# 2. Partner (tier 1, password) and 3. public (tier 0): fetch their export from the team
+helm upgrade --install quellenpanel-partner deploy/helm/quellenpanel \
+  -f deploy/helm/quellenpanel/values-partner.yaml --set config.existingSecret=quellenpanel-partner-secrets
+helm upgrade --install quellenpanel-public deploy/helm/quellenpanel \
+  -f deploy/helm/quellenpanel/values-public.yaml
 ```
 
-## Key values
+The existing Secret holds the keys `QE_TEAM_PASSWORD`, `QE_TIER1_PASSWORD`, `QE_SESSION_SECRET`
+(only those the role needs). Without `existingSecret` the chart creates one from `config.*Password`
+and `config.sessionSecret`.
 
-| Value | Default | Purpose |
-|---|---|---|
-| `replicaCount` | `1` | **Keep 1** — team session + rate-limit state is in-process (`backend/session.py`). |
-| `service.port` | `8080` | Cluster-internal port; the container listens on 8080. |
-| `config.publicOnly` | `false` | Hard-cap every request at tier 0 (public/embedded). |
-| `config.teamPassword` | `""` | Enables tier 2 (Audit). Empty ⇒ team disabled (fail-closed). → Secret. |
-| `config.tier1Password` | `""` | Optional gate for tier 1 (Details). Empty ⇒ open. → Secret. |
-| `config.allowedOrigins` | `""` | Comma-separated origins for a credentialed cross-origin team login. |
-| `config.autoRefreshHour` | `""` | Hour 0–23 for the optional nightly rebuild (see note). |
-| `config.repoUrl` / `config.searchUrl` | prod | Point live queries + the search link at another repo. |
-| `ingress.enabled` / `ingress.hosts` | `true` / nip.io | Ingress (nginx class by default). |
+## What the chart sets up
 
-Passwords (`config.teamPassword`, `config.tier1Password`) land in the chart **Secret**; everything
-else in the **ConfigMap**. `FORWARDED_ALLOW_IPS=*` is set so uvicorn trusts the ingress's
-`X-Forwarded-For` (the pod is only reachable via the ingress) — the per-client rate limits then key
-on the real client IP.
+- **Two ports:** `http` 8080 (Service `quellenpanel-<role>`, behind the ingress) and `internal` 9090
+  (Service `quellenpanel-<role>-internal`, never behind an ingress): `/health` (liveness and startup
+  probe), `/ready` (data and dependency check for monitoring only, never a probe), `/metrics`,
+  `/internal/exports/…` (team only). The readiness probe is `GET /api/health` on `http`: it asks no
+  other service. The team is always ready (it stays reachable while it builds); partner/public become
+  ready once their own export is loaded, so a rolling update with the team down keeps the old pods.
+- **Clean shutdown:** a `preStop` pause (`preStopSleepSeconds`, 5 s) takes the pod out of the Service
+  before SIGTERM; uvicorn then gives running requests 20 s; `terminationGracePeriod` is 30 s.
+- **Restricted security context:** non-root uid 10001, read-only root filesystem, no privilege
+  escalation, all capabilities dropped, seccomp `RuntimeDefault`. Writes go to `/tmp` (emptyDir) and
+  `/data` (PVC for the team, emptyDir otherwise).
+- **Team:** `replicas: 1`, `strategy: Recreate`, PVC `quellenpanel-team-data` (kept on uninstall).
+  First start with an empty volume seeds from `config.seedUrl` or builds from the live repository;
+  until then `/ready` is 503 and the data routes answer 503 "Daten werden aufgebaut".
+- **Partner/public:** `replicaCount` replicas, `config.exportSource` (default: the team's internal
+  Service). They keep serving the last valid export if the team is unreachable.
+- **`config.trustProxy`** (default on): the client IP for the rate limits is the rightmost
+  `X-Forwarded-For` entry. Keep it only behind an ingress that overwrites the header
+  (ingress-nginx does by default, `use-forwarded-headers: false`).
+- **NetworkPolicy** (`networkPolicy.enabled`, on in all three role files): in, 8080 from
+  `networkPolicy.ingressNamespace` (empty = from anywhere) and 9090 only from quellenpanel pods and
+  `networkPolicy.monitoringNamespace`; out, DNS (53), HTTPS (443: repository, `vocabs.openeduhub.de`,
+  seed URL) and, for partner/public, the team's 9090. More rules via `networkPolicy.extraEgress`
+  (e.g. an `http://` export source on another port). Needs a CNI that enforces NetworkPolicies;
+  kubelet probes come from the node and are not affected on common CNIs.
+  Limits: the team rules match pods in the **same namespace** only (install all three releases in one
+  namespace); an ingress controller on `hostNetwork` (e.g. k3s Traefik) does not match
+  `ingressNamespace`, leave it empty there; an outbound HTTP proxy or an `http://` seed URL needs an
+  `extraEgress` rule for its port.
+- **Optional:** `metrics.serviceMonitor.enabled`, `metrics.prometheusRule.enabled` with the alerts
+  `QuellenpanelRebuildStale` (team data older than 26 h), `QuellenpanelNoData` (no data for 6 h), `QuellenpanelHigh5xx` (more than 5 % 5xx
+  over 10 min) and `QuellenpanelExportFetchFailing` (partner/public: only failed fetches for 30 min).
 
-## Data refresh note
+## Checks
 
-`config.autoRefreshHour` (and the manual "Daten aktualisieren" button in the Audit tier) rebuild the
-snapshot from the live WLO API into the **container filesystem** — this is **ephemeral**: on pod
-restart the app reverts to the image's bundled snapshot. That is fine as a "freshen" operation; to
-ship updated data permanently, rebuild the image. (No PVC is provisioned; `readOnlyRootFilesystem`
-is therefore left `false` so the refresh can write.)
+```bash
+helm lint --strict deploy/helm/quellenpanel -f deploy/helm/quellenpanel/values-team.yaml
+helm template t deploy/helm/quellenpanel -f deploy/helm/quellenpanel/values-team.yaml | kubeconform -strict -ignore-missing-schemas
+promtool test rules deploy/helm/quellenpanel/tests/rules-test.yaml
+```
+
+`tests/rules.yaml` is a static rendering of `templates/prometheusrule.yaml`; keep both in sync. All
+values are documented with `## @param` in `values.yaml`.

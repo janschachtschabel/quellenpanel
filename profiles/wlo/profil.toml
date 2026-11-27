@@ -1,0 +1,110 @@
+# Profil WirLernenOnline – alles Repository-Spezifische für den generischen Quellenpanel-Kern.
+# Aufbau und Pflege: siehe profiles/README.md
+id = "wlo"
+name = "WirLernenOnline"
+
+[repository]
+url = "https://redaktion.openeduhub.net"
+search_url = "https://suche.wirlernenonline.de"
+mds = "mds_oeh"
+vocab_sources_url = "https://vocabs.openeduhub.de/w3id.org/openeduhub/vocabs/sources/index.json"
+quelle_property = "ccm:oeh_lrt_aggregated"
+quelle_werte = ["http://w3id.org/openeduhub/vocabs/new_lrt_aggregated/2e678af3-1026-4171-b88e-3b3a915d1673"]
+
+[felder]
+node_uuid = "sys:node-uuid"
+title = "cclom:title"
+www_url = "ccm:wwwurl"
+description = "cclom:general_description"
+publisher = "ccm:oeh_publisher_combined"
+license = "ccm:commonlicense_key"
+license_oer = "ccm:license_oer"
+subjects = "ccm:taxonid_DISPLAYNAME"
+subjects_entry = "ccm:taxonentry_DISPLAYNAME"
+educational_context = "ccm:educationalcontext_DISPLAYNAME"
+lrt = "ccm:oeh_lrt_aggregated_DISPLAYNAME"
+language = "cclom:general_language_DISPLAYNAME"
+language_fallback = "cclom:general_language"
+keywords = "cclom:general_keyword"
+author = "ccm:author_freetext"
+target_group = "ccm:educationalintendedenduserrole_DISPLAYNAME"
+language_level = "ccm:oeh_languageLevel_DISPLAYNAME"
+language_target = "ccm:oeh_languageTarget"
+curriculum = "ccm:curriculum_DISPLAYNAME"
+fsk = "ccm:fskRating_DISPLAYNAME"
+age_from = "ccm:educationaltypicalagerange_from"
+age_to = "ccm:educationaltypicalagerange_to"
+replication_source = "ccm:replicationsource"
+general_identifier = "ccm:general_identifier"
+editorial_status = "ccm:editorial_checklist_DISPLAYNAME"
+wf_status = "ccm:wf_status"
+
+[qualitaet]
+# Reihenfolge = Anzeige-Reihenfolge (Label, Property)
+felder = [
+  ["Sachrichtigkeit", "ccm:oeh_quality_correctness_DISPLAYNAME"],
+  ["Aktualität", "ccm:oeh_quality_currentness_DISPLAYNAME"],
+  ["Neutralität", "ccm:oeh_quality_neutralness_DISPLAYNAME"],
+  ["Sprachl. Angemessenheit", "ccm:oeh_quality_language_DISPLAYNAME"],
+  ["Medial passend", "ccm:oeh_quality_medial_DISPLAYNAME"],
+  ["Didaktik/Methodik", "ccm:oeh_quality_didactics_DISPLAYNAME"],
+  ["Transparenz", "ccm:oeh_quality_transparentness_DISPLAYNAME"],
+  ["Für Bildung geeignet", "ccm:oeh_quality_relevancy_for_education_DISPLAYNAME"],
+  ["Jugendschutz", "ccm:oeh_quality_protection_of_minors_DISPLAYNAME"],
+  ["Datenschutz (rechtl.)", "ccm:oeh_quality_data_privacy_DISPLAYNAME"],
+  ["Persönlichkeitsrechte", "ccm:oeh_quality_personal_law_DISPLAYNAME"],
+  ["Strafrecht", "ccm:oeh_quality_criminal_law_DISPLAYNAME"],
+  ["Urheberrecht", "ccm:oeh_quality_copyright_law_DISPLAYNAME"],
+  ["Login", "ccm:conditionsOfAccess_DISPLAYNAME"],
+  ["Kosten", "ccm:price_DISPLAYNAME"],
+  ["Werbung", "ccm:containsAdvertisement_DISPLAYNAME"],
+  ["DSGVO", "ccm:dataProtectionConformity_DISPLAYNAME"],
+  ["Barrierefreiheit", "ccm:accessibilitySummary_DISPLAYNAME"],
+]
+
+[spider]
+kennung_enthaelt = "spider"              # general_identifier gilt als Spider, wenn er das enthält
+ignorieren = ["wirlernenonline_spider"]  # truth_text.IGNORE_SPIDERS
+migration = ["wirlernenonline_spider", "wirlernenonline_gsheet_spider"]  # config.WLO_SPIDERS
+migration_quelle = "wirlernenonline_spider"  # replicationsource → Flag WLO_MIGRATION
+platzhalter_bezugsquellen = ["wirlernenonline"]  # normalisiert (truth_text.PLACEHOLDER_BQ)
+lrt_quelle_stichwort = "quelle"
+publiziert_wf_status = ["150_PUBLISH_IN_SEARCH", "155_ELEMENT_UNLOCK_BUFFET"]
+
+[crawler_tabelle]
+spider_spalte = "Crawler (Spider)"
+quelldatensatz_spalte = "Quelldatensatz (Prod)"
+
+[crawler_tabelle.spalten]   # CSV-Spalte → Schlüssel (Schlüssel müssen in field_policy stehen)
+"Titel" = "titel"
+"Url" = "url"
+"Bezugsquelle" = "bezugsquelle"
+"Urheber" = "urheber"
+"robots.txt" = "robotsTxt"
+"TDM Hinweis ( §44b)" = "tdmHinweis"
+"AGB / Nutzungsbedingungen" = "agb"
+"Lizenz Check" = "lizenzCheck"
+"API Nutzungsbedingungen" = "apiNutzung"
+"Crawler (Spider)" = "spider"
+"Prio" = "prio"
+"Crawler-Type" = "crawlerType"
+"Zustand" = "zustand"
+"Spider Bemerkungen" = "spiderBemerkungen"
+"Einschätzung KI & Erschließung" = "kiEinschaetzung"
+"Bemerkung/Status" = "bemerkungStatus"
+"Prod letzter Crawl" = "prodLetzterCrawl"
+"Staging letzter Crawl" = "stagingLetzterCrawl"
+"Häufigkeit" = "haeufigkeit"
+"Anzahl Prod" = "anzahlProd"
+"Anzahl Staging" = "anzahlStaging"
+"Quelldatensatz (Prod)" = "quelldatensatzProd"
+"Hinweis zu Quellendatensatz" = "hinweisQuelldatensatz"
+"Export to OER Berlin" = "exportOerBerlin"
+"GitHub" = "github"
+"Vereinb. neu" = "Vertrag/Vereinbarung"
+"Vereinb. alt" = "Vereinbarung (alt)"
+
+[branding]
+primary = "#003b7c"
+accent = "#e4f700"
+logo = "wlo-logo.svg"

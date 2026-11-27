@@ -4,17 +4,24 @@ metadata:
   name: {{ include "quellenpanel.fullname" . }}-env
   labels: {{ include "quellenpanel.labels" . | nindent 4 }}
 data:
-  # ---- Access tiers (all optional; unset = end-user-only, fail-closed). Passwords are in the Secret. ----
-  QE_PUBLIC_ONLY: {{ .Values.config.publicOnly | quote }}
+  QE_ROLE: {{ .Values.config.role | quote }}
+  QE_PROFILE: {{ .Values.config.profile | quote }}
+  QE_DATA_DIR: "/data"
+  LOG_FORMAT: {{ .Values.log.format | quote }}
+  LOG_LEVEL: {{ .Values.log.level | quote }}
+  TRUST_PROXY: {{ ternary "1" "" .Values.config.trustProxy | quote }}
   QE_ALLOWED_ORIGINS: {{ .Values.config.allowedOrigins | quote }}
+  QE_FRAME_ANCESTORS: {{ .Values.config.frameAncestors | quote }}
+  QE_THUMB_CACHE_MB: {{ .Values.config.thumbCacheMB | quote }}
+  {{- if eq .Values.config.role "team" }}
+  QE_SEED_URL: {{ .Values.config.seedUrl | quote }}
   QE_AUTO_REFRESH_HOUR: {{ .Values.config.autoRefreshHour | quote }}
-  # ---- Repository neutrality (live queries + "view in search" link) ----
+  {{- else }}
+  QE_EXPORT_SOURCE: {{ required "config.exportSource is required for the partner/public roles" .Values.config.exportSource | quote }}
+  QE_EXPORT_POLL_MINUTES: {{ .Values.config.exportPollMinutes | quote }}
+  {{- end }}
   QE_REPO_URL: {{ .Values.config.repoUrl | quote }}
   QE_SEARCH_URL: {{ .Values.config.searchUrl | quote }}
-  # The pod is only reachable via the ingress (ClusterIP), which sets X-Forwarded-For to the real
-  # client IP — so let uvicorn trust the proxy headers, giving the per-client rate limits the true
-  # client IP instead of the ingress address. (uvicorn reads this env as --forwarded-allow-ips.)
-  FORWARDED_ALLOW_IPS: "*"
   {{- range $key, $value := .Values.config.extraEnv }}
   {{ $key }}: {{ $value | quote }}
   {{- end }}

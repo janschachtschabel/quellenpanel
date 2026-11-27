@@ -9,6 +9,7 @@ per-record detectable. Team-only — served via an authenticated route; pure & u
 """
 from collections import defaultdict
 
+import repo_profile
 from stats_common import _FUELL_META
 
 # Per-category long lists are capped (sorted by content) to keep the file usable; the full
@@ -20,11 +21,14 @@ CAP = 300
 #   flag: the record flag marking this category (set in truth._mark_data_problems / truth_record).
 #   Every rubric maps 1:1 to a flag, so the team filter (flag=<NAME>) covers all of them.
 # No inner double quotes in the strings (they would clash with the Python delimiter).
+# Publisher property of the active profile (named in the fix hint below).
+_PUBLISHER = repo_profile.get().felder["publisher"]
+
 CATALOG = [
     ("WLO_MIGRATION", "Als Datenmigration getaggt",
-     "Die Bezugsquelle am Quelldatensatz ist der WirLernenOnline-Migrations-Platzhalter, "
+     "Die Bezugsquelle am Quelldatensatz ist der Migrations-Platzhalter des Repositorys, "
      "obwohl die echte Bezugsquelle der Inhalte bekannt ist (siehe Spalte Bezugsquelle).",
-     "Bezugsquelle (ccm:oeh_publisher_combined) am Quelldatensatz auf den Wert der Spalte "
+     f"Bezugsquelle ({_PUBLISHER}) am Quelldatensatz auf den Wert der Spalte "
      "Bezugsquelle setzen — sofern noch kein anderer Quelldatensatz mit der richtigen "
      "Bezugsquelle existiert.", "WLO_MIGRATION"),
     ("FEHLTAGGING", "Misch-Typen (Quelle + weitere Inhaltstypen)",
@@ -322,7 +326,7 @@ def build_protokoll(records, meta) -> str:
     sections = _sections(records)
     problem_ids = {r["id"] for _k, _t, _d, _r, cases in sections for r in cases}
 
-    L = ["# Fehler-Protokoll — Datenprobleme bei WLO-Quellen", ""]
+    L = [f"# Fehler-Protokoll — Datenprobleme bei Quellen in {repo_profile.get().name}", ""]
     L.append(f"Datenstand: {meta.get('generatedAt', '?')} · Quellen-Records gesamt: "
              f"{len(records)} · mit mindestens einem Datenproblem: {len(problem_ids)}")
     L.append("")

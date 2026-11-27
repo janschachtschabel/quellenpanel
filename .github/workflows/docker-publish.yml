@@ -1,6 +1,6 @@
 name: Build & Push Docker image
 
-# Runs the backend + frontend test suites, then builds the serving image and publishes it to
+# Runs the CI gates (ci.yml), then builds the serving image and publishes it to
 # Docker Hub. Requires repository secrets DOCKERHUB_USERNAME and DOCKERHUB_TOKEN (Docker Hub user +
 # access token). The image name is <DOCKERHUB_USERNAME>/quellenpanel (adjust below if needed).
 
@@ -10,49 +10,19 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+# Read-only token: the image goes to Docker Hub with its own secrets, nothing writes to the repository.
+permissions:
+  contents: read
+
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Backend deps + tests
-        # conftest.py sets QE_TEAM_PASSWORD before import, so no team secret is needed in CI.
-        run: |
-          pip install -r backend/requirements-dev.txt
-          python -m pytest backend/tests
-      - name: Backend dependency audit
-        # Hard gate: fails the build on any known CVE in the pinned backend deps (tree verified clean).
-        run: |
-          pip install pip-audit
-          pip-audit -r backend/requirements.txt
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - name: Frontend deps + tests
-        run: |
-          npm --prefix frontend ci
-          npm --prefix frontend test -- --watch=false
-      - name: Frontend dependency audit — shipped deps
-        # Hard gate on PRODUCTION dependencies — what actually ships in the SPA bundle (verified clean).
-        run: npm --prefix frontend audit --omit=dev --audit-level=high
-      - name: Frontend dependency audit — build tooling (advisory)
-        # Dev/build-tooling CVEs (devDependencies, e.g. undici via @angular/build & cli) affect only
-        # the build machine, not the shipped app, and can't be fixed without Angular-tooling bumps —
-        # surfaced as a warning, not release-blocking.
-        continue-on-error: true
-        run: npm --prefix frontend audit --audit-level=high
+  # All quality gates (lint, tests, audits, chart, version, tag = "v" + version) — see ci.yml.
+  ci:
+    uses: ./.github/workflows/ci.yml
 
   # Gate the publish on the Docker Hub secrets actually being present, so the workflow stays green
   # (with a warning) on forks / repos without credentials instead of failing at the login step.
   check-secrets:
-    needs: test
+    needs: ci
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'pull_request' }}
     outputs:
@@ -72,7 +42,7 @@ jobs:
           fi
 
   docker:
-    needs: [test, check-secrets]
+    needs: [ci, check-secrets]
     runs-on: ubuntu-latest
     # Publish only when the credentials are present (skips cleanly otherwise).
     if: ${{ needs.check-secrets.outputs.present == 'true' }}
@@ -93,11 +63,15 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/quellenpanel
+          # Release images carry the version (tag v1.0.0 → 1.0.0 and 1.0); main → main + sha. Never `latest`
+          # (metadata-action would add it to semver tags by default).
+          flavor: |
+            latest=false
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
             type=sha,format=short
-            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push
         uses: docker/build-push-action@v6

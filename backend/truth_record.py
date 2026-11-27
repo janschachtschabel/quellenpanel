@@ -6,7 +6,8 @@ provenance and provenance flags. Pure construction (no IO); called by truth.buil
 once per source.
 """
 import field_policy as fp
-from truth_text import IGNORE_SPIDERS, _norm, _resolve_rs, spider_vocab_name
+import repo_profile
+from truth_text import _norm, _resolve_rs, spider_vocab_name
 
 
 def _public_and_provenance(node, prof, bq, content):
@@ -84,11 +85,12 @@ def _record_flags(node, spider, public, korr):
         if kk and kk["liste"]:
             flags.append(kk["liste"].upper())
         # Provenance markers (public, as badges):
-        if node.get("replicationSource", "") == "wirlernenonline_spider":
-            flags.append("WLO_MIGRATION")           # imported via the WLO data migration
+        prof = repo_profile.get()
+        if prof.migration_quelle and node.get("replicationSource", "") == prof.migration_quelle:
+            flags.append("WLO_MIGRATION")           # imported via the repository's data migration
         if spider and spider.startswith("http"):
             flags.append("LEGACY_BINDUNG")           # bound via legacy vocab URI (not a technical spider)
-        if spider and not any("quelle" in str(x).lower() for x in node.get("oehLrt", [])):
+        if spider and not any(prof.lrt_quelle_stichwort in str(x).lower() for x in node.get("oehLrt", [])):
             flags.append("TYP_NICHT_QUELLE")         # real binding, but LRT ≠ Quelle (mis-tagged)
     if not node:
         flags.append("FACETS_ONLY")
@@ -107,11 +109,11 @@ def make_record(kind, anchor, prof, node, bq, content, vocab, korr, bq_prev=None
     else:  # manual / otherwise: the dataset title is the source name
         name = node_title or bq or prof_titel or anchor
     spider = prof["spider"] if prof else (node["crawlerSpider"] if node else "")
-    # Effective binding: if no general_identifier is set but replicationsource
-    # is NOT wirlernenonline_spider, then that is the real spider/source binding.
+    # Effective binding: if no general_identifier is set but replicationsource is NOT a
+    # migration-origin spider (profile: spider.ignorieren), that is the real spider/source binding.
     if not spider and node:
         rs = node.get("replicationSource", "")
-        if rs and rs not in IGNORE_SPIDERS:
+        if rs and rs not in repo_profile.get().ignore_spiders:
             spider = rs
     public, prov = _public_and_provenance(node, prof, bq, content)
     internal = _internal_fields(node, prof, vocab, korr)

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, inject, signal, computed, Signal } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, OnDestroy, effect, inject, signal, computed, Signal } from '@angular/core';
 import { Subscription, timer, of } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
@@ -26,14 +26,17 @@ import { DetailDialogComponent } from './detail.component';
 import { ImpressumDialogComponent } from './impressum.component';
 import { AuditReportComponent } from './audit-report.component';
 import { TeamLoginComponent } from './team-login.component';
+import { KorrekturenComponent } from './korrekturen.component';
 import { TierService } from './tier.service';
+import { wendeBrandingAn } from './branding';
+import { EINBETT_STANDARD, EinbettOptionen, ansichtOderNull, farbeOderNull, istAn, leseEinbettung, wendeHintergrundAn } from './einbettung';
 import { SelectionService } from './selection.service';
 import { PdfService } from './pdf.service';
 import { PRUEF_GROUPS } from './data-problem-filters';
 import { COL_BREAKPOINTS, columnsFromMatcher, pageSizeOptionsFor, roundToRows } from './grid-columns';
 import { I18n } from './i18n.service';
 
-type View = 'tile' | 'list' | 'stats';
+type View = 'tile' | 'list' | 'stats' | 'korrekturen';
 
 /**
  * Page shell + orchestrator: the framed header, the filter controls, the view switch and
@@ -47,13 +50,14 @@ type View = 'tile' | 'list' | 'stats';
     CommonModule, FormsModule, MatIconModule, MatButtonModule, MatButtonToggleModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatCheckboxModule, MatPaginatorModule,
     MatProgressBarModule, MatDialogModule, MatSnackBarModule, StatsComponent, FullStatsComponent,
-    TeamStatsComponent, TilesComponent, ListComponent,
+    TeamStatsComponent, TilesComponent, ListComponent, KorrekturenComponent,
   ],
   template: `
-  <div class="host">
+  <div class="host" [class.ohne-rahmen]="!ein().rahmen">
+    @if (ein().kopf) {
     <header class="bar">
       <div class="bar-left">
-        <img class="logo" src="wlo-logo.svg" alt="WissenLebtOnline">
+        <img class="logo" [src]="api.assetUrl('wlo-logo.svg')" alt="WissenLebtOnline">
         <span class="sep"></span>
         <span class="brand">{{ i18n.t('app.title') }}</span>
         @if (data) { <span class="total-badge">{{ data.total | number }}</span> }
@@ -61,15 +65,22 @@ type View = 'tile' | 'list' | 'stats';
       <div class="bar-right">
         <mat-button-toggle-group class="views" [(ngModel)]="view" (change)="onViewChange()"
           hideSingleSelectionIndicator [attr.aria-label]="i18n.t('aria.view')">
-          <mat-button-toggle value="tile"><mat-icon>grid_view</mat-icon> {{ i18n.t('view.tiles') }}</mat-button-toggle>
-          <mat-button-toggle value="list"><mat-icon>view_list</mat-icon> {{ i18n.t('view.list') }}</mat-button-toggle>
-          <mat-button-toggle value="stats"><mat-icon>bar_chart</mat-icon> {{ i18n.t('view.stats') }}</mat-button-toggle>
+          <mat-button-toggle value="tile"><mat-icon aria-hidden="true">grid_view</mat-icon> <span class="lbl">{{ i18n.t('view.tiles') }}</span></mat-button-toggle>
+          <mat-button-toggle value="list"><mat-icon aria-hidden="true">view_list</mat-icon> <span class="lbl">{{ i18n.t('view.list') }}</span></mat-button-toggle>
+          <mat-button-toggle value="stats"><mat-icon aria-hidden="true">bar_chart</mat-icon> <span class="lbl">{{ i18n.t('view.stats') }}</span></mat-button-toggle>
+          @if (tiers.tier() >= 2) {
+            <mat-button-toggle value="korrekturen"><mat-icon aria-hidden="true">edit_note</mat-icon> <span class="lbl">{{ i18n.t('view.korrekturen') }}</span></mat-button-toggle>
+          }
         </mat-button-toggle-group>
         <mat-button-toggle-group class="tiers" [value]="tiers.tier()" (change)="onTierToggle($event.value)"
           hideSingleSelectionIndicator [attr.aria-label]="i18n.t('tier.aria')">
-          <mat-button-toggle [value]="0"><mat-icon>visibility</mat-icon> {{ i18n.t('tier.base') }}</mat-button-toggle>
-          <mat-button-toggle [value]="1"><mat-icon>list_alt</mat-icon> {{ i18n.t('tier.details') }}</mat-button-toggle>
-          <mat-button-toggle [value]="2"><mat-icon>lock</mat-icon> {{ i18n.t('tier.audit') }}</mat-button-toggle>
+          <mat-button-toggle [value]="0"><mat-icon aria-hidden="true">visibility</mat-icon> <span class="lbl">{{ i18n.t('tier.base') }}</span></mat-button-toggle>
+          @if (!tiers.publicOnly()) {
+            <mat-button-toggle [value]="1"><mat-icon aria-hidden="true">list_alt</mat-icon> <span class="lbl">{{ i18n.t('tier.details') }}</span></mat-button-toggle>
+          }
+          @if (tiers.role() === 'team') {
+            <mat-button-toggle [value]="2"><mat-icon aria-hidden="true">lock</mat-icon> <span class="lbl">{{ i18n.t('tier.audit') }}</span></mat-button-toggle>
+          }
         </mat-button-toggle-group>
         <mat-button-toggle-group class="lang" [value]="i18n.lang()" (change)="i18n.set($event.value)"
           hideSingleSelectionIndicator [attr.aria-label]="i18n.t('aria.lang')">
@@ -78,8 +89,9 @@ type View = 'tile' | 'list' | 'stats';
         </mat-button-toggle-group>
       </div>
     </header>
+    }
 
-    @if (view !== 'stats') {
+    @if (ein().filter && view !== 'stats' && view !== 'korrekturen') {
       <div class="filters">
         <div class="filter-row top">
           <mat-form-field appearance="outline" class="search">
@@ -134,6 +146,7 @@ type View = 'tile' | 'list' | 'stats';
               @for (l of options?.lrts ?? []; track l) { <mat-option [value]="l">{{ l }}</mat-option> }
             </mat-select>
           </mat-form-field>
+          @if ((options?.erschliessung ?? []).length) {
           <mat-form-field appearance="outline" class="status">
             <mat-icon matPrefix>task</mat-icon>
             <mat-label>{{ i18n.t('filter.status') }}</mat-label>
@@ -142,6 +155,7 @@ type View = 'tile' | 'list' | 'stats';
               @for (e of options?.erschliessung ?? []; track e) { <mat-option [value]="e">{{ e }}</mat-option> }
             </mat-select>
           </mat-form-field>
+          }
           <mat-form-field appearance="outline" class="min">
             <mat-icon matPrefix>filter_9_plus</mat-icon>
             <mat-label>{{ i18n.t('filter.minCount') }}</mat-label>
@@ -174,9 +188,11 @@ type View = 'tile' | 'list' | 'stats';
       </div>
     }
 
-    @if (loading && view !== 'stats') { <mat-progress-bar mode="indeterminate"></mat-progress-bar> }
+    @if (loading && view !== 'stats' && view !== 'korrekturen') { <mat-progress-bar mode="indeterminate"></mat-progress-bar> }
 
-    @if (view === 'stats') {
+    @if (view === 'korrekturen' && tiers.tier() >= 2) {
+      @defer { <wlo-korrekturen></wlo-korrekturen> } @loading { <mat-progress-bar mode="indeterminate"></mat-progress-bar> }
+    } @else if (view === 'stats') {
       <!-- Base stats always shown; higher tiers append their extra swimlanes below (same optics). -->
       <wlo-stats [stats]="stats"></wlo-stats>
       @if (tiers.tier() >= 1) { <wlo-full-stats [stats]="fullStats"></wlo-full-stats> }
@@ -239,6 +255,7 @@ type View = 'tile' | 'list' | 'stats';
       </div>
     }
 
+    @if (ein().fuss) {
     <footer class="appfoot">
       <span class="foot-brand">WissenLebtOnline · {{ i18n.t('app.title') }}</span>
       <nav class="foot-links">
@@ -247,24 +264,35 @@ type View = 'tile' | 'list' | 'stats';
         <a class="foot-link" href="https://wirlernenonline.de/" target="_blank" rel="noopener">wirlernenonline.de ↗</a>
       </nav>
     </footer>
+    }
   </div>
   `,
   styles: [`
     .host {
       max-width: 1320px; margin: 16px auto; background: var(--wlo-bg);
       border: 1px solid var(--wlo-border); border-radius: 12px; overflow: hidden;
-      box-shadow: 0 1px 4px rgba(18,33,58,.06);
+      box-shadow: var(--shadowSmall);
     }
+    /* Schlanke Einbettung (rahmen="aus"): nahtlos in die Gastseite, ohne Rahmen, Schatten, Abstand. */
+    .host.ohne-rahmen { max-width: none; margin: 0; border: 0; border-radius: 0; box-shadow: none; }
 
-    .bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 8px 16px; min-height: 56px; background: var(--wlo-card); border-bottom: 1px solid var(--wlo-border); }
+    .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 15px; padding: 10px 15px; min-height: 56px; background: var(--wlo-card); border-bottom: 1px solid var(--wlo-border); }
     .bar-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
     .logo { height: 38px; width: auto; display: block; flex-shrink: 0; }
     .sep { width: 1px; height: 24px; background: var(--wlo-border); flex-shrink: 0; }
     .brand { font-size: 15px; font-weight: 700; color: var(--wlo-text); white-space: nowrap; }
-    .total-badge { background: var(--wlo-primary-light); color: var(--wlo-primary); font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 10px; }
+    .total-badge { background: var(--wlo-primary-light); color: var(--primaryText); font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 10px; }
     .views { --mat-standard-button-toggle-height: 36px; font-size: 13px; }
     .views mat-icon { font-size: 17px; width: 17px; height: 17px; vertical-align: -3px; margin-right: 2px; }
-    .bar-right { display: flex; align-items: center; gap: 12px; }
+    .bar-right { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }
+    /* Below 900px the controls get their own row; below 700px the toggles show icons only
+       (label stays for screen readers and as tooltip-free accessible name). */
+    @media (max-width: 900px) { .bar-right { flex-basis: 100%; justify-content: flex-start; } }
+    @media (max-width: 700px) {
+      .bar-right .lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+      .views mat-icon, .tiers mat-icon { margin-right: 0; }
+      .brand { font-size: 14px; }
+    }
     .lang { --mat-standard-button-toggle-height: 36px; font-size: 12px; flex-shrink: 0; }
     .tiers { --mat-standard-button-toggle-height: 36px; font-size: 13px; }
     .tiers mat-icon { font-size: 16px; width: 16px; height: 16px; vertical-align: -3px; margin-right: 2px; }
@@ -278,7 +306,7 @@ type View = 'tile' | 'list' | 'stats';
     .filter-row .level { width: 150px; }
     .filter-row .lrt { width: 180px; }
     .filter-row .status { width: 220px; }
-    .filter-row .min { width: 120px; }
+    .filter-row .min { width: 140px; }
     .filter-row .flag { width: 220px; }
     .filters mat-form-field { font-size: 14px; }
     .filters mat-form-field mat-icon[matPrefix] { font-size: 18px; width: 18px; height: 18px; color: var(--wlo-text-muted); }
@@ -301,19 +329,19 @@ type View = 'tile' | 'list' | 'stats';
 
     /* Sammel-PDF selection bar (tier 1+, shown once ≥1 source is ticked). */
     .selbar { display: flex; align-items: center; gap: 10px; padding: 8px 14px; margin-bottom: 14px; background: var(--wlo-primary-light); border: 1px solid var(--wlo-primary); border-radius: 10px; }
-    .selcount { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; color: var(--wlo-primary); }
+    .selcount { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; color: var(--primaryText); }
     .selcount mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .selspacer { flex: 1; }
 
     .appfoot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--wlo-border); background: var(--wlo-card); font-size: 12px; color: var(--wlo-text-muted); }
     .foot-links { display: flex; gap: 14px; align-items: center; }
     .foot-link { background: none; border: none; padding: 0; font: inherit; font-size: 12px; color: var(--wlo-text-muted); cursor: pointer; text-decoration: none; }
-    .foot-link:hover { color: var(--wlo-primary); text-decoration: underline; }
+    .foot-link:hover { color: var(--primaryText); text-decoration: underline; }
     @media (max-width: 600px) { .filter-row.top .search { flex-basis: 100%; } .filter-row.top .sort { width: 100%; } }
   `],
 })
 export class AppComponent implements OnInit {
-  private readonly api = inject(SourcesService);
+  readonly api = inject(SourcesService);
   private readonly dialog = inject(MatDialog);
   private readonly snack = inject(MatSnackBar);
   private readonly pdf = inject(PdfService);
@@ -344,6 +372,29 @@ export class AppComponent implements OnInit {
   @Input('with-credentials') set withCredentials(value: string | boolean) {
     this.api.setCredentials(value === '' || value === true || value === 'true');
   }
+
+  /** Widget presets (`<wlo-quellen-kacheln fach="…" bildungsstufe="…" suche="…" nur-oer>`), applied
+   *  before the first load like api-base. */
+  @Input('fach') set presetFach(v: string) { this.subject = (v ?? '').trim(); }
+  @Input('bildungsstufe') set presetStufe(v: string) { this.level = (v ?? '').trim(); }
+  @Input('suche') set presetSuche(v: string) { this.q = (v ?? '').trim(); }
+  @Input('sprache') set presetSprache(v: string) { if (v === 'de' || v === 'en') this.i18n.set(v, false); }
+  @Input('nur-oer') set presetOer(v: string | boolean) { this.onlyOer = v === '' || v === true || v === 'true'; }
+
+  /** Schlanke Einbettung (siehe einbettung.ts und docs/widgets.md): Attribute am Element, in der
+   *  App auch als Query-Parameter (`/?kopf=aus&ansicht=liste&hintergrund=%23ffffff`). */
+  readonly ein = signal<EinbettOptionen>({ ...EINBETT_STANDARD });
+  @Input('kopf') set einKopf(v: string) { this.ein.update((o) => ({ ...o, kopf: istAn(v) })); }
+  @Input('fuss') set einFuss(v: string) { this.ein.update((o) => ({ ...o, fuss: istAn(v) })); }
+  @Input('filter') set einFilter(v: string) { this.ein.update((o) => ({ ...o, filter: istAn(v) })); }
+  @Input('rahmen') set einRahmen(v: string) { this.ein.update((o) => ({ ...o, rahmen: istAn(v) })); }
+  @Input('ansicht') set einAnsicht(v: string) {
+    const a = ansichtOderNull(v);
+    this.ein.update((o) => ({ ...o, ansicht: a }));
+    if (a) this.view = a;
+  }
+  @Input('hintergrund') set einHintergrund(v: string) { this.ein.update((o) => ({ ...o, hintergrund: farbeOderNull(v) })); }
+  @Input('farbe') set einFarbe(v: string) { this.ein.update((o) => ({ ...o, farbe: farbeOderNull(v) })); }
 
   view: View = 'tile';
   q = '';
@@ -383,7 +434,29 @@ export class AppComponent implements OnInit {
   refreshMsg = '';           // sync progress step message
   private refreshSub?: Subscription;
 
+  private readonly host = inject(ElementRef<HTMLElement>);
+
   constructor() {
+    // Profile brand colours as tokens: on the element itself, and in the SPA also on <html> so
+    // overlays (dialogs, menus) attached to <body> get them too.
+    const el0 = this.host.nativeElement as HTMLElement;
+    if (el0.tagName === 'WLO-ROOT') {
+      // Die App selbst (auch im iframe) nimmt dieselben Optionen aus dem Query-String.
+      const q = leseEinbettung(new URLSearchParams(window.location.search));
+      this.ein.set(q);
+      if (q.ansicht) this.view = q.ansicht;
+    }
+    effect(() => {
+      const e = this.ein();
+      const b = e.farbe ? { ...(this.tiers.branding() ?? {}), primary: e.farbe } : this.tiers.branding();
+      const el = this.host.nativeElement as HTMLElement;
+      wendeBrandingAn(el, b);
+      wendeHintergrundAn(el, e.hintergrund);
+      if (el.tagName === 'WLO-ROOT') {
+        wendeBrandingAn(document.documentElement, b);
+        wendeHintergrundAn(document.documentElement, e.hintergrund);
+      }
+    });
     for (const bp of COL_BREAKPOINTS) {
       const mql = window.matchMedia(`(min-width: ${bp.min}px)`);
       // Re-evaluate the column count on ANY breakpoint change (up OR down). Reacting only to
@@ -458,6 +531,12 @@ export class AppComponent implements OnInit {
    *  needs a team login when not yet authenticated; if it is cancelled, the `[value]` binding
    *  snaps the toggle back to the active tier. */
   onTierToggle(t: number): void {
+    if (t === 1 && this.tiers.maxTier() < 1) {
+      // Partner instance: details need the tier-1 password (sent as a header from then on).
+      this.dialog.open(TeamLoginComponent, { width: '360px', autoFocus: false, data: { mode: 'tier1' } })
+        .afterClosed().subscribe((ok) => { if (ok) this.reload(); });
+      return;
+    }
     if (t === 2 && this.tiers.maxTier() < 2) {
       this.dialog.open(TeamLoginComponent, { width: '360px', autoFocus: false })
         .afterClosed().subscribe((ok) => { if (ok) this.reload(); });
@@ -469,8 +548,11 @@ export class AppComponent implements OnInit {
 
   private reload(): void {
     if (this.tiers.tier() < 2) { this.flag = ''; }   // the data-problem filter is tier-2 only
+    if (this.tiers.tier() < 2 && this.view === 'korrekturen') { this.view = 'tile'; }
     if (this.tiers.tier() < 1) { this.sel.clear(); } // multi-select / Sammel-PDF is tier 1+ (Details/Audit)
+    if (this.tiers.tier() < 2) { this.erschliessung = ''; } // exact status filter is tier-2 only
     this.page = 1;
+    this.api.filterOptions().subscribe((o) => (this.options = o));   // options depend on the tier
     this.load();
     if (this.view === 'stats') { this.loadStats(); }   // stats shape depends on the tier
   }

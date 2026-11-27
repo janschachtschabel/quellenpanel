@@ -4,10 +4,15 @@ metadata:
   name: {{ include "quellenpanel.fullname" . }}
   labels: {{ include "quellenpanel.labels" . | nindent 4 }}
 spec:
-  # Single replica: the team session store + login/fetch rate-limit counters are in-process
-  # (see backend/session.py). Multiple replicas would split them → flaky team login. Stateless
-  # otherwise (bundled data/truth.json snapshot), so no PVC is needed.
+  {{- if eq .Values.config.role "team" }}
+  # Team: exactly one pod owns the data volume and the rebuild job; Recreate so two never overlap.
+  replicas: 1
+  strategy:
+    type: Recreate
+  {{- else }}
+  # Partner/public hold only the export (fetched from the team), so they scale freely.
   replicas: {{ .Values.replicaCount }}
+  {{- end }}
   selector:
     matchLabels: {{ include "quellenpanel.selectorLabels" . | nindent 6 }}
   template:
@@ -44,15 +49,17 @@ spec:
         - configMapRef:
             name: {{ include "quellenpanel.fullname" . }}-env
         - secretRef:
-            name: {{ include "quellenpanel.fullname" . }}-env
+            name: {{ include "quellenpanel.secretName" . }}
         ports:
         - name: http
           containerPort: 8080
+        - name: internal
+          containerPort: 9090
         {{- with .Values.startupProbe }}
         startupProbe:
           httpGet:
-            path: /api/health
-            port: http
+            path: /health
+            port: internal
           failureThreshold: {{ .failureThreshold }}
           initialDelaySeconds: {{ .initialDelaySeconds }}
           periodSeconds: {{ .periodSeconds }}
@@ -62,14 +69,18 @@ spec:
         {{- with .Values.livenessProbe }}
         livenessProbe:
           httpGet:
-            path: /api/health
-            port: http
+            path: /health
+            port: internal
           failureThreshold: {{ .failureThreshold }}
           initialDelaySeconds: {{ .initialDelaySeconds }}
           periodSeconds: {{ .periodSeconds }}
           timeoutSeconds: {{ .timeoutSeconds }}
         {{- end }}
         {{- with .Values.readinessProbe }}
+        # Leitfaden: readiness asks no other service, on the PUBLIC port, so a pod with a broken API
+        # listener leaves the rotation. Team: always ready (login and rebuild stay reachable while it
+        # builds). Partner/public: ready once their own export is loaded, so a rolling update with the
+        # team down keeps the old pods that still serve the last valid export.
         readinessProbe:
           httpGet:
             path: /api/health
@@ -80,9 +91,40 @@ spec:
           successThreshold: {{ .successThreshold }}
           timeoutSeconds: {{ .timeoutSeconds }}
         {{- end }}
+        # Clean shutdown: the pause lets the endpoints controller take the pod out of the Service
+        # before SIGTERM; uvicorn then gives running requests 20 s (serve.GRACEFUL_SECONDS).
+        {{- if .Values.preStopSleepSeconds }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "{{ .Values.preStopSleepSeconds }}"]
+        {{- end }}
         {{- with .Values.resources }}
         resources: {{ toYaml . | nindent 10 }}
         {{- end }}
-        {{- with .Values.securityContext }}
-        securityContext: {{ toYaml . | nindent 10 }}
+        # Restricted Pod Security profile, not configurable: writes go to /data and /tmp only.
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: {{ .Values.securityContext.runAsUser }}
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: data
+        {{- if eq .Values.config.role "team" }}
+        persistentVolumeClaim:
+          claimName: {{ default (printf "%s-data" (include "quellenpanel.fullname" .)) .Values.persistence.existingClaim }}
+        {{- else }}
+        emptyDir: {}
         {{- end }}

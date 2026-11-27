@@ -1,6 +1,6 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { DecimalPipe, NgTemplateOutlet } from '@angular/common';
-import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,6 +13,11 @@ import { SourcesService } from './sources.service';
 import { PdfService } from './pdf.service';
 import { TierService } from './tier.service';
 import { I18n } from './i18n.service';
+import { KorrekturenService } from './korrekturen.service';
+import { KorrekturDialogComponent } from './korrektur-dialog.component';
+import { korrekturAusSteckbrief } from './korrekturen-utils';
+import { fehlertext } from './korrekturen-fehler';
+import { KorrekturFelder } from './models';
 
 /**
  * Source detail (Steckbrief) in a Material dialog. Laid out as tidy titled CARD sections
@@ -48,7 +53,7 @@ import { I18n } from './i18n.service';
         @if (detail.language) { <mat-chip>{{ detail.language }}</mat-chip> }
       </mat-chip-set>
     </div>
-    <button mat-icon-button mat-dialog-close [attr.aria-label]="i18n.t('action.close')"><mat-icon>close</mat-icon></button>
+    <button mat-icon-button mat-dialog-close [aria-label]="i18n.t('action.close')"><mat-icon>close</mat-icon></button>
   </div>
 
   <mat-dialog-content class="db">
@@ -61,6 +66,12 @@ import { I18n } from './i18n.service';
           <mat-icon>picture_as_pdf</mat-icon> {{ pdfBusy() ? i18n.t('select.pdfBusy') : i18n.t('detail.pdf') }}
         </button>
       }
+      @if (tiers.tier() >= 2 && tiers.role() === 'team') {
+        @if (detail.binding?.node) {
+          <button mat-stroked-button type="button" (click)="korrektur('blacklist')"><mat-icon>block</mat-icon> {{ i18n.t('detail.korr.blacklist') }}</button>
+        }
+        <button mat-stroked-button type="button" (click)="korrektur('beschreibung')"><mat-icon>edit_note</mat-icon> {{ i18n.t('detail.korr.description') }}</button>
+      }
       @if (detail.searchUrl) {
         <a mat-stroked-button color="primary" [href]="detail.searchUrl" target="_blank" rel="noopener">
           <mat-icon>search</mat-icon> {{ i18n.t('action.search') }}
@@ -72,6 +83,7 @@ import { I18n } from './i18n.service';
         </a>
       }
     </div>
+    @if (korrMeldung()) { <p class="korr-msg" role="status">{{ korrMeldung() }}</p> }
 
     <!-- Grund-Informationen -->
     <section class="sb">
@@ -207,7 +219,7 @@ import { I18n } from './i18n.service';
         <div class="kv ki">
           @for (k of keys(detail.ki); track k) {
             <div class="k">{{ k }}<ng-container [ngTemplateOutlet]="pp" [ngTemplateOutletContext]="{ $implicit: k }"></ng-container></div>
-            <div class="v">@if (detail.ki[k]) { {{ detail.ki[k] }} } @else { <span class="muted">—</span> }</div>
+            <div class="v" tabindex="0" role="region" [attr.aria-label]="k">@if (detail.ki[k]) { {{ detail.ki[k] }} } @else { <span class="muted">—</span> }</div>
           }
         </div>
       </section>
@@ -302,38 +314,39 @@ import { I18n } from './i18n.service';
   styles: [`
     :host { display: block; }
     .dh { display: flex; gap: 16px; padding: 16px 16px 8px; align-items: flex-start; }
-    .dh-preview { width: 132px; height: 88px; border-radius: 10px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--wlo-border); background: #e8eef7; }
+    .dh-preview { width: 132px; height: 88px; border-radius: 10px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--wlo-border); background: var(--primaryBackground50); }
     .dh-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .dh-init { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: var(--wlo-primary); background: var(--wlo-primary-light); }
+    .dh-init { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: var(--primaryText); background: var(--wlo-primary-light); }
     .dh-info { flex: 1; min-width: 0; }
     .dh-name { margin: 0 0 8px !important; font-size: 19px; font-weight: 700; color: var(--wlo-text); line-height: 1.25; }
-    .c-oer { --mdc-chip-elevated-container-color: #e6f4ea; --mdc-chip-label-text-color: #1a8a4d; font-weight: 700; }
+    .c-oer { --mdc-chip-elevated-container-color: var(--colorStatusPositiveBackground); --mdc-chip-label-text-color: var(--colorStatusPositiveText); font-weight: 700; }
     .db { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 14px; background: var(--wlo-bg); }
     .count-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--wlo-primary-light); border-radius: 10px; flex-wrap: wrap; }
-    .c-big { font-size: 24px; font-weight: 700; color: var(--wlo-primary); }
-    .c-lbl { font-size: 13px; color: var(--wlo-primary); opacity: .85; }
+    .c-big { font-size: 24px; font-weight: 700; color: var(--primaryText); }
+    .c-lbl { font-size: 13px; color: var(--primaryText); }
     .spacer { flex: 1; }
 
     /* Titled card sections (mirrors the Quellensteckbriefe profile). */
     .sb { background: var(--wlo-card); border: 1px solid var(--wlo-border); border-radius: 12px; padding: 14px 16px; }
-    .sb > h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; font-size: 14px; font-weight: 700; color: var(--wlo-primary); }
+    .sb > h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; font-size: 14px; font-weight: 700; color: var(--primaryText); }
     .sb > h3 mat-icon { font-size: 18px; width: 18px; height: 18px; }
     .sb-sub { font-weight: 400; font-size: 12px; color: var(--wlo-text-muted); }
     .sb-hint { font-size: 12px; color: var(--wlo-text-muted); margin: -4px 0 10px; line-height: 1.45; }
     /* Related sources (Bezugsquelle family — publisher + its sub-channels) */
     /* Data-problem note: multiple datasets per Bezugsquelle are tracked in the audit protocol. */
-    .rel-warn { display: flex; align-items: flex-start; gap: 5px; color: #aa6600; }
+    .rel-warn { display: flex; align-items: flex-start; gap: 5px; color: var(--colorStatusWarningText); }
     .rel-warn mat-icon { font-size: 14px; width: 14px; height: 14px; margin-top: 1px; flex-shrink: 0; }
     .rel-list { display: flex; flex-direction: column; gap: 1px; }
     .rel-item { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 13px; }
-    .rel-ic { font-size: 16px; width: 16px; height: 16px; color: #8aa0c0; flex-shrink: 0; }
-    .rel-ic.node { color: #1a8a4d; }
+    .rel-ic { font-size: 16px; width: 16px; height: 16px; color: var(--textMediumLight); flex-shrink: 0; }
+    .rel-ic.node { color: var(--colorStatusPositiveText); }
     .rel-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--wlo-text); }
+    .korr-msg { background: var(--primaryBackground50); padding: 8px 12px; border-radius: 6px; margin: 8px 0; }
     /* Node-ID (Audit tier): the edu-sharing Quelldatensatz id, monospace + copy-selectable. */
     .rel-node { flex-shrink: 0; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: ui-monospace, Consolas, monospace; font-size: 10px; color: var(--wlo-text-muted); user-select: all; }
     .rel-cc { font-size: 11px; color: var(--wlo-text-muted); flex-shrink: 0; }
     .rel-more { font-size: 12px; color: var(--wlo-text-muted); font-style: italic; padding-top: 4px; }
-    .sb.internal > h3 { color: #b3261e; }
+    .sb.internal > h3 { color: var(--warn); }
 
     /* Key/value grid (label | value). */
     .kv { display: grid; grid-template-columns: 168px 1fr; gap: 6px 14px; font-size: 13px; align-items: start; }
@@ -341,16 +354,17 @@ import { I18n } from './i18n.service';
     .kv .v { color: var(--wlo-text); word-break: break-word; }
     .kv .v .muted { color: var(--wlo-text-muted); }
     .kv.remarks .v { white-space: pre-wrap; line-height: 1.5; }
+    .kv.ki .v:focus-visible { outline: 2px solid var(--focusColor); outline-offset: 2px; }
     .kv.ki .v { max-height: 150px; overflow: auto; background: var(--wlo-bg); border: 1px solid var(--wlo-border); border-radius: 6px; padding: 4px 8px; white-space: pre-wrap; }
     @media (max-width: 560px) { .kv { grid-template-columns: 1fr; gap: 1px 0; } .kv .k { margin-top: 8px; font-weight: 600; } }
     .from-content { font-weight: 400; opacity: .8; }
 
     /* Provenance pill (team, tier 2) — palette mirrors the Quellensteckbriefe app. */
-    .prov { display: inline-block; margin-left: 6px; font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 6px; background: #eef3fb; color: #4466aa; white-space: nowrap; vertical-align: middle; }
-    .prov.api { color: #1a8a4d; background: #e7f7ee; }
-    .prov.csv { color: #aa6600; background: #fff3e6; }
-    .prov.facet { color: #2e6ca8; background: #eaf1fb; }
-    .prov.other { color: #5b6b86; background: #eef2f8; }
+    .prov { display: inline-block; margin-left: 6px; font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 6px; background: var(--primaryBackground50); color: var(--primaryForeground800); white-space: nowrap; vertical-align: middle; }
+    .prov.api { color: var(--colorStatusPositiveText); background: var(--colorStatusPositiveBackground); }
+    .prov.csv { color: var(--colorStatusWarningText); background: var(--colorStatusWarningBackground); }
+    .prov.facet { color: var(--primaryForeground800); background: var(--primaryBackground50); }
+    .prov.other { color: var(--textLight); background: var(--primaryBackground50); }
 
     /* Quality groups. */
     .q-block { margin-bottom: 10px; }
@@ -369,25 +383,25 @@ import { I18n } from './i18n.service';
     /* Crawler field-generation table. */
     .sb-sub2 { font-size: 12px; font-weight: 600; color: var(--wlo-text-muted); margin: 12px 0 6px; padding-top: 8px; border-top: 1px dashed var(--wlo-border); }
     .fgtable { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .fgtable th, .fgtable td { text-align: left; padding: 4px 8px; border-bottom: 1px solid #eef2f8; vertical-align: top; }
+    .fgtable th, .fgtable td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--tableSeperatorLineColor); vertical-align: top; }
     .fgtable th { color: var(--wlo-text-muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; }
-    .fgtable .fg-how { color: #6b7a90; }
-    .fgtable .fg-active { color: #1a8a4d; font-weight: 600; }
+    .fgtable .fg-how { color: var(--textMediumLight); }
+    .fgtable .fg-active { color: var(--colorStatusPositiveText); font-weight: 600; }
 
     /* Example content. */
     .ct-state { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--wlo-text-muted); padding: 6px 0; }
     .ct-state.muted { font-style: italic; }
     .ct-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
     .ct-card { display: flex; flex-direction: column; text-decoration: none; color: inherit; background: var(--wlo-card); border: 1px solid var(--wlo-border); border-radius: 12px; overflow: hidden; transition: border-color .15s, box-shadow .15s, transform .15s; }
-    .ct-card:hover { border-color: var(--wlo-primary); box-shadow: 0 6px 18px rgba(0,59,124,.12); transform: translateY(-2px); }
-    .ct-thumb { aspect-ratio: 16 / 9; background: #e8eef7; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .ct-card:hover { border-color: var(--wlo-primary); box-shadow: var(--shadowMedium); transform: translateY(-2px); }
+    .ct-thumb { aspect-ratio: 16 / 9; background: var(--primaryBackground50); display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .ct-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .ct-thumb mat-icon { font-size: 32px; width: 32px; height: 32px; color: #9fb2cd; }
+    .ct-thumb mat-icon { font-size: 32px; width: 32px; height: 32px; color: var(--textMediumLight); }
     .ct-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 5px; }
     .ct-title { font-size: 13px; font-weight: 600; line-height: 1.35; color: var(--wlo-text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .ct-desc { font-size: 12px; line-height: 1.45; color: var(--wlo-text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .ct-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
-    .ct-chip { font-size: 10px; padding: 2px 8px; border-radius: 20px; background: #eaf0f9; color: #003b7c; white-space: nowrap; }
+    .ct-chip { font-size: 10px; padding: 2px 8px; border-radius: 20px; background: var(--primaryBackground50); color: var(--primaryForeground800); white-space: nowrap; }
   `],
 })
 export class DetailDialogComponent implements OnInit {
@@ -398,6 +412,9 @@ export class DetailDialogComponent implements OnInit {
   readonly tiers = inject(TierService);
 
   readonly pdfBusy = signal(false);
+  readonly korrMeldung = signal('');
+  private readonly korrSvc = inject(KorrekturenService);
+  private readonly dialog = inject(MatDialog);
   readonly contents = signal<ContentItem[] | null>(null);
   readonly contentsTotal = signal(0);
   readonly contentsError = signal(false);
@@ -474,6 +491,23 @@ export class DetailDialogComponent implements OnInit {
       fields.push(f);
     }
     return groups;
+  }
+
+  /** Team: start a correction for this source (blacklist / description) in the correction dialog. */
+  korrektur(aktion: 'blacklist' | 'beschreibung'): void {
+    const vorlage = korrekturAusSteckbrief(aktion, {
+      name: this.detail.name, nodeId: this.detail.binding?.node, bezugsquelle: this.detail.bezugsquelle });
+    this.dialog.open(KorrekturDialogComponent, { data: { neu: true, korrektur: vorlage }, autoFocus: false })
+      .afterClosed().subscribe((k?: KorrekturFelder) => {
+        if (!k) return;
+        this.korrSvc.lesen().subscribe({
+          next: s => this.korrSvc.anlegen(k, s.version).subscribe({
+            next: r => this.korrMeldung.set(this.i18n.t(r.anwenden?.wirktBeimNaechstenAufbau ? 'korr.applied.later' : 'korr.applied.now')),
+            error: e => this.korrMeldung.set(fehlertext(e)),
+          }),
+          error: e => this.korrMeldung.set(fehlertext(e)),
+        });
+      });
   }
 
   /** Export THIS source as a single-source Steckbrief PDF (tier 1+), via the shared PdfService. */

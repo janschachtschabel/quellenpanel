@@ -1,0 +1,60 @@
+@use '@angular/material' as mat;
+@use 'tokens';
+
+// Material 3 theme via system variables (mat.theme): components read --mat-sys-*, which are then
+// pointed at the edu-sharing tokens below — so the profile's brand colour drives Material too.
+
+/// Material theme + WLO brand variables, emitted inside the given selector (SPA: :root, element: the host tags).
+@mixin wlo-theme-vars {
+  @include mat.theme((
+    color: (theme-type: light, primary: mat.$azure-palette, tertiary: mat.$orange-palette),
+    typography: 'Open Sans',
+    density: 0,
+  ));
+
+  @include tokens.tokens;
+
+  // Material (M3) system colours follow the edu-sharing tokens, so the brand colour drives buttons,
+  // toggles, checkboxes and form fields.
+  --mat-sys-primary: var(--primaryText);
+  --mat-sys-on-primary: var(--textWhite);
+  --mat-sys-primary-container: var(--primaryBackground100);
+  --mat-sys-on-primary-container: var(--primaryForeground800);
+  --mat-sys-secondary-container: var(--primaryBackground100);
+  --mat-sys-on-secondary-container: var(--primaryForeground800);
+  --mat-sys-surface: var(--defaultBackground);
+  --mat-sys-on-surface: var(--textMain);
+  --mat-sys-on-surface-variant: var(--textLight);
+  --mat-sys-outline: var(--textMediumLight);
+  --mat-sys-outline-variant: var(--tableSeperatorLineColor);
+  --mat-sys-error: var(--warn);
+  --mat-sys-body-large-font: var(--fontFamily);
+  --mat-sys-body-medium-font: var(--fontFamily);
+  --mat-sys-label-large-font: var(--fontFamily);
+  --mat-sys-title-medium-font: var(--fontFamily);
+
+  // Older names used across the components: aliases onto the tokens (one source of truth).
+  --wlo-primary: var(--primary);
+  --wlo-primary-light: var(--primaryBackground100);
+  --wlo-secondary: var(--primaryForeground800);
+  --wlo-accent: var(--colorStatusWarning);
+  --wlo-bg: var(--backgroundColor);
+  --wlo-card: var(--roundedContainerBackground);
+  --wlo-text: var(--textMain);
+  --wlo-text-muted: var(--textLight);
+  --wlo-border: var(--tableSeperatorLineColor);
+  // Quality traffic-light colours (shared by tile/list dots + detail cards).
+  --q-good-bg: #e6f4ea;    --q-good-fg: var(--colorStatusPositiveText);
+  --q-neutral-bg: #fef3c7; --q-neutral-fg: #92400e;
+  --q-bad-bg: #fde8e8;     --q-bad-fg: #b3261e;
+  --q-unknown-bg: #eef1f6; --q-unknown-fg: #7c8aa3;
+}
+
+/// Material Icons ligature class (font self-hosted via @fontsource).
+@mixin material-icons-class {
+  .material-icons {
+    font-family: 'Material Icons'; font-weight: normal; font-style: normal; font-size: 24px; line-height: 1;
+    letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; word-wrap: normal;
+    direction: ltr; font-feature-settings: 'liga'; -webkit-font-smoothing: antialiased;
+  }
+}

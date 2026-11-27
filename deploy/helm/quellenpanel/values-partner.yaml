@@ -1,0 +1,18 @@
+# Partner instance (tier 1): Steckbrief app behind QE_TIER1_PASSWORD. Holds only the tier-0/1 exports.
+#   helm upgrade --install quellenpanel-partner deploy/helm/quellenpanel -f deploy/helm/quellenpanel/values-partner.yaml \
+#     --set config.existingSecret=quellenpanel-partner-secrets
+config:
+  role: partner
+  exportSource: http://quellenpanel-team-internal:9090/internal/exports/stufe{tier}.json
+networkPolicy:
+  enabled: true
+ingress:
+  hosts:
+  - steckbrief.example.de
+resources:   # gemessen, siehe docs/messung.md (Limit ≈ Spitze + 25 %)
+  requests:
+    cpu: 50m
+    memory: 192Mi
+  limits:
+    cpu: "1"
+    memory: 288Mi

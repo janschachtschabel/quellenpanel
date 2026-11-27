@@ -8,7 +8,7 @@ export type Lang = 'de' | 'en';
  * UI chrome is translated here — data (subjects, source names, quality values) comes from the
  * backend and stays in its original language, and the Impressum stays German (legal text).
  */
-const DICT: Record<string, { de: string; en: string }> = {
+export const DICT: Record<string, { de: string; en: string }> = {
   // header / views
   'app.title':            { de: 'Quellenverzeichnis', en: 'Source directory' },
   'view.tiles':           { de: 'Kacheln', en: 'Tiles' },
@@ -16,6 +16,66 @@ const DICT: Record<string, { de: string; en: string }> = {
   'view.stats':           { de: 'Statistiken', en: 'Statistics' },
   'aria.view':            { de: 'Ansicht', en: 'View' },
   'aria.lang':            { de: 'Sprache', en: 'Language' },
+
+  // team corrections (Etappe 4)
+  'view.korrekturen': { de: 'Korrekturen', en: 'Corrections' },
+  'korr.title': { de: 'Korrekturen und Crawler-Tabelle', en: 'Corrections and crawler table' },
+  'korr.tab.list': { de: 'Korrekturen', en: 'Corrections' },
+  'korr.tab.history': { de: 'Verlauf', en: 'History' },
+  'korr.tab.import': { de: 'Import', en: 'Import' },
+  'korr.tab.crawler': { de: 'Crawler-Tabelle', en: 'Crawler table' },
+  'korr.search': { de: 'Suchen', en: 'Search' },
+  'korr.all': { de: 'Alle', en: 'All' },
+  'korr.new': { de: 'Neue Korrektur', en: 'New correction' },
+  'korr.export': { de: 'Als CSV herunterladen', en: 'Download as CSV' },
+  'korr.rows': { de: 'Zeilen', en: 'rows' },
+  'korr.line': { de: 'Zeile', en: 'Line' },
+  'korr.rowErrors': { de: 'fehlerhafte Zeilen (werden ignoriert)', en: 'invalid rows (ignored)' },
+  'korr.rowWarnings': { de: 'Warnungen', en: 'warnings' },
+  'korr.col.typ': { de: 'Typ', en: 'Type' },
+  'korr.col.schluessel': { de: 'Schlüssel', en: 'Key' },
+  'korr.col.aktion': { de: 'Aktion', en: 'Action' },
+  'korr.col.wert': { de: 'Wert', en: 'Value' },
+  'korr.col.kommentar': { de: 'Kommentar', en: 'Comment' },
+  'korr.col.wer': { de: 'Geändert von', en: 'Changed by' },
+  'korr.edit': { de: 'Ändern', en: 'Edit' },
+  'korr.delete': { de: 'Löschen', en: 'Delete' },
+  'korr.delete.confirm': { de: 'Diese Korrektur löschen?', en: 'Delete this correction?' },
+  'korr.dialog.new': { de: 'Neue Korrektur', en: 'New correction' },
+  'korr.dialog.edit': { de: 'Korrektur ändern', en: 'Edit correction' },
+  'korr.save': { de: 'Speichern', en: 'Save' },
+  'korr.wer': { de: 'Ihr Kürzel', en: 'Your initials' },
+  'korr.wer.hint': { de: 'Steht im Verlauf; wird in diesem Browser gemerkt.', en: 'Recorded in the history; remembered in this browser.' },
+  'korr.wer.missing': { de: 'Bitte zuerst über „Neue Korrektur“ ein Kürzel eintragen.', en: 'Please enter your initials first via “New correction”.' },
+  'korr.applied.now': { de: 'Gespeichert. Die Daten wurden neu berechnet.', en: 'Saved. The data was recomputed.' },
+  'korr.applied.later': { de: 'Gespeichert. Beschreibungen und Vorschaubilder gelten sofort, Node-Korrekturen beim nächsten Datenaufbau.', en: 'Saved. Descriptions and preview images apply now, node corrections at the next data build.' },
+  'korr.h.when': { de: 'Zeitpunkt', en: 'When' },
+  'korr.h.what': { de: 'Vorgang', en: 'Action' },
+  'korr.h.old': { de: 'Alt', en: 'Old' },
+  'korr.h.new': { de: 'Neu', en: 'New' },
+  'korr.h.empty': { de: 'Noch keine Änderungen.', en: 'No changes yet.' },
+
+  'imp.mode': { de: 'Modus', en: 'Mode' },
+  'imp.mode.add': { de: 'Ergänzen', en: 'Add' },
+  'imp.mode.replace': { de: 'Ersetzen', en: 'Replace' },
+  'imp.mapping': { de: 'Spaltenzuordnung', en: 'Column mapping' },
+  'imp.new': { de: 'neu', en: 'new' },
+  'imp.changed': { de: 'geändert', en: 'changed' },
+  'imp.same': { de: 'unverändert', en: 'unchanged' },
+  'imp.faulty': { de: 'fehlerhaft', en: 'invalid' },
+  'imp.dropped': { de: 'entfallen', en: 'dropped' },
+  'imp.apply': { de: 'Übernehmen', en: 'Apply' },
+  'imp.nothing': { de: 'Keine Änderungen.', en: 'No changes.' },
+  'imp.format': { de: 'Bitte eine CSV-, JSON- oder XLSX-Datei wählen.', en: 'Please choose a CSV, JSON or XLSX file.' },
+  'imp.replace.confirm': { de: 'Alle Korrekturen durch den Import ersetzen? Die alte Datei wird gesichert.', en: 'Replace all corrections with the import? The old file is backed up.' },
+  'crawler.hint': { de: 'Export der Crawler-Tabelle als CSV. Die alte Tabelle wird vor dem Ersetzen gesichert.', en: 'Export of the crawler table as CSV. The old table is backed up before replacing.' },
+  'crawler.missing': { de: 'Pflichtspalte fehlt', en: 'Required column missing' },
+  'crawler.replace': { de: 'Crawler-Tabelle ersetzen', en: 'Replace crawler table' },
+  'crawler.confirm': { de: 'Die Crawler-Tabelle jetzt ersetzen?', en: 'Replace the crawler table now?' },
+  'crawler.done.now': { de: 'Crawler-Tabelle ersetzt. Die Daten wurden neu berechnet.', en: 'Crawler table replaced. The data was recomputed.' },
+  'crawler.done.later': { de: 'Crawler-Tabelle ersetzt. Sie wirkt beim nächsten Datenaufbau.', en: 'Crawler table replaced. It takes effect at the next data build.' },
+  'detail.korr.blacklist': { de: 'Auf Blacklist', en: 'Blacklist' },
+  'detail.korr.description': { de: 'Beschreibung ergänzen', en: 'Add description' },
 
   // filters
   'filter.search':        { de: 'Quelle suchen', en: 'Search source' },
@@ -42,7 +102,7 @@ const DICT: Record<string, { de: string; en: string }> = {
   'filter.more':          { de: 'Weitere Filter', en: 'More filters' },
   'filter.lrt':           { de: 'Inhaltstyp', en: 'Content type' },
   'filter.problem':       { de: 'Datenprüfung (Team)', en: 'Data check (team)' },
-  'filter.clear':         { de: 'Filter löschen', en: 'Clear filters' },
+  'filter.clear':         { de: 'Filter zurücksetzen', en: 'Reset filters' },
 
   // results / units
   'results.count':        { de: 'Quellen', en: 'sources' },
@@ -51,8 +111,8 @@ const DICT: Record<string, { de: string; en: string }> = {
   'export.table':         { de: 'Tabelle', en: 'Table' },
   'export.tableTitle':    { de: 'Aktuelle Filter-Auswahl als Tabellen-PDF', en: 'Current filter selection as a table PDF' },
   'export.tableDone':     { de: 'Tabelle erzeugt', en: 'Table created' },
-  'export.tableEmpty':    { de: 'Keine Quellen im aktuellen Filter.', en: 'No sources in the current filter.' },
-  'export.tableError':    { de: 'Tabelle konnte nicht erzeugt werden.', en: 'Could not create the table.' },
+  'export.tableEmpty':    { de: 'Im aktuellen Filter sind keine Quellen. Bitte ändern Sie die Filter.', en: 'There are no sources in the current filter. Please change the filters.' },
+  'export.tableError':    { de: 'Die Tabelle konnte nicht erzeugt werden. Bitte versuchen Sie es erneut.', en: 'The table could not be created. Please try again.' },
   'status.blacklist':     { de: 'Blacklist', en: 'blacklist' },
   'status.mehrfach':      { de: 'Mehrfach', en: 'duplicate' },
   'status.hidden':        { de: 'ausgeblendet', en: 'hidden' },
@@ -70,12 +130,14 @@ const DICT: Record<string, { de: string; en: string }> = {
   'sync.title':           { de: 'Live-Abruf von WLO starten und die Datenbasis neu aufbauen (wie der nächtliche Lauf).', en: 'Fetch live from WLO and rebuild the data (like the nightly job).' },
   'sync.running':         { de: 'Aktualisierung läuft …', en: 'Refreshing …' },
   'sync.done':            { de: 'Datenaktualisierung abgeschlossen.', en: 'Data refresh complete.' },
-  'sync.error':           { de: 'Aktualisierung fehlgeschlagen.', en: 'Refresh failed.' },
-  'results.empty':        { de: 'Keine Quellen für diese Filter gefunden.', en: 'No sources found for these filters.' },
-  'error.load':           { de: 'Daten konnten nicht geladen werden. Bitte später erneut versuchen.', en: 'Could not load data. Please try again later.' },
+  'sync.error':           { de: 'Die Aktualisierung ist fehlgeschlagen. Bitte versuchen Sie es später erneut.', en: 'The refresh failed. Please try again later.' },
+  'results.empty':        { de: 'Für diese Filter gibt es keine Quellen. Ändern Sie die Filter oder setzen Sie sie zurück.', en: 'No sources match these filters. Change the filters or reset them.' },
+  'error.load':           { de: 'Die Daten konnten nicht geladen werden. Bitte versuchen Sie es später erneut.', en: 'Could not load data. Please try again later.' },
   'unit.content':         { de: 'Inhalte', en: 'content' },
 
   // tile / list
+  'a11y.newTab':          { de: '(öffnet in neuem Tab)', en: '(opens in a new tab)' },
+  'tile.type':            { de: 'Quelle', en: 'Source' },
   'tile.oer':             { de: 'Offene Bildungsressource', en: 'Open Educational Resource' },
   'tile.family':          { de: 'verwandte Quellen (gleiche Bezugsquelle)', en: 'related sources (same publisher)' },
   'tile.fieldProfile':    { de: 'aktive Metadatenfelder (Crawler-Provenienz)', en: 'active metadata fields (crawler provenance)' },
@@ -101,6 +163,7 @@ const DICT: Record<string, { de: string; en: string }> = {
   'team.login.password':  { de: 'Passwort', en: 'Password' },
   'team.login.submit':    { de: 'Anmelden', en: 'Sign in' },
   'team.login.error':     { de: 'Falsches Passwort.', en: 'Wrong password.' },
+  'tier1.login.title':    { de: 'Details freischalten', en: 'Unlock details' },
   'detail.field.ki':          { de: 'KI-Nutzung & Recht', en: 'AI usage & law' },
   'detail.ki.hint':           { de: 'Rechts-/Nutzungshinweise der Quelle selbst — Basis der KI-Nutzungs-Einschätzung.', en: 'The source\'s own legal / usage notes — the basis of the AI-usage assessment.' },
   'detail.field.fieldgen':    { de: 'Metadaten-Erzeugung (Crawler-Provenienz)', en: 'Metadata generation (crawler provenance)' },
@@ -128,8 +191,8 @@ const DICT: Record<string, { de: string; en: string }> = {
   'select.pdf':           { de: 'Sammel-PDF', en: 'Bundle PDF' },
   'select.pdfBusy':       { de: 'PDF wird erzeugt …', en: 'Generating PDF …' },
   'select.pdfDone':       { de: 'PDF erzeugt', en: 'PDF created' },
-  'select.pdfEmpty':      { de: 'Keine Daten für die Auswahl.', en: 'No data for the selection.' },
-  'select.pdfError':      { de: 'PDF konnte nicht erzeugt werden.', en: 'Could not create the PDF.' },
+  'select.pdfEmpty':      { de: 'Für die Auswahl gibt es keine Daten. Bitte wählen Sie andere Quellen.', en: 'There is no data for the selection. Please select other sources.' },
+  'select.pdfError':      { de: 'Das PDF konnte nicht erzeugt werden. Bitte versuchen Sie es erneut.', en: 'The PDF could not be created. Please try again.' },
 
   // stats
   'stats.kpi.sources':    { de: 'Quellen', en: 'Sources' },
@@ -236,7 +299,7 @@ const DICT: Record<string, { de: string; en: string }> = {
   'detail.examples':      { de: 'Beispiel-Inhalte aus WLO', en: 'Example content from WLO' },
   'detail.contentLoading':{ de: 'Inhalte werden geladen …', en: 'Loading content …' },
   'detail.contentError':  { de: 'Inhalte derzeit nicht abrufbar.', en: 'Content currently unavailable.' },
-  'detail.contentNone':   { de: 'Keine verknüpften Inhalte gefunden.', en: 'No linked content found.' },
+  'detail.contentNone':   { de: 'Zu dieser Quelle sind keine Inhalte verknüpft. Prüfen Sie die Quelle in der WLO-Suche.', en: 'No content is linked to this source. Check the source in the WLO search.' },
 
   // footer
   'footer.impressum':     { de: 'Impressum', en: 'Imprint' },
@@ -332,8 +395,10 @@ export class I18n {
     } catch { /* localStorage unavailable (e.g. private mode) — keep the default */ }
   }
 
-  set(l: Lang): void {
+  /** merken=false: a preset from the embedding page, not the visitor's choice — not stored. */
+  set(l: Lang, merken = true): void {
     this.lang.set(l);
+    if (!merken) return;
     try { localStorage.setItem('wlo-lang', l); } catch { /* ignore */ }
   }
 

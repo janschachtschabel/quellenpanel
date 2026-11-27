@@ -49,11 +49,11 @@ import { MatIconModule } from '@angular/material/icon';
     .lh { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px 0; }
     .lh h2 { margin: 0 !important; font-size: 18px; font-weight: 700; color: var(--wlo-text); }
     .legal { padding: 0 16px 16px; color: var(--wlo-text); }
-    .legal h3 { font-size: 14px; font-weight: 700; margin: 18px 0 4px; color: var(--wlo-primary); }
+    .legal h3 { font-size: 14px; font-weight: 700; margin: 18px 0 4px; color: var(--primaryText); }
     .legal p { font-size: 13px; line-height: 1.55; margin: 0 0 8px; }
     .legal .intro { color: var(--wlo-text-muted); }
     .legal .src { margin-top: 16px; font-size: 12px; color: var(--wlo-text-muted); }
-    .legal a { color: var(--wlo-primary); }
+    .legal a { color: var(--primaryText); }
   `],
 })
 export class ImpressumDialogComponent {}

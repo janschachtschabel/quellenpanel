@@ -89,23 +89,23 @@ const X0 = 8;       // x of the first box
     .mf { width: 100%; height: auto; display: block; }
     .mf-g { cursor: pointer; }
     .mf-g:focus-visible { outline: none; }
-    .mf-g:focus-visible .mf-rect { stroke: var(--wlo-primary); stroke-width: 2; }
+    .mf-g:focus-visible .mf-rect { stroke: var(--primaryText); stroke-width: 2; }
     .mf-rect { fill: var(--wlo-card); stroke: var(--wlo-border); stroke-width: 1.2; transition: fill .15s, stroke .15s; }
-    .mf-g:hover .mf-rect { stroke: var(--wlo-primary); }
+    .mf-g:hover .mf-rect { stroke: var(--primaryText); }
     /* ONLY the selected phase is highlighted — no permanent accent that could look "stuck". */
-    .mf-g.sel .mf-rect { stroke: var(--wlo-primary); stroke-width: 2.6; fill: var(--wlo-primary-light); }
-    .mf-num { fill: #8aa0c0; }
-    .mf-g.sel .mf-num { fill: var(--wlo-primary); }
-    .mf-numt { fill: #fff; font-size: 12px; font-weight: 700; text-anchor: middle; }
+    .mf-g.sel .mf-rect { stroke: var(--primaryText); stroke-width: 2.6; fill: var(--wlo-primary-light); }
+    .mf-num { fill: var(--textMediumLight); }
+    .mf-g.sel .mf-num { fill: var(--primaryText); }
+    .mf-numt { fill: var(--textWhite); font-size: 12px; font-weight: 700; text-anchor: middle; }
     /* foreignObject content — flows + wraps like normal HTML */
     .mf-inner { height: 70px; display: flex; flex-direction: column; justify-content: center; font-family: inherit; pointer-events: none; }
     .mf-t { font-size: 12px; font-weight: 700; color: var(--wlo-text); line-height: 1.15; }
     .mf-s { font-size: 9.5px; color: var(--wlo-text-muted); line-height: 1.12; margin-top: 3px; }
-    .mf-arrow { stroke: #8aa0c0; stroke-width: 1.6; fill: none; marker-end: url(#mf-ah); }
-    .mf-ahf { fill: #8aa0c0; }
+    .mf-arrow { stroke: var(--textMediumLight); stroke-width: 1.6; fill: none; marker-end: url(#mf-ah); }
+    .mf-ahf { fill: var(--textMediumLight); }
     .mf-detail { margin-top: 12px; background: var(--wlo-bg); border: 1px solid var(--wlo-border); border-left: 3px solid var(--wlo-primary); border-radius: 8px; padding: 12px 16px; }
     .mf-detail-h { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--wlo-text); }
-    .mf-detail-n { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--wlo-primary); color: #fff; font-size: 12px; flex-shrink: 0; }
+    .mf-detail-n { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--primaryText); color: var(--textWhite); font-size: 12px; flex-shrink: 0; }
     .mf-detail-t { font-size: 13px; color: var(--wlo-text); line-height: 1.55; margin: 8px 0 0; }
   `],
 })

@@ -1,0 +1,99 @@
+name: CI
+
+# Quality gates (Diensteleitfaden): lint, tests, dependency audits, chart checks, one version.
+# Runs on every push and pull request; docker-publish.yml calls it before building an image.
+on:
+  push:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install -r backend/requirements-dev.txt pip-audit
+      - name: Lint
+        run: python -m ruff check .
+      - name: Tests
+        # conftest.py sets QE_TEAM_PASSWORD before import, so no secret is needed.
+        working-directory: backend
+        run: python -m pytest -q -p no:warnings
+      - name: Dependency audit
+        run: pip-audit -r backend/requirements.txt
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm --prefix frontend ci
+      - run: npm --prefix frontend test -- --watch=false
+      - run: npm --prefix frontend run build:element
+      - run: npm --prefix frontend run build:widgets
+      - run: npm --prefix frontend run lint:design   # edu-sharing design rules (0 FEHLER)
+      - name: Audit (shipped dependencies)
+        run: npm --prefix frontend audit --omit=dev --audit-level=high
+
+  chart:
+    runs-on: ubuntu-latest
+    env:
+      CHART: deploy/helm/quellenpanel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.19.0
+      - name: Install kubeconform and promtool
+        run: |
+          curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.7.0/kubeconform-linux-amd64.tar.gz | tar xz kubeconform
+          curl -sSL https://github.com/prometheus/prometheus/releases/download/v3.5.0/prometheus-3.5.0.linux-amd64.tar.gz \
+            | tar xz --strip-components=1 prometheus-3.5.0.linux-amd64/promtool
+      - name: Lint and validate each role
+        run: |
+          helm lint --strict "$CHART"
+          for role in public partner team; do
+            helm lint --strict "$CHART" -f "$CHART/values-$role.yaml"
+            helm template "quellenpanel-$role" "$CHART" -f "$CHART/values-$role.yaml" \
+              --set networkPolicy.enabled=true --set metrics.serviceMonitor.enabled=true \
+              --set metrics.prometheusRule.enabled=true \
+              | ./kubeconform -strict -ignore-missing-schemas -schema-location default -summary
+          done
+      - name: Alert rules
+        run: ./promtool test rules "$CHART/tests/rules-test.yaml"
+      - name: Rendered rules match tests/rules.yaml
+        run: |
+          for role in team public; do
+            helm template "quellenpanel-$role" "$CHART" -f "$CHART/values-$role.yaml" \
+              --set metrics.prometheusRule.enabled=true --show-only templates/prometheusrule.yaml
+          done | grep -E '^\s+(expr:|sum\(|/ |unless$|quellenpanel_)' | sed 's/^ *//' | sort -u > rendered.txt
+          grep -E '^\s+(expr:|sum\(|/ |unless$|quellenpanel_)' "$CHART/tests/rules.yaml" | sed 's/^ *//' | sort -u > static.txt
+          diff static.txt rendered.txt
+      - name: One version (pyproject = Chart = package.json)
+        run: |
+          v=$(python3 -c "import tomllib;print(tomllib.load(open('backend/pyproject.toml','rb'))['project']['version'])")
+          c=$(python3 -c "import re;t=open('$CHART/Chart.yaml').read();print(re.search(r'^version: *(\S+)',t,re.M)[1], re.search(r'^appVersion: *\"?([^\"\s]+)',t,re.M)[1])")
+          p=$(python3 -c "import json;print(json.load(open('frontend/package.json'))['version'])")
+          echo "pyproject=$v chart=$c package=$p"
+          [ "$c" = "$v $v" ] && [ "$p" = "$v" ]
+
+  tag:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag equals "v" + version
+        run: |
+          v=$(python3 -c "import tomllib;print(tomllib.load(open('backend/pyproject.toml','rb'))['project']['version'])")
+          [ "$GITHUB_REF_NAME" = "v$v" ] || { echo "::error::Tag $GITHUB_REF_NAME passt nicht zu Version $v"; exit 1; }

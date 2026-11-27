@@ -45,8 +45,8 @@ import { I18n } from './i18n.service';
     </mat-dialog-actions>
   `,
   styles: [`
-    .ar-title { display: flex; align-items: center; gap: 8px; color: var(--wlo-primary); }
-    .ar-title mat-icon { color: #b3261e; }
+    .ar-title { display: flex; align-items: center; gap: 8px; color: var(--primaryText); }
+    .ar-title mat-icon { color: var(--warn); }
     .ar-body { display: flex; flex-direction: column; width: 100%; box-sizing: border-box; }
     .ar-hint { font-size: 12px; color: var(--wlo-text-muted); margin: 0 0 8px; }
     .ar-state { display: flex; align-items: center; gap: 10px; padding: 32px; color: var(--wlo-text-muted); }

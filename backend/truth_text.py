@@ -8,11 +8,10 @@ from __future__ import annotations
 import re
 import unicodedata
 
-# Spiders that are NOT a real crawler binding but the migration origin of the
-# dataset node (wirlernenonline_spider) -> do not anchor as a crawler.
-IGNORE_SPIDERS = {"wirlernenonline_spider"}
+import repo_profile
 
-PLACEHOLDER_BQ = {"wirlernenonline"}
+# Repository-specific constants (migration-origin spiders that are not a crawler binding,
+# placeholder Bezugsquellen) come from the profile: repo_profile.get().ignore_spiders / .platzhalter_bq.
 
 # Node ID from a render/component link (CSV column 'Quelldatensatz (Prod)')
 _UUID_RE = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", re.I)
@@ -70,8 +69,9 @@ def _clean_q(v):
 
 def _age(props):
     """Typical age range as 'x–y Jahre'; the default 0–99 (= all) is omitted."""
-    af = p1(props, "ccm:educationaltypicalagerange_from")
-    at = p1(props, "ccm:educationaltypicalagerange_to")
+    f = repo_profile.get().felder
+    af = p1(props, f["age_from"])
+    at = p1(props, f["age_to"])
     if not af and not at:
         return ""
     if af in ("0", "") and at in ("99", ""):
@@ -93,7 +93,7 @@ def spider_vocab_name(spider, vocab):
 
 def _resolve_rs(rs, vocab):
     """Make replicationsource human-readable: legacy URI (…/vocabs/sources/<uuid>) → vocab name.
-    Technical names (e.g. bpb_spider) and wirlernenonline_spider stay unchanged,
+    Technical names (e.g. bpb_spider) and the migration-origin spider stay unchanged,
     so that filters/statistics can keep checking against them."""
     s = (rs or "").strip()
     if "vocabs/sources/" in s:
