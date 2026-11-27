@@ -96,6 +96,8 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
 - Ohne `QE_SESSION_SECRET` legt das Team einmal `session.key` im Datenordner an; Anmeldungen
   überstehen so Neustarts.
 - Die bisherige Entwicklungsdatei heißt jetzt `docker-compose.build.yml`.
+- Das Team-Image wird bei jedem Deploy neu aus dem Repository gebaut (`pull_policy: build`). Vorher
+  versuchte der Server es aus einer Registry zu laden, scheiterte und startete das alte lokale Image weiter.
 
 ### Abhängigkeiten aktualisiert (Dependabot)
 

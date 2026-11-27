@@ -10,7 +10,7 @@
 # :18081 (PORT, PARTNER_PORT); the team port 18082 is bound to this host only (TEAM_PORT, TEAM_BIND).
 # Then fill in .env (start: .env.example) and deploy again. Step by step: deploy/README.md.
 #
-# Update to the newest code:  docker compose up -d --build
+# Update to the newest code: deploy again (the team image is rebuilt each time), or docker compose up -d --build
 # Logs: docker compose logs -f team   ·   Data: volume quellenpanel-data (corrections, history, data)
 
 services:
@@ -18,6 +18,8 @@ services:
     build:
       context: ${QE_GIT_URL:-https://github.com/janschachtschabel/quellenpanel.git#main}
     image: quellenpanel:server
+    # Never pulled (there is no registry): rebuilt from the repository on every deploy.
+    pull_policy: build
     restart: unless-stopped
     read_only: true
     tmpfs:

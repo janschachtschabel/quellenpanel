@@ -28,7 +28,9 @@ panel that deploys a compose file straight from a GitHub URL. The file is
    answer 503 "Daten werden aufgebaut" meanwhile). Without a domain the public list is reachable at
    `http://<SERVER-IP>:18080` and the partner instance at `:18081` (`PORT`, `PARTNER_PORT`; open
    them in the server firewall if needed). The team port `18082` listens on the server only
-   (`TEAM_PORT`; `TEAM_BIND=0.0.0.0` opens it, only for tests and with a long password).
+   (`TEAM_PORT`; `TEAM_BIND=0.0.0.0` opens it, only for tests and with a long password). The three
+   instances are separate containers, so the three ports must differ. Each deploy rebuilds the team
+   image from the repository (`pull_policy: build`), so deploying again is enough to update.
 2. Edit `.env`: `DOMAIN` (public list, plain host name without `https://`), optionally
    `PARTNER_DOMAIN` with `QE_TIER1_PASSWORD`, and `QE_TEAM_PASSWORD`. Deploy again.
 3. Point a DNS A record of each name to the server. Without an own domain,

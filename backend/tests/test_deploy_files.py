@@ -190,6 +190,9 @@ def test_server_compose_three_instances_behind_traefik():
     svc = doc["services"]
     assert set(svc) == {"team", "partner", "public"}
     assert svc["team"]["build"]["context"].startswith("${QE_GIT_URL:-https://github.com/")
+    # The host pulls before it deploys: the team image is never pulled (no registry) but rebuilt from
+    # the repository on every deploy, otherwise an old local image keeps running.
+    assert svc["team"]["pull_policy"] == "build"
     for name, host in (("team", "TEAM_DOMAIN"), ("partner", "PARTNER_DOMAIN"), ("public", "DOMAIN")):
         s = svc[name]
         assert all(":80:" not in p and ":443:" not in p for p in s["ports"]), name   # 80/443: proxy
