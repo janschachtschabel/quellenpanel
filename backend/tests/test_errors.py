@@ -98,7 +98,7 @@ def test_openapi_per_role(client, monkeypatch):
     assert "/api/stats/team" in paths
     assert not any(p.startswith("/internal") for p in paths)
     info = app_module.app.openapi()["info"]
-    assert info["title"] == "Quellenpanel" and info["version"] == "0.6.0" and "Stufe" in info["description"]
+    assert info["title"] == "Quellenpanel" and info["version"] == "1.0.0" and "Stufe" in info["description"]
     monkeypatch.setenv("QE_ROLE", "public")
     paths = app_module.app.openapi()["paths"]
     for team_only in ("/api/stats/team", "/api/protokoll.md", "/api/protokoll.json", "/api/protokoll.csv",

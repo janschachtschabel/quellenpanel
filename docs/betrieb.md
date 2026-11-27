@@ -1,4 +1,4 @@
-# Betrieb – Quellenpanel (Dienst-ID `quellenpanel`, Version 0.6.0)
+# Betrieb – Quellenpanel (Dienst-ID `quellenpanel`, Version 1.0.0)
 
 Dieses Dokument beschreibt den Betrieb nach dem Diensteleitfaden: Rollen, Ports, Probes, Metriken,
 Alarme, Logs und Tracing, Erststart, Daten-Updates, Secrets. Bereitstellung: Compose in
@@ -174,5 +174,5 @@ interne Daten liegen nie auf den öffentlichen Instanzen.
 
 Die einzige Versionsquelle ist `backend/pyproject.toml`. Helm-Chart (`version`, `appVersion`) und
 `frontend/package.json` müssen gleich sein; CI und Tests prüfen das. Ein Release-Tag heißt `v` +
-Version (`v0.6.0`); das Image wird dann mit `0.6.0` und `0.6` getaggt. Die Basis-Images sind per
+Version (`v1.0.0`); das Image wird dann mit `1.0.0` und `1.0` getaggt. Die Basis-Images sind per
 Digest festgelegt und werden bewusst angehoben.

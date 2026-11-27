@@ -240,7 +240,7 @@ Deployment targets:
 - ✅ **Operations (Etappe 3)** — JSON logs + B3 tracing, one error shape with trace id, internal
   port 9090 (health/ready/metrics), signed sessions, data out of the image (seed / first-start build),
   hardened digest-pinned image, three-service Compose, Helm chart per role with alerts, CI gates,
-  version 0.6.0 from `backend/pyproject.toml`. Details: [`docs/betrieb.md`](docs/betrieb.md).
+  version 1.0.0 from `backend/pyproject.toml`. Details: [`docs/betrieb.md`](docs/betrieb.md).
 - ✅ **Backend** — merged 3-tier API; ruff clean (`backend/ruff.toml`); no-leak
   invariant + `QE_PUBLIC_ONLY` hard cap verified; login/fetch rate limits (proxy-safe) + thumbnail
   SSRF guard tested; deps pinned + CVE-clean (`pip-audit`). The Bezugsquelle-family index (publisher
