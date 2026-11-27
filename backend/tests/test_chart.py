@@ -95,3 +95,17 @@ def test_team_ingress_allows_uploads():
     v = yaml.safe_load((CHART / "values-team.yaml").read_text(encoding="utf-8"))
     size = v["ingress"]["annotations"]["nginx.ingress.kubernetes.io/proxy-body-size"]
     assert size.endswith("m") and int(size[:-1]) >= 6
+
+
+def test_values_resources_match_messung():
+    """Etappe 7: Requests/Limits je Rolle stehen so in docs/messung.md (Abschnitt Empfehlung)."""
+    import re
+    text = (ROOT / "docs/messung.md").read_text(encoding="utf-8")
+    teil = text.split("## Empfehlung", 1)[1]
+    for rolle in ("team", "partner", "public"):
+        v = yaml.safe_load((CHART / f"values-{rolle}.yaml").read_text(encoding="utf-8"))["resources"]
+        zeile = re.search(rf"^\|\s*{rolle}\s*\|([^\n]+)$", teil, re.M)
+        assert zeile, rolle
+        zellen = [z.strip().strip("`") for z in zeile.group(1).split("|")[:4]]
+        assert zellen == [str(v["requests"]["cpu"]), str(v["requests"]["memory"]),
+                          str(v["limits"]["cpu"]), str(v["limits"]["memory"])], rolle

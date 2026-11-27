@@ -14,10 +14,10 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-body-size: "6m"
   hosts:
   - quellenpanel-team.intern.example.de
-resources:
+resources:   # gemessen, siehe docs/messung.md (Limit ≈ Spitze + 25 %)
   requests:
-    cpu: 200m
-    memory: 768Mi
+    cpu: 100m
+    memory: 448Mi
   limits:
-    cpu: "2"
-    memory: 2Gi
+    cpu: "1"
+    memory: 1Gi

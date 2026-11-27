@@ -7,10 +7,10 @@ replicaCount: 2
 ingress:
   hosts:
   - quellen.example.de
-resources:
+resources:   # gemessen, siehe docs/messung.md (Limit ≈ Spitze + 25 %)
   requests:
     cpu: 50m
-    memory: 192Mi
+    memory: 96Mi
   limits:
-    cpu: 500m
-    memory: 512Mi
+    cpu: "1"
+    memory: 160Mi
