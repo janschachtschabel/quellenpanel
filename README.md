@@ -30,7 +30,7 @@ QE_TEAM_PASSWORD=geheim python serve.py      # http://localhost:8080 (Rolle team
 
 Ohne `QE_ROLE` läuft die Instanz als `team`; das ist nur für die Entwicklung gedacht. Beim ersten
 Start ohne Daten baut sie die Daten aus dem Repository auf (einige Minuten, bis dahin antworten
-die Datenrouten mit 503) oder lädt Startdaten von `QE_SEED_URL`.
+die Datenrouten mit 503) oder lädt Startdaten von `QE_SEED_URL`. Im Container (Compose, Helm) fehlen Korrekturen und Crawler-Tabelle im Image: dort `QE_SEED_URL` setzen oder beide Dateien im Team-Bereich hochladen, sonst baut das Team keine Daten.
 
 **Server mit Docker Compose** (drei Instanzen, Schritt für Schritt in
 [`deploy/README.md`](deploy/README.md)):
@@ -80,7 +80,7 @@ gefilterte Liste gibt es als CSV, JSON oder Tabellen-PDF.
 | Team-Login aus fremder Seite | `QE_ALLOWED_ORIGINS` | nur für eingebettete Team-Ansichten, nur über HTTPS |
 
 Passwörter tauschen: Secret ändern und die Pods neu starten. Ein neuer `QE_SESSION_SECRET` meldet
-alle Team-Sitzungen ab. Fehlversuche beim Login sind je Adresse gedrosselt.
+alle Team-Sitzungen ab. Fehlversuche mit Passwörtern (Login und Kopfzeilen) sind je Adresse gedrosselt.
 
 ## Bearbeitungsbereich (Korrekturen)
 

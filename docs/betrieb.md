@@ -58,6 +58,12 @@ Fehlern den letzten gültigen Stand, auch als Kopie in `/tmp`.
 
 - Die Daten sind **nicht im Image** (`.dockerignore`: `truth.json`, `raw/`, `exports/`,
   `profiles/*/daten/`).
+- **Ohne Korrekturen kein Datenaufbau:** Das Image enthält weder `korrekturen.csv` noch
+  `crawler.csv` (sie können interne Vermerke enthalten). Fehlt eine der beiden im Volume, lehnt das
+  Team jeden Aufbau ab (Log-Fehler, `status.json` und `/jobs/latest` mit „Startdaten fehlen“,
+  Zähler `quellenpanel_rebuild_total{result="error"}`), statt Quellen ohne Blacklist zu
+  veröffentlichen. Abhilfe: `QE_SEED_URL` setzen oder beide Dateien im Bereich „Korrekturen“
+  hochladen (Import „ersetzen“ und Crawler-Tabelle), dann „Daten aktualisieren“.
 - **Erststart Team mit leerem Volume:** Seed, Laden und Aufbau laufen im Hintergrund; die Ports
   antworten sofort. Fehlende `crawler.csv`, `korrekturen.csv`, `truth.json` werden von
   `QE_SEED_URL` geladen (vorhandene Dateien werden nie überschrieben; HTML-Seiten und eine

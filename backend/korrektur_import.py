@@ -16,7 +16,7 @@ import io
 import json
 import zipfile
 
-from korrekturen import _LISTEN, Korrektur, _check
+from korrekturen import Korrektur, _check
 from truth_text import _norm
 
 MAX_ZEILEN = 20_000
@@ -127,7 +127,8 @@ def auto_zuordnung(spalten: list[str]) -> dict[str, str | None]:
 
 
 def _schluessel(k: Korrektur) -> tuple[str, str, str]:
-    return (k.typ, k.schluessel, "liste" if k.aktion in _LISTEN else k.aktion)
+    # blacklist and whitelist exclude each other (one list per node); a vermerk stands beside them.
+    return (k.typ, k.schluessel, "liste" if k.aktion in ("blacklist", "whitelist") else k.aktion)
 
 
 def vorschau(zeilen: list[dict[str, str]], zuordnung: dict[str, str | None], bestand: list[Korrektur],

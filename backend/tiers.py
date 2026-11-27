@@ -14,6 +14,7 @@ an auth check were wrong. On a partner instance tier 1 always needs QE_TIER1_PAS
 from fastapi import Header, Query, Request
 
 import config
+import ratelimit
 import session
 
 
@@ -26,15 +27,24 @@ def max_tier(request: Request, team_pw: str | None, team_header: str | None,
     if cap == 0:
         return 0
     if role == "team" and (session.valid(request.cookies.get(session.COOKIE))
-                           or config.check_pw(team_pw, team_header)):
+                           or _team_pw_ok(request, team_pw or team_header)):
         return 2
     if role == "partner":
         # Fail-closed: without a configured partner password tier 1 stays shut on this instance.
-        ok = bool(config.TIER1_PW) and config.check_tier1_pw(None, tier1_header)
+        ok = bool(config.TIER1_PW) and _tier1_pw_ok(request, tier1_header)
         return 1 if ok else 0
-    if config.check_tier1_pw(None, tier1_header):  # True when tier 1 is open OR the pw matches
+    if not config.TIER1_PW or _tier1_pw_ok(request, tier1_header):  # tier 1 open, or pw matches
         return min(1, cap)
     return 0
+
+
+def _team_pw_ok(request: Request, given: str | None) -> bool:
+    """A sent team password, checked within the client's failure budget (ratelimit.pw_check)."""
+    return bool(given) and ratelimit.pw_check(request, lambda: config.check_pw(None, given))
+
+
+def _tier1_pw_ok(request: Request, given: str | None) -> bool:
+    return bool(given) and ratelimit.pw_check(request, lambda: config.check_tier1_pw(None, given))
 
 
 def effective_tier(
@@ -52,4 +62,4 @@ def is_team(request: Request, x_team_password: str | None = Header(None)) -> boo
     """Team authorization for write/export/audit routes (session cookie or team password header)."""
     if config.role() != "team":
         return False
-    return session.valid(request.cookies.get(session.COOKIE)) or config.check_pw(None, x_team_password)
+    return session.valid(request.cookies.get(session.COOKIE)) or _team_pw_ok(request, x_team_password)

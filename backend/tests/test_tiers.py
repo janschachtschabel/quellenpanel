@@ -109,7 +109,8 @@ def test_tier2_list_has_flags_and_bind_not_internal():
 
 
 def _req(cookie=None):
-    return types.SimpleNamespace(cookies=({session.COOKIE: cookie} if cookie else {}))
+    return types.SimpleNamespace(cookies=({session.COOKIE: cookie} if cookie else {}), headers={},
+                                 client=types.SimpleNamespace(host="127.0.0.9"))
 
 
 def test_max_tier_tier1_open_by_default():

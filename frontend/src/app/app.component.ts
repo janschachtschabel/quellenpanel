@@ -672,7 +672,11 @@ export class AppComponent implements OnInit {
     this.refreshPct = 0;
     this.refreshMsg = this.i18n.t('sync.running');
     this.api.refreshStart().subscribe({
-      next: () => this.pollRefresh(),
+      next: (r: { status: string; message?: string }) => {
+        if (r.status !== 'error') { this.pollRefresh(); return; }
+        this.refreshBusy = false;      // refused (e.g. starting data missing): say why
+        this.snack.open(r.message || this.i18n.t('sync.error'), '', { duration: 10000 });
+      },
       error: () => this.finishRefresh(true),
     });
   }

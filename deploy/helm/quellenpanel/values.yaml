@@ -128,7 +128,7 @@ config:
   exportSource: http://quellenpanel-team-internal:9090/internal/exports/stufe{tier}.json
   ## @param config.exportPollMinutes Partner/public: re-fetch interval of the export in minutes (0 = off)
   exportPollMinutes: 10
-  ## @param config.seedUrl Team: base URL with crawler.csv, korrekturen.csv, truth.json for the first start. Empty ⇒ build from the live repository
+  ## @param config.seedUrl Team: base URL with crawler.csv, korrekturen.csv, truth.json for the first start. Empty ⇒ no build until both CSVs are uploaded in the team area (the image carries no corrections)
   seedUrl: ""
   ## @param config.autoRefreshHour Team: hour 0–23 for the nightly data rebuild. Empty ⇒ off (the RebuildStale alert then fires after 26 h)
   autoRefreshHour: ""

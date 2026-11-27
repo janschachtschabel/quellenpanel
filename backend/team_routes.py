@@ -37,17 +37,23 @@ def _team(team: bool = Depends(tiers.is_team)) -> None:
         raise HTTPException(403, "Team-Login erforderlich.")
 
 
-def _schreiben_erlaubt(request: Request) -> None:
+def herkunft_pruefen(request: Request) -> None:
+    """Team writes only from the own site or an allowed origin (the cookie may be SameSite=None)."""
     origin = request.headers.get("origin")
     if origin and origin not in config.ALLOWED_ORIGINS \
             and urlparse(origin).netloc != request.headers.get("host", ""):
         raise HTTPException(403, "Fremde Herkunft (Origin) nicht erlaubt.")
+
+
+def _schreiben_erlaubt(request: Request) -> None:
+    herkunft_pruefen(request)
     if refresh.status().get("status") == "running":
         raise HTTPException(409, "Die Daten werden gerade aktualisiert. Bitte danach erneut versuchen.")
 
 
 router = APIRouter(prefix="/api/team", dependencies=[Depends(require_team_role), Depends(_team)])
 _WRITE = [Depends(_schreiben_erlaubt)]
+SCHREIBEN = _WRITE                     # also for the team POSTs outside /api/team (app.py)
 
 
 def _fehler(fn, *args):

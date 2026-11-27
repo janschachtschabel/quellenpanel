@@ -165,3 +165,23 @@ def test_write_doc_unique_tmp(golden, tmp_path, monkeypatch):
     exports.write_doc(doc, tmp_path / "stufe0.json")
     exports.write_doc(doc, tmp_path / "stufe0.json")
     assert len(set(seen)) == 2
+
+
+@pytest.mark.parametrize("tier", [0, 1])
+def test_filter_options_ignore_blacklisted_records(golden, tier):
+    # Abschluss-Audit: a subject only a blacklisted record carries must not show up publicly.
+    records, meta = golden
+    bl = next(r for r in records if "BLACKLIST" in r.get("flags", []))
+    marker = dict(bl, public={**bl["public"], "Faecher": ["Geheimfach-XYZ"],
+                              "Bildungsstufen": ["Geheimstufe-XYZ"]})
+    recs = [marker if r is bl else r for r in records]
+    doc = exports.build_export(recs, meta, tier)
+    text = json.dumps(doc["filters"], ensure_ascii=False)
+    assert "Geheimfach-XYZ" not in text and "Geheimstufe-XYZ" not in text
+
+
+def test_export_source_template_with_other_braces():
+    # Abschluss-Audit: a query string with other {} in QE_EXPORT_SOURCE must not crash the start.
+    import export_store
+    assert export_store.export_url("https://t.example/stufe{tier}.json?x={a}", 1) == \
+        "https://t.example/stufe1.json?x={a}"

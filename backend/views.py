@@ -29,3 +29,15 @@ def flat(r: dict, team: bool = False) -> dict:
         "flags": " | ".join(flags),
         "confidence": r.get("confidence", "") if team else "",
     }
+
+
+_FORMEL_START = ("=", "+", "-", "@", "\t", "\r")
+
+
+def csv_zelle(wert):
+    """A downloaded CSV cell that a spreadsheet will not run as a formula (leading ' for = + - @)."""
+    return "'" + wert if isinstance(wert, str) and wert.startswith(_FORMEL_START) else wert
+
+
+def csv_zeile(row: dict) -> dict:
+    return {k: csv_zelle(v) for k, v in row.items()}
