@@ -23,7 +23,7 @@ const CSS = `
 /* Reset inside the widgets, stronger than typical CMS theme rules (.entry-content ul …).
    Host rules with !important still win. */
 .wq-w.wq-w :is(p, ul, ol, li, a, span, div, input, label) {
-  margin: 0; padding: 0; border: 0; background: none; box-shadow: none; float: none;
+  margin: 0; padding: 0; border: 0; outline: 0; background: none; box-shadow: none; float: none;
   font: inherit; color: inherit; line-height: inherit; text-align: inherit; text-transform: none;
   letter-spacing: normal; text-decoration: none; text-indent: 0; list-style: none; min-height: 0; max-width: none;
 }

@@ -67,3 +67,10 @@ def test_element_bundle_styles_never_touch_host_page():
     text = (ROOT / "frontend/src/styles.element.scss").read_text(encoding="utf-8")
     code = re.sub(r"//[^\n]*", "", text)
     assert not re.search(r"(^|[\s,}])(html|body|:root)\s*[,{]", code)
+
+
+def test_element_bundle_resets_inherited_host_typography():
+    """Probe Etappe 5: kursive/fette Gast-Schrift darf nicht in die Kacheln erben."""
+    text = (ROOT / "frontend/src/styles.element.scss").read_text(encoding="utf-8")
+    for regel in ("font-style: normal", "font-weight: 400", "line-height: normal"):
+        assert regel in text

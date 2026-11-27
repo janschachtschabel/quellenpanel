@@ -105,6 +105,7 @@ All optional, with production defaults:
 | `QE_EXPORT_SOURCE` | unset | partner/public: URL or path of the export with `{tier}`, e.g. `http://quellenpanel-team-internal:9090/internal/exports/stufe{tier}.json`. Unset ⇒ local development only: built once from a local `truth.json` |
 | `QE_EXPORT_POLL_MINUTES` | `10` | partner/public: re-fetch interval (0 = off) |
 | `QE_ALLOWED_ORIGINS` | unset (same-origin) | comma-separated origins allowed to use a credentialed (cookie) cross-origin **team login** when the panel is embedded on another origin (e.g. `https://wirlernenonline.de`). Public read access stays open to any origin regardless. Requires HTTPS |
+| `QE_FRAME_ANCESTORS` | `*` (team: `'self'`) | space-separated CSP `frame-ancestors` for the `/embed/*` iframe pages |
 | `QE_REPO_URL` | `https://redaktion.openeduhub.net` | edu-sharing repository base — all live queries + the thumb proxy |
 | `QE_SEARCH_URL` | `https://suche.wirlernenonline.de` | WLO search base — the per-source "contents in search" link |
 | `QE_AUTO_REFRESH_HOUR` | unset (off) | hour 0–23 for the optional nightly data rebuild (Docker) |
@@ -147,6 +148,9 @@ GET|POST /api/team/korrekturen · PUT|DELETE /api/team/korrekturen/{id}   correc
 GET  /api/team/korrekturen.csv · /api/team/korrekturen/verlauf          download · change history
 POST /api/team/korrekturen/import/vorschau · /api/team/korrekturen/import   CSV/JSON/XLSX import
 POST /api/team/crawler/vorschau · /api/team/crawler                     replace the crawler table
+GET  /api/kennzahl                     {quellen, inhalte} for the list filters (0) — widget key figure
+GET  /embed/{name}                     iframe page of a widget (see docs/widgets.md)
+GET  /widgets/…                        widget script, element bundle, test pages
 ```
 
 Errors share one shape: `{"error", "message", "status", "trace_id"}` (+ `details` on 422,
@@ -216,10 +220,15 @@ Deployment targets:
 
 ## Status
 
+- ✅ **Widgets (Etappe 5)** — one light script (`quellenpanel-widgets.js`, ~14 KB, no dependencies)
+  with list, plain list, top N per subject, key figure, single source and statistics elements; tiles
+  and the whole app as Angular elements; every element also as an iframe page with height protocol.
+  No cookies, CSP-friendly, host page untouched. Guide: [`docs/widgets.md`](docs/widgets.md).
+
 - ✅ **Operations (Etappe 3)** — JSON logs + B3 tracing, one error shape with trace id, internal
   port 9090 (health/ready/metrics), signed sessions, data out of the image (seed / first-start build),
   hardened digest-pinned image, three-service Compose, Helm chart per role with alerts, CI gates,
-  version 0.4.0 from `backend/pyproject.toml`. Details: [`docs/betrieb.md`](docs/betrieb.md).
+  version 0.5.0 from `backend/pyproject.toml`. Details: [`docs/betrieb.md`](docs/betrieb.md).
 - ✅ **Backend** — merged 3-tier API; ruff clean (`backend/ruff.toml`); no-leak
   invariant + `QE_PUBLIC_ONLY` hard cap verified; login/fetch rate limits (proxy-safe) + thumbnail
   SSRF guard tested; deps pinned + CVE-clean (`pip-audit`). The Bezugsquelle-family index (publisher

@@ -115,6 +115,14 @@ describe('widget elements', () => {
     expect(host.querySelectorAll('wlo-quellen-statistik .wq-bar').length).toBe(2);
   });
 
+  it('widget styles reset host outlines inside the widget (probe finding)', async () => {
+    await render('<wlo-quellen-liste api-base="/api"></wlo-quellen-liste>');
+    const css = Array.from(document.adoptedStyleSheets ?? []).flatMap(sh => Array.from(sh.cssRules)).map(r => r.cssText).join('\n')
+      + Array.from(document.querySelectorAll('style')).map(s => s.textContent).join('\n');
+    const reset = css.split('}').find(r => r.includes(':is(p, ul, ol, li, a, span, div, input, label)'));
+    expect(reset).toMatch(/outline(-width)?:\s*(0|0px|none)\b/);
+  });
+
   it('heavy elements load the Angular bundle once', async () => {
     await render('<wlo-quellen-kacheln></wlo-quellen-kacheln><wlo-quellenpanel></wlo-quellenpanel>');
     definiereElemente('');   // the script normally runs deferred, after the elements are parsed

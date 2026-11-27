@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quellenpanel-Widgets – Gastseite mit eigenen Styles</title>
+  <!-- Absichtlich aggressive Gast-Styles: Die Widgets müssen trotzdem lesbar bleiben,
+       und die Gastseite darf durch die Widgets nicht verändert werden. -->
+  <style>
+    html { font-size: 10px; }
+    body { font: italic 22px/2.2 Georgia, serif; color: #6a0dad; background: #fffbe6; text-transform: uppercase; letter-spacing: .1em; }
+    * { box-sizing: content-box; }
+    a { color: #e00 !important; text-decoration: underline wavy; font-size: 30px; }
+    ul, ol { list-style: square; padding-left: 60px; margin: 40px; }
+    li { border: 3px dashed #0a0; padding: 20px; margin: 10px; }
+    p { margin: 2em 0; text-align: center; }
+    input { border: 5px solid red; font-size: 40px; background: yellow; }
+    div { outline: 1px dotted #999; }
+    .gast-text { font-weight: 700; }
+    /* typische CMS-Theme-Regeln (WordPress, TYPO3) */
+    .entry-content ul li, .entry-content ol li { padding-left: 2em; margin-bottom: 1.5em; }
+    .entry-content li::before { content: "➜ "; color: #e00; }
+    .entry-content a { border-bottom: 2px solid #e00; }
+    .entry-content p { font-size: 1.4em; }
+  </style>
+  <script src="/widgets/quellenpanel-widgets.js" defer></script>
+</head>
+<body>
+ <div class="entry-content">
+  <p class="gast-text">Gast-Text vor den Widgets</p>
+  <ul class="gast-liste"><li>Eigene Liste der Gastseite</li></ul>
+  <wlo-quellen-liste fach="Mathematik" max="4"></wlo-quellen-liste>
+  <wlo-quellen-liste variante="schlicht" suche="aus" fach="Chemie" max="3"></wlo-quellen-liste>
+  <wlo-quellen-top fach="Biologie" max="5"></wlo-quellen-top>
+  <wlo-quellen-zahl fach="Biologie"></wlo-quellen-zahl>
+  <wlo-quelle quelle="crawler:bpb_spider"></wlo-quelle>
+  <wlo-quellen-statistik max="4"></wlo-quellen-statistik>
+  <wlo-quellen-kacheln fach="Mathematik"></wlo-quellen-kacheln>
+  <p class="gast-text">Gast-Text nach den Widgets</p>
+ </div>
+</body>
+</html>

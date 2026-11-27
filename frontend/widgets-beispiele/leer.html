@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quellenpanel-Widgets – leere Seite</title>
+  <!-- Strenge CSP wie auf vielen Portalen: kein Inline-Skript, kein eval. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; font-src 'self'; connect-src 'self'">
+  <script src="/widgets/quellenpanel-widgets.js" defer></script>
+</head>
+<body>
+  <h1>Quellenpanel-Widgets auf einer leeren Seite</h1>
+  <h2>Einfache Liste</h2>
+  <wlo-quellen-liste fach="Mathematik" max="5"></wlo-quellen-liste>
+  <h2>Schlichte Liste (helle Hintergründe, ohne Suchfeld)</h2>
+  <wlo-quellen-liste variante="schlicht" suche="aus" fach="Chemie" max="5"></wlo-quellen-liste>
+  <h2>Top 10 je Fach</h2>
+  <wlo-quellen-top fach="Biologie" max="10"></wlo-quellen-top>
+  <h2>Kennzahl (nur OER)</h2>
+  <wlo-quellen-zahl fach="Biologie" nur-oer></wlo-quellen-zahl>
+  <h2>Eine Quelle</h2>
+  <wlo-quelle quelle="crawler:bpb_spider"></wlo-quelle>
+  <h2>Statistik</h2>
+  <wlo-quellen-statistik max="6"></wlo-quellen-statistik>
+  <h2>Kacheln (lädt das große Bundle nach)</h2>
+  <wlo-quellen-kacheln fach="Mathematik"></wlo-quellen-kacheln>
+  <h2>Als iframe</h2>
+  <iframe id="wq-frame" title="Top 10 Physik" src="/embed/quellen-top?fach=Physik&amp;max=5" style="width:100%;border:0;height:200px"></iframe>
+  <script src="iframe-host.js" defer></script>
+</body>
+</html>

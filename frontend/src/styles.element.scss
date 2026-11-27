@@ -10,6 +10,9 @@
 wlo-quellenpanel, wlo-quellen-kacheln, .cdk-overlay-container {
   @include theme.wlo-theme-vars;
   font-family: Roboto, system-ui, sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
   color: var(--wlo-text);
   text-align: left;
   text-transform: none;

@@ -19,7 +19,7 @@ WORKDIR /build
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
-RUN npm run build
+RUN npm run build && npm run build:element && npm run build:widgets
 
 # ---- Stage 2: serving container (Python) ----
 FROM python:3.12-slim@sha256:191083cdf6c7bda8c76158983163ead5d5cf7b77cf3033e805bb0f5296f51b4b
@@ -39,6 +39,8 @@ COPY backend/ /app/quellenpanel/backend/
 # Repository profiles (profil.toml only — the curated starting data stays out, see .dockerignore).
 COPY profiles/ /app/quellenpanel/profiles/
 COPY --from=frontend /build/dist/browser /app/quellenpanel/frontend/dist/browser
+# Widgets (light script, iframe helper, test pages) and the Angular element bundle → /widgets/…
+COPY --from=frontend /build/dist-widgets /app/quellenpanel/frontend/dist-widgets
 
 RUN chown -R appuser:appuser /app
 USER appuser
