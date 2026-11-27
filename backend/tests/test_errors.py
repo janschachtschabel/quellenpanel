@@ -239,6 +239,11 @@ def test_openapi_has_examples_for_public_reads(client):
     assert set(ex["items"][0]) <= set(real["items"][0]) | {"quality"}
     assert set(spec["paths"]["/api/kennzahl"]["get"]["responses"]["200"]["content"]["application/json"]["example"]) \
         == set(client.get("/api/kennzahl").json())
+    for path in ("/api/meta/filters", "/api/health", "/api/capabilities"):
+        ex = spec["paths"][path]["get"]["responses"]["200"]["content"]["application/json"]["example"]
+        assert set(ex) <= set(client.get(path).json()) | {"role"}, path
+    st = spec["paths"]["/api/stats"]["get"]["responses"]["200"]["content"]["application/json"]["example"]
+    assert set(st) <= set(client.get("/api/stats").json())
     # Error answers are documented with the one error shape.
     resp = spec["paths"]["/api/sources/{source_id}"]["get"]["responses"]
     assert set(resp["404"]["content"]["application/json"]["example"]) == {"error", "message", "status", "trace_id"}

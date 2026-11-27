@@ -47,16 +47,41 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
 - **Image-Tags je Pipeline:** GitHub → Docker Hub `1.0.0`/`1.0`; GitLab → `docker.edu-sharing.com`
   `1.0.0` und `v1.0.0`, Chart `quellenpanel` 1.0.0 (früher `edu_sharing-projects-wlo-quellenpanel`;
   im Chart-Repo erscheint der neue Name).
+- **NetworkPolicy in allen drei Rollen an**, jetzt auch ausgehend: nur DNS (53), HTTPS (443) und für
+  Partner/Öffentlich der Team-Port 9090. Wer die Exporte über einen anderen Port holt, ergänzt
+  `networkPolicy.extraEgress`. `networkPolicy.ingressNamespace` auf den Namespace des
+  Ingress-Controllers setzen, dann erreicht nur er Port 8080.
+- **Sauberes Beenden:** `preStop` 5 s (`preStopSleepSeconds`), danach 20 s für laufende Anfragen;
+  `terminationGracePeriod` 30 s nicht senken.
 
 ### Hinzugefügt
 
 - Übergabe-Doku: Steckbrief, Zeile der Kompatibilitätsmatrix, Übergabepaket
   (`docs/uebergabe/`), Ressourcenmessung mit Lastskript (`deploy/messung/last.py`).
+- Schlanke Einbettung: `kopf`, `fuss`, `filter`, `rahmen` = `aus`, feste `ansicht`
+  (`kacheln`/`liste`), `hintergrund` und `farbe` als `#rrggbb`; gleich als Attribut am Element, als
+  Parameter der iframe-Seiten und der App. Übersicht aller Optionen in `docs/widgets.md`, Testseite
+  `/widgets/beispiele/schlank.html`.
+- README auf Deutsch und Englisch (`README.en.md`) mit Installation, Nutzung, Zugangsstufen und
+  ihrem Schutz, Bearbeitungsbereich und Datenabruf über die API.
+- OpenAPI: Beschreibung für jeden Parameter, Beispielantworten für die öffentlichen Leserouten,
+  Fehlerantworten je Route.
+- Dependabot (pip, npm, Actions, Basis-Images); GitLab prüft jetzt Versionsgleichheit, Tag und
+  `helm lint` je Rolle.
 
 ### Geändert
 
 - `info.description` der OpenAPI auf zwei Sätze gekürzt (Kurzbeschreibung des Steckbriefs).
 - Helm-Requests und -Limits je Rolle aus der Messung.
+- `GET /api/health` ist immer 200 (`status: starting`, solange Daten fehlen) und dient als
+  Readiness-Probe; vorher 503 auf Partner/Öffentlich ohne Export.
+- Fehlerklassen: 503 ohne Export und alle 429 (auch Login-Drossel und Vorschaubilder) mit
+  `Retry-After`; ein 4xx des Repositorys wird 502 ohne Wiederholungshinweis.
+- Suchbegriff-Pseudonym im Log als HMAC mit Schlüssel je Prozess statt reinem SHA-256; unbekannte
+  HTTP-Methoden erscheinen in Log und Metriken als `OTHER`.
+- Vorschaubild-Zwischenspeicher 16 MiB statt 128 MiB (`QE_THUMB_CACHE_MB`).
+- Paginator auf Deutsch und Englisch („1–25 von 3.721“).
+- `docker-compose.yml` im Wurzelverzeichnis startet eine Team-Instanz mit Volume (Entwicklung).
 
 ## [0.6.0] – 2026-11-27 · Look
 

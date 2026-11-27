@@ -67,7 +67,7 @@ BEISPIELE = {
         "keywords": ["Demokratie"]}]},
     "/api/kennzahl": {"quellen": 3558, "inhalte": 311219},
     "/api/meta/filters": {"kinds": ["crawler", "manuell", "bezugsquelle"], "subjects": ["Biologie", "Chemie"],
-                          "levels": ["Primarstufe", "Sekundarstufe I"], "lrts": ["Quelle", "Video"],
+                          "levels": ["Primarstufe", "Sekundarstufe I"], "lrts": ["Quelle", "Video"], "erschliessung": [],
                           "licenses": ["CC_BY"],
                           "languages": ["Deutsch (Deutschland)"]},
     "/api/stats": {"total": 3721, "totalContents": 304800, "withQuelldatensatz": 824, "crawlerCount": 55,

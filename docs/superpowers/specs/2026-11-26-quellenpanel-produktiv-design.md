@@ -219,7 +219,7 @@ edu-sharing-Tokens aus `DESIGN.md` der UX-Skills als CSS-Variablen, WLO-Branding
 
 | Kapitel | Umsetzung |
 |---|---|
-| Dienst-ID | `quellenpanel` (Logs `service`, `OTEL_SERVICE_NAME`, Chart, Image) |
+| Dienst-ID | `quellenpanel` (Logs `service`, Chart, Image; kein OpenTelemetry, siehe Übergabepaket) |
 | 1 API | OpenAPI aus FastAPI mit `info.title/description`, Beispielen je Endpunkt; **nur öffentliche Pfade der jeweiligen Rolle** (Team-Pfade nur in der Team-Instanz); Fehler als JSON mit `trace_id`; 4xx/5xx sauber getrennt, `retryAfter` bei Abhängigkeits-429/5xx; keine Header vom Client außer den Passwort-Headern (begründet); Antwortzeiten je Endpunkt im Steckbrief. Repository-Unabhängigkeit über das Profil. |
 | 2.1 LLM | entfällt (kein LLM) |
 | 2.2 b-api | entfällt: „Betrieb ohne b-api“ begründet (öffentliche Webseiten-Daten, kein Personenbezug, anonymer Lesezugriff, den die b-api nicht bietet); eigene Auth = Rollen + Passwörter; Env und Auth-Konzept dokumentiert |
