@@ -37,12 +37,11 @@ export function textAnteil(primary: string): number {
 
 const ABGELEITET = ['--primaryText', '--focusColor', '--primaryForeground800', '--primaryForeground900'];
 
-/** Sets --primary / --accent on the host (SPA: <html>, element: the custom element); invalid values are
- *  ignored. If the primary is not readable as text on its own tints, --primaryText (also Material's
+/** Sets --primary / --accent on the host (SPA: <html>, element: the custom element); a missing or
+ *  invalid value removes the inline token, so the stylesheet default applies again. If the primary is not readable as text on its own tints, --primaryText (also Material's
  *  primary and the focus colour) and the foreground tints are darkened until they reach 4.5:1. */
 export function wendeBrandingAn(el: HTMLElement, b: Branding | undefined): void {
-  if (!b) return;
-  if (istFarbe(b.primary)) {
+  if (istFarbe(b?.primary)) {
     el.style.setProperty('--primary', b.primary);
     const anteil = textAnteil(b.primary);
     if (anteil < 100) {
@@ -53,6 +52,9 @@ export function wendeBrandingAn(el: HTMLElement, b: Branding | undefined): void 
     } else {
       for (const p of ABGELEITET) el.style.removeProperty(p);
     }
+  } else {
+    for (const p of ['--primary', ...ABGELEITET]) el.style.removeProperty(p);
   }
-  if (istFarbe(b.accent)) el.style.setProperty('--accent', b.accent);
+  if (istFarbe(b?.accent)) el.style.setProperty('--accent', b.accent);
+  else el.style.removeProperty('--accent');
 }

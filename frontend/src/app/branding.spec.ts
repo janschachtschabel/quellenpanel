@@ -14,8 +14,19 @@ describe('branding from the profile', () => {
     wendeBrandingAn(el, { primary: '#123456', accent: 'url(x)' });
     expect(el.style.getPropertyValue('--primary')).toBe('#123456');
     expect(el.style.getPropertyValue('--accent')).toBe('');
+  });
+
+  it('falls back to the defaults when the colour is removed (embed attribute farbe taken away)', () => {
+    const el = document.createElement('div');
+    wendeBrandingAn(el, { primary: '#ffeb3b', accent: '#e4f700' });
+    expect(el.style.getPropertyValue('--primaryText')).not.toBe('');
     wendeBrandingAn(el, undefined);
-    expect(el.style.getPropertyValue('--primary')).toBe('#123456');
+    for (const p of ['--primary', '--accent', '--primaryText', '--focusColor', '--primaryForeground800']) {
+      expect(el.style.getPropertyValue(p), p).toBe('');
+    }
+    wendeBrandingAn(el, { primary: '#123456' });
+    wendeBrandingAn(el, { primary: 'kaputt' });
+    expect(el.style.getPropertyValue('--primary')).toBe('');
   });
 });
 

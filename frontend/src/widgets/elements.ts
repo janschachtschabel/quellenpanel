@@ -103,7 +103,6 @@ abstract class WqElement extends HTMLElement {
     this.replaceChildren(el('p', 'wq-status', text));
   }
 
-  /** Load + render; a stale answer (attributes changed meanwhile) is dropped. */
   /** farbe / hintergrund (#rrggbb) und rahmen="aus" — für iframe-Nutzer, die keine CSS-Variablen setzen können. */
   private gestalten(): void {
     const farbe = farbeOderNull(this.getAttribute('farbe'));
@@ -115,6 +114,7 @@ abstract class WqElement extends HTMLElement {
     this.classList.toggle('wq-ohne-rahmen', !istAn(this.getAttribute('rahmen')));
   }
 
+  /** Load + render; a stale answer (attributes changed meanwhile) is dropped. */
   protected async aktualisieren(): Promise<void> {
     this.gestalten();
     this.classList.toggle('wq-schlicht', this.getAttribute('variante') === 'schlicht');
