@@ -159,3 +159,12 @@ def test_root_compose_ist_aktuelle_team_entwicklungsinstanz():
     assert all(p.startswith("127.0.0.1:") for p in svc["ports"])
     assert "9090/health" in " ".join(svc["healthcheck"]["test"])
     assert svc["read_only"] is True and str(svc["user"]) == "10001"
+
+
+def test_gitlab_versionspruefung_bricht_wirklich_ab():
+    # set -e stops on neither part of an && list: every check needs its own line or an explicit exit.
+    import yaml as _yaml
+    gl = _yaml.safe_load((ROOT / ".gitlab-ci.yml").read_text(encoding="utf-8"))
+    for line in gl["version check"]["script"]:
+        if line.startswith("test ") or " && test " in line:
+            assert "&&" not in line or line.rstrip().endswith("exit 1"), line

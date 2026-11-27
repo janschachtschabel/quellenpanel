@@ -33,12 +33,15 @@ Fehlern den letzten gültigen Stand, auch als Kopie in `/tmp`.
 - **Liveness/Startup:** `/health` ist 200, solange der Prozess lebt. Der Body zeigt Rolle, Version,
   Datenstand (`data.state` = `ready` / `building` / `missing`, `generatedAt`, `ageSeconds`) und den
   Rebuild (`rebuild`, mit `rebuild.last` aus `$QE_DATA_DIR/status.json`).
-- **Readiness-Probe (alle Rollen):** `GET /api/health` auf dem öffentlichen Port 8080. Sie hängt an
-  nichts außer dem eigenen Prozess (Leitfaden: Readiness ohne Abhängigkeiten) und ist immer 200;
-  `status` ist `ok` oder, solange Daten oder Exporte fehlen, `starting`. Ein Pod mit kaputtem
-  öffentlichem Listener fällt so aus der Rotation. Ein Pod ohne Daten bleibt im Service und antwortet
-  auf Datenrouten mit 503 und `Retry-After` (Team: „Daten werden aufgebaut“, `Retry-After: 60`;
-  Partner/Öffentlich ohne Export: „Daten werden geladen“, `Retry-After: 60`), statt zu verschwinden.
+- **Readiness-Probe (alle Rollen):** `GET /api/health` auf dem öffentlichen Port 8080. Sie fragt keinen
+  anderen Dienst (Leitfaden: Readiness ohne Abhängigkeiten), nur den eigenen Prozess und seine Daten
+  im Speicher. Ein Pod mit kaputtem öffentlichem Listener fällt so aus der Rotation.
+  **Team:** immer 200, damit der einzelne Team-Pod auch beim Datenaufbau erreichbar bleibt (Login,
+  „Daten aktualisieren“); Datenrouten antworten bis dahin mit 503 „Daten werden aufgebaut“ und
+  `Retry-After: 60`. **Partner/Öffentlich:** 503 `status: starting`, bis alle Exporte der Rolle
+  geladen sind, dann 200. So ersetzt ein Rolling Update bei ausgefallenem Team keine alten Pods, die
+  noch den letzten gültigen Export halten. Fällt das Team später aus, bleiben die Pods bereit und
+  liefern den letzten Stand. Die Probe wird weder geloggt noch in `http_requests_total` gezählt.
 - **`/ready` (nur Monitoring):** 200, sobald die Daten der Rolle im Speicher sind (Team: Datensätze;
   sonst alle Exporte der Rolle), sonst 503. `source.ok` meldet, ob Repository bzw. Export-Quelle
   erreichbar sind; diese Prüfung läuft höchstens alle 30 s. `/ready` ist bewusst **keine**
@@ -62,7 +65,7 @@ Fehlern den letzten gültigen Stand, auch als Kopie in `/tmp`.
   kaputte `truth.json` wird nach `truth.json.kaputt-<zeit>` verschoben, dann startet der Aufbau. Fehlt `truth.json`
   danach noch, startet der Datenaufbau im Hintergrund. Bis er fertig ist, antworten alle Datenrouten
   mit 503 `{"error": "service_unavailable", "message": "Daten werden aufgebaut", "retryAfter": 60}`
-  und `Retry-After: 60`. `/health` und `/api/health` sind 200 (`data.state = building` bzw. `status: starting`), `/ready` 503. Schlägt der Aufbau
+  und `Retry-After: 60`. `/health` und `/api/health` sind 200 (`data.state = building`), `/ready` 503. Schlägt der Aufbau
   fehl, bleibt der Status unter `/health` → `rebuild.last` lesbar. **Wiederherstellung:** Ursache
   beheben (Netz, `QE_SEED_URL`), dann als Team anmelden und „Daten aktualisieren“ drücken, oder den
   Pod neu starten. Ohne Eingriff versucht es erst der nächste nächtliche Lauf; nach 6 h ohne Daten

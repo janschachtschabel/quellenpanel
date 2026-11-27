@@ -77,9 +77,10 @@ spec:
           timeoutSeconds: {{ .timeoutSeconds }}
         {{- end }}
         {{- with .Values.readinessProbe }}
-        # Leitfaden: readiness without dependencies, on the PUBLIC port, so a pod with a broken API
-        # listener leaves the rotation. A pod without data stays in its Service and answers the data
-        # routes with JSON 503 + Retry-After (the team can still log in and start a rebuild).
+        # Leitfaden: readiness asks no other service, on the PUBLIC port, so a pod with a broken API
+        # listener leaves the rotation. Team: always ready (login and rebuild stay reachable while it
+        # builds). Partner/public: ready once their own export is loaded, so a rolling update with the
+        # team down keeps the old pods that still serve the last valid export.
         readinessProbe:
           httpGet:
             path: /api/health

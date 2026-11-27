@@ -192,10 +192,11 @@ def health():
     if role == "team":
         return {"status": "ok", "records": len(_DATA["records"])}
     docs = [export_store.current(t) for t in _role_tiers(role)]
-    # "ok" only with EVERY tier of the role (0 carries most traffic). Always 200: this is the readiness
-    # probe, which must not depend on the export (Leitfaden); data routes answer 503 + Retry-After.
+    # Readiness probe (8080). It checks only the pod's OWN data, no external service: "ok" once EVERY
+    # tier of the role is loaded (0 carries most traffic). Until then 503, so a rolling update with the
+    # team down does not replace old pods that still serve the last valid export.
     if any(d is None for d in docs):
-        return {"status": "starting", "role": role}
+        return JSONResponse({"status": "starting", "role": role}, status_code=503)
     return {"status": "ok", "records": len(docs[0]["items"]), "role": role}
 
 

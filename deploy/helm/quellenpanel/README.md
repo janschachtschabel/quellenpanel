@@ -24,8 +24,9 @@ and `config.sessionSecret`.
 - **Two ports:** `http` 8080 (Service `quellenpanel-<role>`, behind the ingress) and `internal` 9090
   (Service `quellenpanel-<role>-internal`, never behind an ingress): `/health` (liveness and startup
   probe), `/ready` (data and dependency check for monitoring only, never a probe), `/metrics`,
-  `/internal/exports/…` (team only). The readiness probe is `GET /api/health` on `http`: it has no
-  dependencies, so a pod without data stays in its Service and answers 503 with `Retry-After`.
+  `/internal/exports/…` (team only). The readiness probe is `GET /api/health` on `http`: it asks no
+  other service. The team is always ready (it stays reachable while it builds); partner/public become
+  ready once their own export is loaded, so a rolling update with the team down keeps the old pods.
 - **Clean shutdown:** a `preStop` pause (`preStopSleepSeconds`, 5 s) takes the pod out of the Service
   before SIGTERM; uvicorn then gives running requests 20 s; `terminationGracePeriod` is 30 s.
 - **Restricted security context:** non-root uid 10001, read-only root filesystem, no privilege
@@ -45,6 +46,10 @@ and `config.sessionSecret`.
   seed URL) and, for partner/public, the team's 9090. More rules via `networkPolicy.extraEgress`
   (e.g. an `http://` export source on another port). Needs a CNI that enforces NetworkPolicies;
   kubelet probes come from the node and are not affected on common CNIs.
+  Limits: the team rules match pods in the **same namespace** only (install all three releases in one
+  namespace); an ingress controller on `hostNetwork` (e.g. k3s Traefik) does not match
+  `ingressNamespace`, leave it empty there; an outbound HTTP proxy or an `http://` seed URL needs an
+  `extraEgress` rule for its port.
 - **Optional:** `metrics.serviceMonitor.enabled`, `metrics.prometheusRule.enabled` with the alerts
   `QuellenpanelRebuildStale` (team data older than 26 h), `QuellenpanelNoData` (no data for 6 h), `QuellenpanelHigh5xx` (more than 5 % 5xx
   over 10 min) and `QuellenpanelExportFetchFailing` (partner/public: only failed fetches for 30 min).

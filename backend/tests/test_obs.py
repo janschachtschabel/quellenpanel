@@ -216,3 +216,18 @@ def test_unknown_method_does_not_create_new_metric_series(client):
     labels = {s.labels.get("method") for m in obs.REGISTRY.collect() if m.name == "http_requests"
               for s in m.samples}
     assert "XYZZY" not in labels
+
+
+def test_probe_route_is_not_counted_or_logged(client, caplog):
+    # The readiness probe hits /api/health every few seconds; counting it would water down the
+    # 5xx ratio of quiet instances and flood the log.
+    def count():
+        return sum(s.value for m in obs.REGISTRY.collect() if m.name == "http_requests"
+                   for s in m.samples if s.name == "http_requests_total" and s.labels.get("route") == "/api/health")
+
+    caplog.set_level(logging.INFO)
+    before = count()
+    caplog.clear()
+    client.get("/api/health")
+    assert _request_lines(caplog) == []
+    assert count() == before

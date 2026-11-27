@@ -24,8 +24,9 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
   (lokale Entwicklung); im Betrieb die Rolle immer setzen und die Team-Instanz hinter VPN/SSO legen. `QE_PUBLIC_ONLY=1` gilt nur noch als Übergangsname für
   `QE_ROLE=public`.
 - **Zweiter Port 9090** für `/health`, `/ready`, `/metrics` und die Exporte. Nie veröffentlichen.
-  Liveness und Startup fragen `9090/health`, die Readiness `8080/api/health` (ohne Abhängigkeiten,
-  immer 200; `status: starting`, solange Daten fehlen). `/ready` dient nur dem Monitoring.
+  Liveness und Startup fragen `9090/health`, die Readiness `8080/api/health` (fragt keinen anderen
+  Dienst; Team immer bereit, Partner/Öffentlich sobald ihr Export geladen ist). `/ready` dient nur
+  dem Monitoring.
 - **Image-Tag `latest` entfällt.** Images heißen nach der Version (`1.0.0`, `1.0`) oder nach
   Branch und Commit. Deployments auf einen Versions-Tag umstellen.
 - **Port-Variable:** `PORT` entfällt, jetzt `QE_PORT` (8080) und `QE_INTERNAL_PORT` (9090);
@@ -73,8 +74,8 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
 
 - `info.description` der OpenAPI auf zwei Sätze gekürzt (Kurzbeschreibung des Steckbriefs).
 - Helm-Requests und -Limits je Rolle aus der Messung.
-- `GET /api/health` ist immer 200 (`status: starting`, solange Daten fehlen) und dient als
-  Readiness-Probe; vorher 503 auf Partner/Öffentlich ohne Export.
+- `GET /api/health` dient als Readiness-Probe (vorher `9090/ready`) und wird nicht mehr geloggt
+  oder gezählt.
 - Fehlerklassen: 503 ohne Export und alle 429 (auch Login-Drossel und Vorschaubilder) mit
   `Retry-After`; ein 4xx des Repositorys wird 502 ohne Wiederholungshinweis.
 - Suchbegriff-Pseudonym im Log als HMAC mit Schlüssel je Prozess statt reinem SHA-256; unbekannte

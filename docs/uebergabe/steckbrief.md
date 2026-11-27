@@ -33,7 +33,7 @@ Kern voll und die Zeit ist vor allem Wartezeit). Kosten aller Endpunkte: nur Bet
 | `GET /api/kennzahl` | alle | 3 / 4 ms | 54 / 70 ms |
 | `GET /api/sources/{id}/contents` | alle | Live-Abruf beim Repository, Zeitlimit 20 s, pro Client gedrosselt (429) | – |
 | `GET /api/thumb` | alle | Live-Abruf eines Vorschaubilds für den PDF-Export, Zeitlimit 8 s, danach aus dem Zwischenspeicher (`QE_THUMB_CACHE_MB`, 16 MiB), pro Client gedrosselt (429) | – |
-| `GET /api/health` | alle | unter 1 ms (Readiness-Probe, ohne Abhängigkeiten) | – |
+| `GET /api/health` | alle | unter 1 ms (Readiness-Probe, fragt keinen anderen Dienst) | – |
 | `GET /api/stats/team` | team | 14 / 15 ms | 205 / 262 ms |
 | `GET /api/export.json` (ab Stufe 1) | team, partner | 23 / 24 ms | 239 / 309 ms |
 | `POST /api/admin/reload` | team | 0,8 s (Neuaufbau aus vorhandenen Daten) | – |

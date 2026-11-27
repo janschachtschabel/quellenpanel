@@ -74,7 +74,8 @@ version check:
     - c=$(python3 -c "import re;t=open('deploy/helm/quellenpanel/Chart.yaml').read();print(re.search(r'^version:\s*(\S+)',t,re.M)[1], re.search(r'^appVersion:\s*\"?([^\"\s]+)',t,re.M)[1])")
     - p=$(python3 -c "import json;print(json.load(open('frontend/package.json'))['version'])")
     - echo "pyproject=$v chart=$c package=$p"
-    - test "$c" = "$v $v" && test "$p" = "$v"
+    - test "$c" = "$v $v" || { echo "Chart-Version $c passt nicht zu $v"; exit 1; }
+    - test "$p" = "$v" || { echo "package.json-Version $p passt nicht zu $v"; exit 1; }
     - if [ -n "$CI_COMMIT_TAG" ] && [ "$CI_COMMIT_TAG" != "v$v" ]; then echo "Tag $CI_COMMIT_TAG passt nicht zu Version $v"; exit 1; fi
 
 # Helm-Chart je Rolle prüfen (kubeconform und promtool laufen im GitHub-Workflow).

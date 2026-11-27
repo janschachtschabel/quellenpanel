@@ -184,6 +184,9 @@ def outgoing_headers() -> dict[str, str]:
 # Per-process key: a plain hash of a short search term could be reversed with a word list.
 _PSEUDONYM_KEY = secrets.token_bytes(32)
 
+# The readiness probe hits this every few seconds; counting it would water down the 5xx ratio.
+_PROBE_ROUTES = frozenset({"/api/health"})
+
 _METHODS = frozenset({"GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"})
 
 
@@ -259,6 +262,7 @@ class TraceMiddleware:
                           "duration_ms": round((time.perf_counter() - start) * 1000, 1)}
                 if q.strip():
                     fields["q_pseudonym"] = pseudonym(q.strip())
-                _log.info("request", extra={"fields": fields})
-                HTTP_REQUESTS.labels(fields["route"], fields["method"], str(fields["status"])).inc()
-                HTTP_DURATION.labels(fields["route"], fields["method"]).observe(fields["duration_ms"] / 1000)
+                if not (fields["route"] in _PROBE_ROUTES and status["code"] < 500):  # probe: skip
+                    _log.info("request", extra={"fields": fields})
+                    HTTP_REQUESTS.labels(fields["route"], fields["method"], str(fields["status"])).inc()
+                    HTTP_DURATION.labels(fields["route"], fields["method"]).observe(fields["duration_ms"] / 1000)
