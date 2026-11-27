@@ -45,7 +45,9 @@ COPY --from=frontend /build/dist-widgets /app/quellenpanel/frontend/dist-widgets
 RUN chown -R appuser:appuser /app
 USER appuser
 
-ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 QE_DATA_DIR=/data LOG_FORMAT=json
+# Git commit of this build (CI passes it; /api/capabilities shows it as "revision").
+ARG QE_REVISION=unknown
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 QE_DATA_DIR=/data LOG_FORMAT=json QE_REVISION=$QE_REVISION
 VOLUME ["/data"]
 EXPOSE 8080 9090
 

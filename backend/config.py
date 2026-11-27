@@ -25,6 +25,15 @@ def _read_version(path: Path) -> str:
 
 
 VERSION = _read_version(HERE / "pyproject.toml")
+
+
+def _revision() -> str:
+    """Git commit the image was built from (build arg QE_REVISION, set by CI); "" when unknown."""
+    rev = os.environ.get("QE_REVISION", "").strip()
+    return "" if rev in ("", "unknown") else rev[:12]
+
+
+REVISION = _revision()
 FRONTEND = HERE.parent / "frontend"
 
 

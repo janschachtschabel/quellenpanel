@@ -173,6 +173,7 @@ Regeln sind mit `promtool test rules deploy/helm/quellenpanel/tests/rules-test.y
 | `QE_PROFILE`, `QE_PROFILES_DIR` | alle | | Repository-Profil (Standard `wlo`) und sein Verzeichnis (Standard `profiles/`) |
 | `QE_FRAME_ANCESTORS` | alle | | wer die iframe-Widgets (`/embed/…`) einbetten darf; leer = überall, auf dem Team nur `'self'` |
 | `QE_THUMB_CACHE_MB` | alle | | Speicher für zwischengespeicherte Vorschaubilder (PDF-Export) in MiB, Standard 16, `0` = aus; zählt zum Speicherlimit |
+| `QE_REVISION` | alle | | Commit, aus dem das Image gebaut wurde; setzt die CI als Build-Argument. `/api/capabilities` zeigt ihn als `revision`. Nicht von Hand setzen |
 | `QE_PUBLIC_ONLY` | | | Übergangsname: `1` entspricht `QE_ROLE=public` |
 | `QE_RENAME_UNREP_BQ` | team | | `0` schaltet die Umbenennung nicht repräsentierter Bezugsquellen beim Datenaufbau ab |
 | `QE_DATA_DIR` | alle | | Datenverzeichnis (Image: `/data`) |

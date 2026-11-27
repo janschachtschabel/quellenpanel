@@ -105,6 +105,14 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
   abgewiesen. Ein Wertfeld erscheint nur bei Aktionen, die einen Wert brauchen.
 - Kurze, aufklappbare Hilfe zu Typen und Aktionen im Korrekturbereich und im Dialog.
 
+### Geändert (Server-Compose)
+
+- `docker-compose.yml` baut das Image nicht mehr auf dem Server, sondern holt bei jedem Bereitstellen das
+  Image, das GitHub aus `main` baut (`ghcr.io/janschachtschabel/quellenpanel:main`, `pull_policy:
+  always`). Vorher konnte ein Server ein altes, lokal gebautes Image weiterlaufen lassen. `QE_GIT_URL`
+  entfällt; eine feste Version wählt `QE_IMAGE` (z. B. `…:1.0.0`).
+- `/api/capabilities` nennt den Commit des laufenden Images als `revision` (Build-Argument `QE_REVISION`, setzt die CI).
+
 ### Behoben (Inhaltszahlen)
 
 - Der Link „In der WLO-Suche“ filtert nach der Bezugsquelle statt nach dem Titel des
