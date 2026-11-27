@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { AKTIONEN_JE_TYP, filterKorrekturen } from './korrekturen-utils';
+import { AKTIONEN_JE_TYP, aktionsKonflikt, korrekturZeilen, filterKorrekturen } from './korrekturen-utils';
 import { Korrektur } from './models';
 
 const k = (id: number, typ: string, schluessel: string, aktion: string, kommentar = '', wert = ''): Korrektur =>
@@ -32,5 +32,28 @@ describe('AKTIONEN_JE_TYP', () => {
     expect(AKTIONEN_JE_TYP['node']).toContain('blacklist');
     expect(AKTIONEN_JE_TYP['node']).not.toContain('beschreibung');
     expect(AKTIONEN_JE_TYP['bezugsquelle']).toEqual(['beschreibung', 'vorschaubild']);
+  });
+});
+
+describe('korrekturZeilen (several actions for one key)', () => {
+  it('expands one key into one row per action, trimming the key and sharing the comment', () => {
+    const rows = korrekturZeilen({ typ: 'node', schluessel: ' abc ', kommentar: 'Serlo' },
+      [{ aktion: 'whitelist', wert: '' }, { aktion: 'spider_setzen', wert: 'serlo_spider' }]);
+    expect(rows).toEqual([
+      { typ: 'node', schluessel: 'abc', aktion: 'whitelist', wert: '', kommentar: 'Serlo' },
+      { typ: 'node', schluessel: 'abc', aktion: 'spider_setzen', wert: 'serlo_spider', kommentar: 'Serlo' },
+    ]);
+  });
+});
+
+describe('aktionsKonflikt', () => {
+  it('accepts different actions', () => {
+    expect(aktionsKonflikt(['whitelist', 'bezugsquelle_setzen', 'spider_setzen'])).toBe('');
+  });
+  it('rejects the same action twice', () => {
+    expect(aktionsKonflikt(['vermerk', 'vermerk'])).toBe('doppelt');
+  });
+  it('rejects blacklist together with whitelist', () => {
+    expect(aktionsKonflikt(['blacklist', 'whitelist'])).toBe('liste');
   });
 });

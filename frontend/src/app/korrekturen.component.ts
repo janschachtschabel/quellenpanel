@@ -15,6 +15,7 @@ import { fehlertext } from './korrekturen-fehler';
 import { KorrekturImportComponent } from './korrektur-import.component';
 import { CrawlerUploadComponent } from './crawler-upload.component';
 import { KorrekturDialogComponent } from './korrektur-dialog.component';
+import { KorrekturHilfeComponent } from './korrektur-hilfe.component';
 import { KorrekturenService } from './korrekturen.service';
 import { AKTIONEN_JE_TYP, TYPEN, filterKorrekturen } from './korrekturen-utils';
 import { Anwenden, Korrektur, KorrekturFelder, KorrekturStand, VerlaufEintrag } from './models';
@@ -29,11 +30,13 @@ import { Anwenden, Korrektur, KorrekturFelder, KorrekturStand, VerlaufEintrag } 
   changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [FormsModule, MatButtonModule, MatDialogModule, MatFormFieldModule, MatIconModule, MatInputModule,
-            MatPaginatorModule, MatSelectModule, MatTabsModule, KorrekturImportComponent, CrawlerUploadComponent],
+            MatPaginatorModule, MatSelectModule, MatTabsModule, KorrekturImportComponent, CrawlerUploadComponent,
+            KorrekturHilfeComponent],
   template: `
   <h2 class="head"><mat-icon aria-hidden="true">lock</mat-icon>{{ i18n.t('korr.title') }}</h2>
   <mat-tab-group animationDuration="0ms" (selectedIndexChange)="tab($event)">
     <mat-tab [label]="i18n.t('korr.tab.list')">
+      <wlo-korrektur-hilfe class="hilfe"></wlo-korrektur-hilfe>
       <div class="bar">
         <mat-form-field appearance="outline" subscriptSizing="dynamic" class="q">
           <mat-label>{{ i18n.t('korr.search') }}</mat-label>
@@ -124,6 +127,7 @@ import { Anwenden, Korrektur, KorrekturFelder, KorrekturStand, VerlaufEintrag } 
     :host { display: block; padding: 16px 16px 24px; }
     .head { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 16px; font-weight: 600; color: var(--textMain); }
     .head mat-icon { font-size: 20px; width: 20px; height: 20px; color: var(--primaryText); }
+    .hilfe { display: block; margin-top: 16px; }
     .bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 16px 0 12px; }
     .bar .q { flex: 1 1 260px; }
     .bar mat-form-field:not(.q) { width: 180px; }
@@ -204,15 +208,16 @@ export class KorrekturenComponent implements OnInit {
 
   neu(vorlage?: Partial<KorrekturFelder>): void {
     this.dialog.open(KorrekturDialogComponent, { data: { neu: true, korrektur: vorlage }, autoFocus: false })
-      .afterClosed().subscribe((k?: KorrekturFelder) => {
-        if (!k) return;
-        this.svc.anlegen(k, this.stand()?.version ?? '').subscribe({ next: s => this.uebernehmen(s), error: e => this.fehlerAnzeigen(e) });
+      .afterClosed().subscribe((rows?: KorrekturFelder[]) => {
+        if (!rows?.length) return;
+        this.svc.anlegenAlle(rows, this.stand()?.version ?? '').subscribe({ next: s => this.uebernehmen(s), error: e => this.fehlerAnzeigen(e) });
       });
   }
 
   bearbeiten(alt: Korrektur): void {
     this.dialog.open(KorrekturDialogComponent, { data: { neu: false, korrektur: alt }, autoFocus: false })
-      .afterClosed().subscribe((k?: KorrekturFelder) => {
+      .afterClosed().subscribe((rows?: KorrekturFelder[]) => {
+        const k = rows?.[0];
         if (!k) return;
         this.svc.aendern(alt.id, k, this.stand()?.version ?? '').subscribe({ next: s => this.uebernehmen(s), error: e => this.fehlerAnzeigen(e) });
       });

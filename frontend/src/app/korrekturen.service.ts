@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, concatMap, from, last, scan } from 'rxjs';
 
 import { CrawlerVorschau, ImportVorschau, KorrekturFelder, KorrekturStand, VerlaufEintrag, Zuordnung } from './models';
 import { SourcesService } from './sources.service';
@@ -35,6 +35,17 @@ export class KorrekturenService {
 
   anlegen(k: KorrekturFelder, version: string): Observable<KorrekturStand> {
     return this.http.post<KorrekturStand>(this.url('korrekturen'), { korrektur: k, wer: this.wer(), version });
+  }
+
+  /** Several new rows (e.g. several actions for one key), saved one after another: each request
+   *  carries the version the previous answer returned. Emits the last state. */
+  anlegenAlle(rows: KorrekturFelder[], version: string): Observable<KorrekturStand> {
+    let v = version;
+    return from(rows).pipe(
+      concatMap(k => this.anlegen(k, v)),
+      scan((_, s) => { v = s.version; return s; }, {} as KorrekturStand),
+      last(),
+    );
   }
 
   aendern(id: number, k: KorrekturFelder, version: string): Observable<KorrekturStand> {
