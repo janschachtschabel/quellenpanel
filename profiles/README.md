@@ -94,9 +94,31 @@ Zusatzspalten am Zeilenende werden ignoriert.
 `cd backend && python -m tools.migrate_korrekturen --help`. Der Migrationsbericht
 (`daten/migration-bericht.md`, nicht im Image) listet Dubletten und verrutschte Zeilen.
 
+## Crawler-Tabelle
+
+Die Crawler-Tabelle (`crawler.csv`) beschreibt je Quelle, woher ihre Metadaten kommen. Jedes Profil
+ordnet unter `[crawler_tabelle.spalten]` seine eigenen Spaltenüberschriften diesen festen
+Schlüsseln zu. Welche Stufe einen Schlüssel sieht, legt `backend/field_policy.py` fest:
+
+| Sichtbar | Schlüssel |
+|---|---|
+| ab Stufe 1 (Partner) | `titel`, `url`, `bezugsquelle`, `urheber`, `robotsTxt`, `tdmHinweis`, `agb`, `lizenzCheck`, `apiNutzung` |
+| nur Team | `spider`, `prio`, `crawlerType`, `zustand`, `spiderBemerkungen`, `kiEinschaetzung`, `bemerkungStatus`, `prodLetzterCrawl`, `stagingLetzterCrawl`, `haeufigkeit`, `anzahlProd`, `anzahlStaging`, `quelldatensatzProd`, `hinweisQuelldatensatz`, `exportOerBerlin`, `github`, `Vertrag/Vereinbarung`, `Vereinbarung (alt)` |
+
+Pflicht sind nur die beiden Spalten aus `spider_spalte` und `quelldatensatz_spalte`; alle anderen
+dürfen fehlen. Spalten der Form `<Item> - <Feld> – Status` (z. B. `Beschreibung - Text – Status`)
+werden zusätzlich als Feld-Erzeugung gelesen und speisen den Filter **Feld-Profil**. Eine Spalte, die
+keinem Schlüssel zugeordnet ist, wird nicht angezeigt; ein neuer Schlüssel braucht eine Zeile in
+`field_policy.py`.
+
 ## Neues Profil anlegen
 
 1. `profiles/beispiel/` kopieren und in `profil.toml` `id`, `name` und `[repository]` anpassen.
 2. Unter `[felder]` die Properties des eigenen Metadatensatzes eintragen.
-3. Crawler-Tabelle und Korrekturen unter `daten/` ablegen (beide dürfen fehlen).
-4. Mit `QE_PROFILE=<id>` starten.
+3. Crawler-Tabelle und Korrekturen unter `daten/` ablegen. Für den Anfang genügt je die Kopfzeile;
+   ohne beide Dateien lehnt die Team-Instanz den Datenaufbau ab („Startdaten fehlen“).
+4. Mit `QE_PROFILE=<id>` starten. Im Container fehlt `daten/` im Image: dort `QE_SEED_URL` auf den
+   `daten`-Ordner des Profils setzen (Rohdatei-Adresse auf GitHub) oder beide Dateien im Team-Bereich
+   hochladen.
+
+Schritt für Schritt bis zum Server: [README, „Anderes Repository anbinden“](../README.md#anderes-repository-anbinden).

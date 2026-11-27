@@ -13,7 +13,7 @@ changes: [`CHANGELOG.md`](CHANGELOG.md) (German).
 | Tier | For whom | What you see | Where |
 |---|---|---|---|
 | **0 Basic** | everyone | sources, filters, quality features, example content, statistics | instance `public` (and all others) |
-| **1 Details** | partners, profile authors | plus provenance, licences, field generation, export, profile PDF | instance `partner` with password; on `team` without password |
+| **1 Details** | partners, profile authors | plus provenance, licences, field generation, export, profile PDF | every instance except `public`, with the tier 1 password |
 | **2 Audit** | team | plus internal fields, data problems, protocol, corrections, data refresh | instance `team` only, with team password |
 
 Below tier 2 every instance answers only from its export. The public instance never holds tier 1
@@ -69,10 +69,12 @@ Handover to operations: [`docs/uebergabe/`](docs/uebergabe/README.md) (German).
 ## Usage
 
 The app has three views: **tiles**, **list** and **statistics**. At the top: search, source type and
-sorting; below: subject, educational level, content type, minimum number of contents and OER. A
-click on a source opens its profile with example content from the repository.
+sorting; below: subject, educational level, content type, minimum number of contents and OER.
+**Field profile** shows only sources whose crawler table states how their metadata fields are
+created. A click on a source opens its profile with example content from the repository.
 
-At the top right you pick the tier (**Basic**, **Details**, **Audit**) and the language (DE/EN). In
+At the top right you pick the tier (**Basic**, **Details**, **Audit**) and the language (DE/EN).
+**Details** asks once for the tier 1 password, **Audit** for the team password. In
 Details and Audit several sources can be selected and exported as a profile PDF; the filtered list
 is available as CSV, JSON or table PDF.
 
@@ -95,7 +97,8 @@ team sessions. Failed password attempts (login and headers) are throttled per ad
 
 The editing area exists on the **team instance** only:
 
-1. Open the team instance (internal, e.g. `http://127.0.0.1:8082` with Compose).
+1. Open the team instance (server with Traefik: `http://<SERVER-IP>:18080` or the domain; three
+   instances from `deploy/`: internal `http://127.0.0.1:8082`).
 2. Choose **Audit** at the top right and enter the team password (`QE_TEAM_PASSWORD`).
 3. The view bar now shows **Korrekturen** (corrections).
 
@@ -199,8 +202,40 @@ view, `hintergrund` = background, `farbe` = colour; `aus` = off). The same works
 | `LOG_FORMAT`, `LOG_LEVEL` | `json`, `INFO` | logs |
 | `QE_PORT`, `QE_INTERNAL_PORT`, `QE_HOST` | `8080`, `9090`, `0.0.0.0` | ports, bind address |
 
-Complete with roles and secrets: [`docs/betrieb.md`](docs/betrieb.md#secrets-und-umgebung). Another
-repository gets its own profile under `profiles/<name>/` ([`profiles/README.md`](profiles/README.md)).
+Complete with roles and secrets: [`docs/betrieb.md`](docs/betrieb.md#secrets-und-umgebung).
+
+## Connecting another repository
+
+Everything that makes up an edu-sharing repository lives in a **profile** under `profiles/<name>/`;
+the code stays unchanged. One instance serves exactly one repository; a second repository gets a
+second instance.
+
+**Same metadata set, other address** (e.g. a staging system): set only `QE_REPO_URL` and
+`QE_SEARCH_URL` (server: in `.env`) and restart.
+
+**Own metadata set:** create a profile.
+
+1. Copy `profiles/beispiel/` to `profiles/<name>/`. In `profil.toml` set `id`, `name` and
+   `[repository]` (address, search, metadata set `mds`, how a source record is recognised).
+2. Under `[felder]` enter the properties of your metadata set, under `[qualitaet]` the quality
+   criteria (may be empty), under `[spider]` how a crawler is recognised.
+3. The crawler table describes per source where its metadata comes from (spider, legal and AI
+   fields, crawl status, field generation). Under `[crawler_tabelle]` map your column names to the
+   fixed keys. Which keys exist and who sees them: [`profiles/README.md`](profiles/README.md#crawler-tabelle).
+4. Put starting data under `profiles/<name>/daten/`: `crawler.csv` and `korrekturen.csv`. The header
+   line alone is enough to begin with; without both files the team instance builds no data.
+5. Check locally: `QE_PROFILE=<name> QE_TEAM_PASSWORD=secret python serve.py`, then
+   **Daten aktualisieren** in Audit.
+6. Bring it to main. GitHub builds the image with the new profile.
+7. On the server create a separate instance (own folder or own project in the Docker panel, so
+   volume and containers stay apart) and set in its `.env`: `QE_PROFILE=<name>`,
+   `QE_SEED_URL=https://raw.githubusercontent.com/janschachtschabel/quellenpanel/main/profiles/<name>/daten`
+   and a free `PORT`. Deploy.
+
+The team then maintains corrections, black- and whitelist and the crawler table in that
+instance's editing area. Limits: the kinds of fields and their tier (public, partner, team) are
+fixed in code (`backend/field_policy.py`). A column that matches no key is not shown; that takes a
+small code change.
 
 ## Development and tests
 

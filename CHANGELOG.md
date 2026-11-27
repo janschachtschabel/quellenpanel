@@ -15,6 +15,9 @@ Je Release die Änderungen und die **Hinweise für den Betrieb**. Format nach
   ersetzt `QE_GIT_URL` und legt bei Bedarf eine Version fest (z. B. `1.0.1`).
 - Server-Compose reicht `QE_PROFILE`, `QE_REPO_URL` und `QE_SEARCH_URL` durch (leer: Werte des
   Profils). Ein anderes Repository lässt sich so allein über die `.env` einstellen.
+- README (de/en): neuer Abschnitt „Anderes Repository anbinden“ Schritt für Schritt bis zum Server;
+  `profiles/README.md` listet die Schlüssel der Crawler-Tabelle mit ihrer Stufe. Korrigiert: Stufe 1
+  braucht auch auf der Team-Instanz ihr Passwort, und ohne beide Startdateien baut das Team keine Daten.
 - Der Kopf zeigt die Zahl der Quellen nicht mehr; sie steht schon über der Liste.
 
 ## [1.0.0] – 2026-11-27

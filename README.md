@@ -13,7 +13,7 @@ einer Zugangsstufe. Version und Änderungen:
 | Stufe | Für wen | Was man sieht | Wo |
 |---|---|---|---|
 | **0 Basis** | alle | Quellen, Filter, Qualitätsmerkmale, Beispielinhalte, Statistik | Instanz `public` (und alle anderen) |
-| **1 Details** | Partner, Steckbrief-Erstellung | zusätzlich Herkunft, Lizenzen, Felderzeugung, Export, Steckbrief-PDF | Instanz `partner` mit Passwort; auf `team` ohne Passwort |
+| **1 Details** | Partner, Steckbrief-Erstellung | zusätzlich Herkunft, Lizenzen, Felderzeugung, Export, Steckbrief-PDF | jede Instanz außer `public`, mit dem Stufe-1-Passwort |
 | **2 Audit** | Team | zusätzlich interne Felder, Datenprobleme, Protokoll, Korrekturen, Datenabgleich | nur Instanz `team`, mit Team-Passwort |
 
 Jede Instanz liefert unter Stufe 2 nur aus ihrem Export. Die öffentliche Instanz hat die Daten der
@@ -69,9 +69,11 @@ Betrieb (Ports, Probes, Metriken, Alarme, Logs, Secrets, Daten-Updates):
 
 Die App hat drei Ansichten: **Kacheln**, **Liste** und **Statistiken**. Oben stehen Suche,
 Quellenart und Sortierung, darunter Fach, Bildungsstufe, Inhaltstyp, Mindestzahl an Inhalten und
-OER. Ein Klick auf eine Quelle öffnet den Steckbrief mit Beispielinhalten aus dem Repository.
+OER. **Feld-Profil** zeigt nur Quellen, zu denen die Crawler-Tabelle angibt, wie ihre Metadatenfelder
+entstehen. Ein Klick auf eine Quelle öffnet den Steckbrief mit Beispielinhalten aus dem Repository.
 
 Rechts oben wählt man die Stufe (**Basisinfos**, **Details**, **Audit**) und die Sprache (DE/EN).
+**Details** fragt einmal nach dem Stufe-1-Passwort, **Audit** nach dem Team-Passwort.
 In Details und Audit lassen sich mehrere Quellen auswählen und als Steckbrief-PDF ausgeben; die
 gefilterte Liste gibt es als CSV, JSON oder Tabellen-PDF.
 
@@ -94,7 +96,8 @@ alle Team-Sitzungen ab. Fehlversuche mit Passwörtern (Login und Kopfzeilen) sin
 
 Der Bearbeitungsbereich gibt es nur auf der **Team-Instanz**:
 
-1. Team-Instanz öffnen (intern, z. B. `http://127.0.0.1:8082` bei Compose).
+1. Team-Instanz öffnen (Server mit Traefik: `http://<SERVER-IP>:18080` oder die Domain; drei
+   Instanzen mit `deploy/`: intern `http://127.0.0.1:8082`).
 2. Rechts oben **Audit** wählen und das Team-Passwort (`QE_TEAM_PASSWORD`) eingeben.
 3. In der Ansichtsleiste erscheint **Korrekturen**.
 
@@ -198,8 +201,41 @@ App (`/?kopf=aus&ansicht=liste`). Alle Elemente, Attribute und Farben:
 | `QE_PORT`, `QE_INTERNAL_PORT`, `QE_HOST` | `8080`, `9090`, `0.0.0.0` | Ports, Bind-Adresse |
 
 Vollständig mit Rollen und Secrets: [`docs/betrieb.md`](docs/betrieb.md#secrets-und-umgebung).
-Ein anderes Repository bekommt ein eigenes Profil unter `profiles/<name>/`
-([`profiles/README.md`](profiles/README.md)).
+
+## Anderes Repository anbinden
+
+Alles, was ein edu-sharing-Repository ausmacht, steht in einem **Profil** unter `profiles/<name>/`.
+Der Code bleibt unverändert. Eine Instanz bedient genau ein Repository; für ein zweites startet man
+eine zweite Instanz.
+
+**Gleicher Metadatensatz, andere Adresse** (z. B. ein Testsystem): nur `QE_REPO_URL` und
+`QE_SEARCH_URL` setzen (Server: in der `.env`) und neu starten.
+
+**Eigener Metadatensatz:** ein eigenes Profil anlegen.
+
+1. `profiles/beispiel/` nach `profiles/<name>/` kopieren. In `profil.toml` `id`, `name` und
+   `[repository]` (Adresse, Suche, Metadatensatz `mds`, woran ein Quelldatensatz zu erkennen ist)
+   eintragen.
+2. Unter `[felder]` die Properties des eigenen Metadatensatzes eintragen, unter `[qualitaet]` die
+   Qualitätskriterien (darf leer sein), unter `[spider]`, woran ein Crawler zu erkennen ist.
+3. Die Crawler-Tabelle beschreibt je Quelle die Herkunft der Metadaten (Spider, Rechts- und
+   KI-Felder, Crawl-Status, Feld-Erzeugung). Unter `[crawler_tabelle]` die eigenen Spaltennamen
+   den festen Schlüsseln zuordnen. Welche Schlüssel es gibt und wer sie sieht, steht in
+   [`profiles/README.md`](profiles/README.md#crawler-tabelle).
+4. Startdaten unter `profiles/<name>/daten/` ablegen: `crawler.csv` und `korrekturen.csv`. Für den
+   Anfang genügt je die Kopfzeile; ohne beide Dateien baut die Team-Instanz keine Daten.
+5. Lokal prüfen: `QE_PROFILE=<name> QE_TEAM_PASSWORD=geheim python serve.py`, dann im Audit
+   **Daten aktualisieren**.
+6. Auf main bringen. GitHub baut das Image mit dem neuen Profil.
+7. Auf dem Server eine eigene Instanz anlegen (eigener Ordner bzw. eigenes Projekt im Docker-Panel,
+   damit Volume und Container getrennt bleiben) und in deren `.env` setzen:
+   `QE_PROFILE=<name>`, `QE_SEED_URL=https://raw.githubusercontent.com/janschachtschabel/quellenpanel/main/profiles/<name>/daten`
+   und einen freien `PORT`. Bereitstellen.
+
+Danach pflegt das Team Korrekturen, Black- und Whitelist und die Crawler-Tabelle im
+Bearbeitungsbereich dieser Instanz. Grenzen: Die Arten von Feldern und ihre Stufe (öffentlich,
+Partner, Team) sind im Code festgelegt (`backend/field_policy.py`). Eine Spalte, die keinem
+Schlüssel entspricht, wird nicht angezeigt; dafür braucht es eine kleine Code-Änderung.
 
 ## Entwicklung und Tests
 
