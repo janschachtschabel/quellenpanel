@@ -170,6 +170,12 @@ Regeln sind mit `promtool test rules deploy/helm/quellenpanel/tests/rules-test.y
 | `LOG_FORMAT`, `LOG_LEVEL` | alle | | Logs |
 | `QE_PORT`, `QE_INTERNAL_PORT`, `QE_HOST` | alle | | Ports (8080, 9090) und Bind-Adresse (`0.0.0.0`) |
 
+**Passwörter und Sitzungsschlüssel wechseln:** Wert im Secret ändern (Helm: `config.existingSecret`
+oder die Werte im Chart-Secret; Compose: `deploy/.env`), dann die Pods neu starten
+(`kubectl rollout restart deployment/<release>` bzw. `docker compose up -d`). Ein neues
+`QE_TEAM_PASSWORD` oder `QE_TIER1_PASSWORD` gilt ab dem Neustart; bestehende Team-Sitzungen laufen
+weiter, bis sie ablaufen (12 h). Ein neues `QE_SESSION_SECRET` beendet sofort alle Team-Sitzungen.
+
 **Team-Sitzung:** Der Login setzt ein httpOnly-Cookie `qe_session` = `<ablauf>.<nonce>.<hmac>`
 (12 h). Jede Instanz mit demselben `QE_SESSION_SECRET` erkennt es; ein Neustart beendet keine
 Sitzung. Logout sperrt die Nonce bis zum Ablauf, aber nur im Speicher dieses Pods (die Team-Instanz
