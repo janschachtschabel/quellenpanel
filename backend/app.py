@@ -57,8 +57,8 @@ async def _lifespan(_app: FastAPI):
     # Configure logging here (not at import): JSON lines on stdout per Diensteleitfaden.
     obs.setup_logging()
     role = config.role()                  # fail fast on an invalid QE_ROLE
-    if role == "partner" and not config.TIER1_PW:
-        log.warning("Rolle partner ohne QE_TIER1_PASSWORD: Stufe 1 (Details, Steckbrief) bleibt gesperrt")
+    if role != "public" and not config.TIER1_PW:
+        log.warning("Ohne QE_TIER1_PASSWORD bleibt Stufe 1 (Details, Steckbrief) ohne Team-Login gesperrt")
     if role == "team":
         _DATA.update({"meta": {}, "records": [], "byId": {}, "byFamily": {}})
         if bootstrap.start_team() == "ready":
@@ -209,7 +209,7 @@ def capabilities(request: Request, x_team_password: str | None = Header(None),
         "maxTier": tiers.max_tier(request, None, x_team_password, x_tier1_password),
         "role": config.role(),
         "publicOnly": config.public_only(),
-        "tier1Gated": bool(config.TIER1_PW) or config.role() == "partner",
+        "tier1Gated": True,   # tier 1 always needs its password (fail-closed)
         "teamAvailable": bool(config.TEAM_PW) and config.role() == "team",
         "repoUrl": config.REPO_URL,   # which edu-sharing repo the data refers to (repo-neutral)
         "branding": _branding(),

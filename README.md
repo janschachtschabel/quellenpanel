@@ -33,10 +33,11 @@ Start ohne Daten baut sie die Daten aus dem Repository auf (einige Minuten, bis 
 die Datenrouten mit 503) oder lädt Startdaten von `QE_SEED_URL`. Im Container (Compose, Helm) fehlen Korrekturen und Crawler-Tabelle im Image: dort `QE_SEED_URL` setzen oder beide Dateien im Team-Bereich hochladen, sonst baut das Team keine Daten.
 
 **Server mit Traefik** (Docker-Server, auf dem schon ein Traefik-Proxy mit Let's Encrypt läuft,
-etwa ein Docker-Panel mit „Compose aus URL“): Die `docker-compose.yml` im Hauptordner startet die drei
-Instanzen, baut das Image aus diesem Repository und braucht beim ersten Start keine einzige Variable.
-Danach in der `.env` (Vorlage `.env.example`) `DOMAIN` und die Passwörter eintragen und erneut
-bereitstellen. Schritt für Schritt in [`deploy/README.md`](deploy/README.md#server-with-traefik).
+etwa ein Docker-Panel mit „Compose aus URL“): Die `docker-compose.yml` im Hauptordner startet eine
+Instanz, die alle Stufen über einen Port liefert (Stufe 1 und 2 nur mit ihrem Passwort), baut das Image
+aus diesem Repository und braucht beim ersten Start keine einzige Variable. Danach in der `.env`
+(Vorlage `.env.example`) `DOMAIN` oder `PORT` und die Passwörter eintragen und erneut bereitstellen.
+Getrennte Partner- und öffentliche Instanzen lassen sich mit `SEPARATE_INSTANCES=1` zuschalten. Schritt für Schritt in [`deploy/README.md`](deploy/README.md#server-with-traefik).
 
 **Server mit Docker Compose** (drei Instanzen aus einem veröffentlichten Image, Schritt für Schritt in
 [`deploy/README.md`](deploy/README.md)):
@@ -78,10 +79,10 @@ gefilterte Liste gibt es als CSV, JSON oder Tabellen-PDF.
 | Was | Wie | Wirkung |
 |---|---|---|
 | Rolle der Instanz | `QE_ROLE=team`, `partner` oder `public` | begrenzt die höchste Stufe (2, 1, 0); immer setzen |
-| Stufe 1 auf dem Partner | `QE_TIER1_PASSWORD` (Secret) | ohne Passwort bleibt Stufe 1 zu; die App fragt danach, API-Aufrufe senden es im Header `x-tier1-password` |
+| Stufe 1 (Partner und Team) | `QE_TIER1_PASSWORD` (Secret) | ohne Passwort bleibt Stufe 1 auf jeder Instanz zu; die App fragt danach, API-Aufrufe senden es im Header `x-tier1-password` |
 | Stufe 2 (Team) | `QE_TEAM_PASSWORD` (Secret) | ohne Passwort gibt es keinen Team-Zugang; Login über den Knopf **Audit** |
 | Team-Sitzung | `QE_SESSION_SECRET` (Secret, `openssl rand -hex 32`) | signiertes Cookie für 12 h; mit festem Schlüssel übersteht die Anmeldung Neustarts |
-| Team-Instanz abschirmen | Ingress hinter VPN/SSO | auf dem Team ist Stufe 1 ohne Passwort offen; der Host darf nicht aus dem Internet erreichbar sein |
+| Team-Instanz abschirmen | Ingress hinter VPN/SSO (empfohlen) | die Team-Instanz hält alle Daten und die Schreibrouten; öffentlich erreichbar schützen sie nur die Passwörter und die Fehlversuchsbremse |
 | Port 9090 (Exporte, Metriken) | `networkPolicy.enabled` (in `values-team.yaml` an) | nur Quellenpanel-Pods und Monitoring erreichen ihn; nie veröffentlichen |
 | Team-Login aus fremder Seite | `QE_ALLOWED_ORIGINS` | nur für eingebettete Team-Ansichten, nur über HTTPS |
 
@@ -180,7 +181,7 @@ App (`/?kopf=aus&ansicht=liste`). Alle Elemente, Attribute und Farben:
 |---|---|---|
 | `QE_ROLE` | `team` | `team`, `partner` oder `public` |
 | `QE_TEAM_PASSWORD` | leer (kein Team-Zugang) | Passwort Stufe 2 |
-| `QE_TIER1_PASSWORD` | leer (Partner: Stufe 1 zu) | Passwort Stufe 1 |
+| `QE_TIER1_PASSWORD` | leer (Stufe 1 zu) | Passwort Stufe 1 |
 | `QE_SESSION_SECRET` | `session.key` im Datenordner | Schlüssel der Team-Sitzung |
 | `QE_EXPORT_SOURCE`, `QE_EXPORT_POLL_MINUTES` | leer, `10` | Partner/Öffentlich: Export-Quelle mit `{tier}`, Abgleich in Minuten |
 | `QE_SEED_URL` | leer | Team: Startdaten für den ersten Start |

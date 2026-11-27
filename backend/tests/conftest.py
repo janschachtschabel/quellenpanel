@@ -20,3 +20,11 @@ def client():
 @pytest.fixture
 def team_pw():
     return "test-team-pw"
+
+
+@pytest.fixture
+def tier1(monkeypatch):
+    """Tier 1 is fail-closed: set its password and return the header that unlocks it."""
+    import config
+    monkeypatch.setattr(config, "TIER1_PW", "test-tier1-pw")
+    return {"X-Tier1-Password": "test-tier1-pw"}

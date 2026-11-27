@@ -246,8 +246,8 @@ def check_pw(pw: str | None, header_pw: str | None) -> bool:
 
 
 def check_tier1_pw(pw: str | None, header_pw: str | None) -> bool:
-    """Tier 1 access: open when QE_TIER1_PASSWORD is unset; otherwise a constant-time match."""
+    """Tier 1 access: a constant-time match; fail-closed when QE_TIER1_PASSWORD is unset."""
     if not TIER1_PW:
-        return True
+        return False
     token = (pw or header_pw or "").strip()
     return hmac.compare_digest(token.encode("utf-8"), TIER1_PW.encode("utf-8"))

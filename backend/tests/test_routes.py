@@ -2,13 +2,14 @@
 tier and correct gating (no end-user access to team-only or data-work routes)."""
 
 
-def test_stats_overview_is_tiered(client, team_pw):
+def test_stats_overview_is_tiered(client, team_pw, tier1):
     t0 = client.get("/api/stats").json()
     assert "totalContents" in t0 and "topByContent" in t0      # end-user shape
     assert "topLanguages" in t0                                # languages moved into the base view
     assert "contentBrackets" not in t0                         # "content per source" chart removed
     assert "quellenverwaltung" not in t0                       # no extended data leaks in
-    t1 = client.get("/api/stats?tier=1").json()
+    assert client.get("/api/stats?tier=1").json() == t0           # no password: tier 0
+    t1 = client.get("/api/stats?tier=1", headers=tier1).json()
     assert "quellenverwaltung" in t1                           # extended (full) shape
     # Descriptive-metadata fill over Quelldatensätze, split into two balanced charts.
     bf = t1["beschreibendeFelder"]
@@ -29,17 +30,18 @@ def test_team_stats_separate_and_gated(client, team_pw):
     assert "metadaten" not in team["feldFuellstand"]           # metadata fill moved to tier 1
 
 
-def test_export_requires_tier1(client):
+def test_export_requires_tier1(client, tier1):
     assert client.get("/api/export.json").status_code == 403          # tier 0 default
     assert client.get("/api/export.csv").status_code == 403
-    ok = client.get("/api/export.json?tier=1")
+    assert client.get("/api/export.json?tier=1").status_code == 403   # tier 1 without password
+    ok = client.get("/api/export.json?tier=1", headers=tier1)
     assert ok.status_code == 200 and isinstance(ok.json(), list) and ok.json()
 
 
-def test_export_respects_filter(client):
+def test_export_respects_filter(client, tier1):
     # The export honours the same filters as the list (so the file matches what is on screen).
-    full = client.get("/api/export.json?tier=1").json()
-    none = client.get("/api/export.json?tier=1&min_count=99999999").json()
+    full = client.get("/api/export.json?tier=1", headers=tier1).json()
+    none = client.get("/api/export.json?tier=1&min_count=99999999", headers=tier1).json()
     assert len(full) > 0 and len(none) == 0
 
 

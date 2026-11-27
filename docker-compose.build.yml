@@ -30,6 +30,7 @@ services:
     environment:
       QE_ROLE: team
       QE_TEAM_PASSWORD: ${QE_TEAM_PASSWORD:-}
+      QE_TIER1_PASSWORD: ${QE_TIER1_PASSWORD:-}
       QE_SESSION_SECRET: ${QE_SESSION_SECRET:-}
       QE_SEED_URL: ${QE_SEED_URL:-https://raw.githubusercontent.com/janschachtschabel/quellenpanel/main/profiles/wlo/daten}
       QE_AUTO_REFRESH_HOUR: ${QE_AUTO_REFRESH_HOUR:-}

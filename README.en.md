@@ -33,9 +33,11 @@ without data it builds the data from the repository (a few minutes; until then t
 answer 503) or loads starting data from `QE_SEED_URL`. In a container (Compose, Helm) the image carries no corrections or crawler table: set `QE_SEED_URL` or upload both files in the team area, otherwise the team builds no data.
 
 **Server with Traefik** (a Docker server that already runs a Traefik proxy with Let's Encrypt, such
-as a Docker panel with "compose from URL"): `docker-compose.yml` in the root folder starts the three
-instances, builds the image from this repository and needs no variable at all on the first start.
-Then set `DOMAIN` and the passwords in `.env` (template `.env.example`) and deploy again. Step by step
+as a Docker panel with "compose from URL"): `docker-compose.yml` in the root folder starts one instance
+that serves every tier on one port (tier 1 and 2 only with their password), builds the image from this
+repository and needs no variable at all on the first start. Then set `DOMAIN` or `PORT` and the
+passwords in `.env` (template `.env.example`) and deploy again. Separate partner and public instances
+can be added with `SEPARATE_INSTANCES=1`. Step by step
 in [`deploy/README.md`](deploy/README.md#server-with-traefik).
 
 **Server with Docker Compose** (three instances from a published image, step by step in
@@ -78,10 +80,10 @@ is available as CSV, JSON or table PDF.
 | What | How | Effect |
 |---|---|---|
 | Instance role | `QE_ROLE=team`, `partner` or `public` | caps the highest tier (2, 1, 0); always set it |
-| Tier 1 on the partner | `QE_TIER1_PASSWORD` (secret) | without a password tier 1 stays shut; the app asks for it, API calls send it in the header `x-tier1-password` |
+| Tier 1 (partner and team) | `QE_TIER1_PASSWORD` (secret) | without a password tier 1 stays shut on every instance; the app asks for it, API calls send it in the header `x-tier1-password` |
 | Tier 2 (team) | `QE_TEAM_PASSWORD` (secret) | without a password there is no team access; log in via the **Audit** button |
 | Team session | `QE_SESSION_SECRET` (secret, `openssl rand -hex 32`) | signed cookie for 12 h; with a fixed key logins survive restarts |
-| Shield the team instance | ingress behind VPN/SSO | on the team, tier 1 is open without password; the host must not be reachable from the internet |
+| Shield the team instance | ingress behind VPN/SSO (recommended) | the team instance holds all data and the write routes; when public, only the passwords and the failed-attempt brake protect them |
 | Port 9090 (exports, metrics) | `networkPolicy.enabled` (on in `values-team.yaml`) | only Quellenpanel pods and monitoring reach it; never publish it |
 | Team login from another site | `QE_ALLOWED_ORIGINS` | only for embedded team views, HTTPS only |
 
@@ -181,7 +183,7 @@ view, `hintergrund` = background, `farbe` = colour; `aus` = off). The same works
 |---|---|---|
 | `QE_ROLE` | `team` | `team`, `partner` or `public` |
 | `QE_TEAM_PASSWORD` | empty (no team access) | tier 2 password |
-| `QE_TIER1_PASSWORD` | empty (partner: tier 1 shut) | tier 1 password |
+| `QE_TIER1_PASSWORD` | empty (tier 1 shut) | tier 1 password |
 | `QE_SESSION_SECRET` | `session.key` in the data folder | key of the team session |
 | `QE_EXPORT_SOURCE`, `QE_EXPORT_POLL_MINUTES` | empty, `10` | partner/public: export source with `{tier}`, sync interval in minutes |
 | `QE_SEED_URL` | empty | team: starting data for the first start |

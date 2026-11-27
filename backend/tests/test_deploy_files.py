@@ -185,7 +185,7 @@ def test_server_compose_deploys_without_any_variable():
     assert not any(n.get("external") for n in doc["networks"].values())
 
 
-def test_server_compose_three_instances_behind_traefik():
+def test_server_compose_one_instance_by_default():
     _, doc = _server()
     svc = doc["services"]
     assert set(svc) == {"team", "partner", "public"}
@@ -193,24 +193,29 @@ def test_server_compose_three_instances_behind_traefik():
     # The host pulls before it deploys: the team image is never pulled (no registry) but rebuilt from
     # the repository on every deploy, otherwise an old local image keeps running.
     assert svc["team"]["pull_policy"] == "build"
-    for name, host in (("team", "TEAM_DOMAIN"), ("partner", "PARTNER_DOMAIN"), ("public", "DOMAIN")):
+    # One port serves every tier; tier 1 and 2 need their passwords (fail-closed).
+    assert svc["team"]["ports"] == ["${BIND:-0.0.0.0}:${PORT:-18080}:8080"]
+    assert "deploy" not in svc["team"]
+    # Separate instances are optional: off unless SEPARATE_INSTANCES=1, so equal ports never clash.
+    for name in ("partner", "public"):
+        assert svc[name]["deploy"]["replicas"] == "${SEPARATE_INSTANCES:-0}", name
+        assert svc[name]["pull_policy"] == "never"
+        assert svc[name]["environment"]["QE_EXPORT_SOURCE"] == "http://team:9090/internal/exports/stufe{tier}.json"
+    assert svc["partner"]["ports"] == ["${PARTNER_PORT:-18081}:8080"]
+    assert svc["public"]["ports"] == ["${PUBLIC_PORT:-18082}:8080"]
+    for name, host in (("team", "DOMAIN"), ("partner", "PARTNER_DOMAIN"), ("public", "PUBLIC_DOMAIN")):
         s = svc[name]
         assert all(":80:" not in p and ":443:" not in p for p in s["ports"]), name   # 80/443: proxy
+        assert all("9090" not in p for p in s["ports"]), name                       # metrics stay inside
         assert s["image"] == "quellenpanel:server", name
         assert s["read_only"] is True and str(s["user"]) == "10001", name
         assert s["environment"]["TRUST_PROXY"] == "1", name
         labels = "\n".join(s["labels"])
         assert f"quellenpanel-{name}.rule=Host(`${{{host}:-}}`)" in labels, name
         assert "loadbalancer.server.port=8080" in labels and "traefik.docker.network=" in labels, name
-    for name in ("partner", "public"):
-        assert svc[name]["pull_policy"] == "never"
-        assert svc[name]["environment"]["QE_EXPORT_SOURCE"] == "http://team:9090/internal/exports/stufe{tier}.json"
-    assert svc["public"]["ports"] == ["${PORT:-18080}:8080"]
-    assert svc["partner"]["ports"] == ["${PARTNER_PORT:-18081}:8080"]
-    assert svc["team"]["ports"] == ["${TEAM_BIND:-127.0.0.1}:${TEAM_PORT:-18082}:8080"]
     team = svc["team"]["environment"]
     assert team["QE_ROLE"] == "team" and "quellenpanel-data:/data" in svc["team"]["volumes"]
-    # Without it tier 1 is open on the team instance to anyone who reaches it.
+    assert team["QE_TEAM_PASSWORD"] == "${QE_TEAM_PASSWORD:-}"
     assert team["QE_TIER1_PASSWORD"] == "${QE_TIER1_PASSWORD:-}"
     assert team["QE_SEED_URL"].endswith("/profiles/wlo/daten}")   # never a deploy without corrections
 
