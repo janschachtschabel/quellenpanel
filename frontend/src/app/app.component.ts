@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, OnInit, OnDestroy, effect, inject, signal, computed, Signal } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, OnDestroy, effect, inject, signal, computed, Signal, ChangeDetectionStrategy } from '@angular/core';
 import { Subscription, timer, of } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
@@ -45,6 +45,7 @@ type View = 'tile' | 'list' | 'stats' | 'korrekturen';
  */
 @Component({
   selector: 'wlo-root',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [
     CommonModule, FormsModule, MatIconModule, MatButtonModule, MatButtonToggleModule,

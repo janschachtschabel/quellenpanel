@@ -603,9 +603,12 @@ def _openapi() -> dict:
         routes = [r for r in app.routes
                   if not getattr(r, "path", "").startswith("/internal")
                   and (role == "team" or not _is_team_only(r))]
-        _openapi_cache[role] = openapi_doku.ergaenze(
-            get_openapi(title="Quellenpanel", version=config.VERSION,
-                        description=_OPENAPI_DESCRIPTION, routes=routes))
+        spec = get_openapi(title="Quellenpanel", version=config.VERSION,
+                           description=_OPENAPI_DESCRIPTION, routes=routes)
+        if role != "team":                  # the team router stays one entry in app.routes: drop by prefix
+            team_prefix = team_routes.router.prefix + "/"
+            spec["paths"] = {p: v for p, v in spec.get("paths", {}).items() if not p.startswith(team_prefix)}
+        _openapi_cache[role] = openapi_doku.ergaenze(spec)
     return _openapi_cache[role]
 
 

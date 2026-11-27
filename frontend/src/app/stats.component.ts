@@ -1,4 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, inject, ChangeDetectionStrategy } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { Stats } from './models';
 import { I18n } from './i18n.service';
@@ -11,6 +11,7 @@ import { I18n } from './i18n.service';
  */
 @Component({
   selector: 'wlo-stats',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [DecimalPipe],
   template: `

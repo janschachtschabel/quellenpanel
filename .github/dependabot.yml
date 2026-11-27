@@ -13,6 +13,10 @@ updates:
     groups:
       angular:
         patterns: ["@angular/*", "@angular-devkit/*", "@schematics/angular"]
+    ignore:
+      # Angular pins the TypeScript range (Angular 22: >=6.0 <6.1); TypeScript follows an Angular update.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
@@ -21,3 +25,7 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # Node: only LTS lines (even majors) for the build stage.
+      - dependency-name: node
+        versions: ["23.x", "25.x", "27.x", "29.x"]

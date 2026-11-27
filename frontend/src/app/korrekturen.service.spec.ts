@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { KorrekturenService } from './korrekturen.service';
 import { SourcesService } from './sources.service';
@@ -13,7 +13,7 @@ describe('KorrekturenService', () => {
 
   beforeEach(() => {
     localStorage.removeItem('qe.wer');
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({ providers: [provideHttpClient(withXhr()), provideHttpClientTesting()] });
     svc = TestBed.inject(KorrekturenService);
     http = TestBed.inject(HttpTestingController);
   });

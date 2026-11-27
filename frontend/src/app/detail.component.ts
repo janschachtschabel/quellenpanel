@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DecimalPipe, NgTemplateOutlet } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatChipsModule } from '@angular/material/chips';
@@ -28,6 +28,7 @@ import { KorrekturFelder } from './models';
  */
 @Component({
   selector: 'wlo-detail-dialog',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [
     DecimalPipe, NgTemplateOutlet, MatDialogModule, MatChipsModule, MatIconModule, MatButtonModule,

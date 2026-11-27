@@ -23,7 +23,7 @@ Checkliste: [README.md](README.md).
 
 | Architektur | |
 |---|---|
-| **Überblick** | FastAPI-Backend und Angular-21-Oberfläche in einem Image; drei Instanzen: team (Stufe 2), partner (Stufe 1), public (Stufe 0) |
+| **Überblick** | FastAPI-Backend und Angular-22-Oberfläche in einem Image; drei Instanzen: team (Stufe 2), partner (Stufe 1), public (Stufe 0) |
 | **Horizontale Skalierbarkeit** | `geprüft` (partner und public ja; team 1 Pod wegen RWO-Volume) |
 | **Integriert in B-API** | `geprüft` (nein, begründet: anonymer Lesezugriff auf öffentliche Daten) |
 | **Schreibt Suggestions** | `geprüft` (nein) |

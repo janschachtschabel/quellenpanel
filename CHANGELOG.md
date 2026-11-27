@@ -97,6 +97,18 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
   überstehen so Neustarts.
 - Die bisherige Entwicklungsdatei heißt jetzt `docker-compose.build.yml`.
 
+### Abhängigkeiten aktualisiert (Dependabot)
+
+- Angular und Angular Material 22.3 (mit TypeScript 6.0, Vitest 5, happy-dom 21, tslib 2.9). Die
+  Komponenten behalten mit `ChangeDetectionStrategy.Eager` das bisherige Verhalten, `provideHttpClient`
+  nutzt ausdrücklich `withXhr()`.
+- FastAPI 0.165, uvicorn 0.54, pytest 9.2, PyYAML 6.0.4, ruff 0.17 (Regelauswahl in `ruff.toml` jetzt
+  fest auf E4/E7/E9/F, wie bisher). Die OpenAPI der partner- und public-Instanz blendet die Team-Pfade
+  jetzt über ihr Präfix aus, weil FastAPI eingebundene Router nicht mehr auflöst.
+- GitHub-Actions: checkout 7, setup-node 7, setup-python 7, setup-helm 5, build-push 7, setup-buildx 4.
+- Nicht übernommen: TypeScript 7 (Angular 22 verlangt 6.0) und Node 25 (keine LTS-Linie); Dependabot
+  schlägt beides nicht mehr vor.
+
 ### Behoben (Abschluss-Audit)
 
 - Ohne `korrekturen.csv` und `crawler.csv` startet kein Datenaufbau mehr: vorher erschien eine

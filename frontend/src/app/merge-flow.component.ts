@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { I18n } from './i18n.service';
 
 /**
@@ -51,6 +51,7 @@ const X0 = 8;       // x of the first box
 
 @Component({
   selector: 'wlo-merge-flow',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   template: `
     <p class="mf-intro">{{ i18n.lang() === 'de' ? 'Phase anklicken für Details:' : 'Click a phase for details:' }}</p>

@@ -1,4 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, inject, ChangeDetectionStrategy } from '@angular/core';
 import { BarEntry, FullStats } from './models';
 import { BarRow, StatBarsComponent, barRows } from './stat-bars.component';
 import { I18n } from './i18n.service';
@@ -15,6 +15,7 @@ import { I18n } from './i18n.service';
  */
 @Component({
   selector: 'wlo-full-stats',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [StatBarsComponent],
   template: `

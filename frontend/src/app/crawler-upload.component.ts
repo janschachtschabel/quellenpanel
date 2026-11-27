@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Output, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -10,6 +10,7 @@ import { fehlertext } from './korrekturen-fehler';
 /** Replace the crawler table: choose a CSV, see required columns and the effect per spider, replace. */
 @Component({
   selector: 'wlo-crawler-upload',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [MatButtonModule, MatIconModule],
   template: `

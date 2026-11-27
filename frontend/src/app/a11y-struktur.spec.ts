@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 
@@ -16,7 +16,7 @@ const KARTE: SourceCard = {
 
 describe('keyboard and screen-reader structure (review findings Etappe 6)', () => {
   beforeEach(() => TestBed.configureTestingModule({
-    providers: [provideHttpClient(), provideHttpClientTesting(), provideNoopAnimations()],
+    providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), provideNoopAnimations()],
   }));
 
   it('list: each source opens via a real button', () => {
