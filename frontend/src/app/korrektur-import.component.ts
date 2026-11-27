@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -18,6 +18,7 @@ const ZIELFELDER = ['typ', 'schluessel', 'aktion', 'wert', 'kommentar'] as const
  *  preview (new / changed / faulty / dropped), then apply. Emits the new state after applying. */
 @Component({
   selector: 'wlo-korrektur-import',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [FormsModule, MatButtonModule, MatButtonToggleModule, MatFormFieldModule, MatIconModule, MatSelectModule],
   template: `

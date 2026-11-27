@@ -1,4 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, inject, ChangeDetectionStrategy } from '@angular/core';
 import { DupInfo, TeamStats } from './models';
 import { BarRow, StatBarsComponent } from './stat-bars.component';
 import { PRUEF_GROUPS } from './data-problem-filters';
@@ -36,6 +36,7 @@ const PROBLEM_KEY: Record<string, string> = {
  */
 @Component({
   selector: 'wlo-team-stats',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [StatBarsComponent, MergeFlowComponent],
   template: `

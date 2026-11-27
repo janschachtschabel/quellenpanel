@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,6 +14,7 @@ import { I18n } from './i18n.service';
  */
 @Component({
   selector: 'wlo-audit-report',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [MatDialogModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
   template: `

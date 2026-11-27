@@ -1,4 +1,4 @@
-import { Component, HostBinding, Input } from '@angular/core';
+import { Component, HostBinding, Input, ChangeDetectionStrategy } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { BarEntry } from './models';
 
@@ -22,6 +22,7 @@ export function barRows(items: BarEntry[] | undefined, color?: string): BarRow[]
  */
 @Component({
   selector: 'wlo-stat-bars',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [DecimalPipe],
   template: `

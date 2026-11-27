@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 
@@ -17,7 +17,7 @@ describe('schlanke Einbettung (Kopf, Fuß, Filter, Rahmen, Ansicht, Farben)', ()
   beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideNoopAnimations()],
+      providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), provideNoopAnimations()],
     });
     await TestBed.compileComponents();
   });

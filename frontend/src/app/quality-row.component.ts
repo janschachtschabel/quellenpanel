@@ -1,4 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, inject, ChangeDetectionStrategy } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { COMPACT_KEYS, QualityEntry, qualityEntries } from './quality';
@@ -11,6 +11,7 @@ import { I18n } from './i18n.service';
  */
 @Component({
   selector: 'wlo-quality-row',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [MatIconModule, MatTooltipModule],
   template: `

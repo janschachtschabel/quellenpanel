@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpClient, provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { credentialsInterceptor } from './credentials.interceptor';
@@ -15,7 +15,7 @@ describe('tier-1 password', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(withInterceptors([credentialsInterceptor])), provideHttpClientTesting()],
+      providers: [provideHttpClient(withXhr(), withInterceptors([credentialsInterceptor])), provideHttpClientTesting()],
     });
     api = TestBed.inject(SourcesService);
     tiers = TestBed.inject(TierService);

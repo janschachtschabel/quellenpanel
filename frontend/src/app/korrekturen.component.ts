@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MatButtonModule } from '@angular/material/button';
@@ -26,6 +26,7 @@ import { Anwenden, Korrektur, KorrekturFelder, KorrekturStand, VerlaufEintrag } 
  */
 @Component({
   selector: 'wlo-korrekturen',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [FormsModule, MatButtonModule, MatDialogModule, MatFormFieldModule, MatIconModule, MatInputModule,
             MatPaginatorModule, MatSelectModule, MatTabsModule, KorrekturImportComponent, CrawlerUploadComponent],

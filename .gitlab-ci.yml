@@ -52,7 +52,7 @@ ruff check:
   stage: lint
   interruptible: true
   image:
-    name: ghcr.io/astral-sh/ruff:0.12.9-alpine
+    name: ghcr.io/astral-sh/ruff:0.17.6-alpine
   before_script:
     - cd "$CI_PROJECT_DIR/backend"
     - ruff --version

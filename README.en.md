@@ -208,7 +208,7 @@ cd frontend && npm test -- --watch=false       # frontend (vitest)
 cd frontend && npm run lint:design             # design rules (edu-sharing)
 ```
 
-Layout: `backend/` (FastAPI, data preparation, roles and tiers), `frontend/` (Angular 21, Material,
+Layout: `backend/` (FastAPI, data preparation, roles and tiers), `frontend/` (Angular 22, Material,
 widgets), `profiles/` (repository profiles), `deploy/` (Compose, Helm, measurement), `docs/`. How
 the data is built: [`docs/datenaufbereitung.md`](docs/datenaufbereitung.md). CI
 (`.github/workflows/ci.yml`) additionally runs `pip-audit`, `npm audit`, Helm, kubeconform, alert

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, ChangeDetectionStrategy } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,6 +15,7 @@ import { I18n } from './i18n.service';
  * From the Details tier (`selectable`, tier 1+) a leading checkbox column drives the Sammel-PDF selection. */
 @Component({
   selector: 'wlo-list',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [DecimalPipe, MatCheckboxModule, MatIconModule, MatTooltipModule, QualityRowComponent],
   template: `
