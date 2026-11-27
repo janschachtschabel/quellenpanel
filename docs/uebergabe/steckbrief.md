@@ -1,6 +1,6 @@
 # Steckbrief Quellenpanel
 
-Dienst-ID `quellenpanel`, Version 1.0.0, Stand 27.11.2026. Zeilen nach dem Diensteleitfaden,
+Dienst-ID `quellenpanel`, Version 1.0.0 plus die Änderungen unter „Unveröffentlicht“ im Changelog, Stand 27.11.2026 abends. Zeilen nach dem Diensteleitfaden,
 Kapitel 6. Status: **erfüllt**, **Abweichung begründet**, **entfällt** (mit Grund) oder **offen**.
 
 | Zeile | Angabe | Status |

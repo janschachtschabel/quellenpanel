@@ -89,6 +89,11 @@ gefilterte Liste gibt es als CSV, JSON oder Tabellen-PDF.
 | Port 9090 (Exporte, Metriken) | `networkPolicy.enabled` (in `values-team.yaml` an) | nur Quellenpanel-Pods und Monitoring erreichen ihn; nie veröffentlichen |
 | Team-Login aus fremder Seite | `QE_ALLOWED_ORIGINS` | nur für eingebettete Team-Ansichten, nur über HTTPS |
 
+**Hinter der b-api** (optional): Die API-Endpunkte können hinter dem Dienste-Proxy der b-api liegen.
+Der Dienst erkennt das je Anfrage am Delegations-Token und bietet dort keine eigene Anmeldung an
+(Stufe 0 anonym, Stufe 1 nur mit `X-Tier1-Password`, kein Team-Bereich). Direkt bleibt alles wie
+oben. Proxy-Eintrag: [`docs/betrieb.md`](docs/betrieb.md#betrieb-mit-und-ohne-b-api).
+
 Passwörter tauschen: Secret ändern und die Pods neu starten. Ein neuer `QE_SESSION_SECRET` meldet
 alle Team-Sitzungen ab. Fehlversuche mit Passwörtern (Login und Kopfzeilen) sind je Adresse gedrosselt.
 
@@ -195,6 +200,8 @@ App (`/?kopf=aus&ansicht=liste`). Alle Elemente, Attribute und Farben:
 | `QE_THUMB_CACHE_MB` | `16` | Zwischenspeicher für Vorschaubilder in MiB (`0` = aus) |
 | `QE_REPO_URL`, `QE_SEARCH_URL` | aus dem Profil | Repository und Suche |
 | `QE_PROFILE`, `QE_PROFILES_DIR` | `wlo`, `profiles/` | Repository-Profil |
+| `QE_VERSION` | leer (`main`) | nur Server-Compose: Image-Version aus GitHub |
+| `B_API_DELEGATION_HEADER` | leer | hinter der b-api mit eigenem `delegationHeader` |
 | `QE_DATA_DIR` | `backend/data` (Image: `/data`) | Datenverzeichnis |
 | `TRUST_PROXY` | aus | Client-Adresse aus `X-Forwarded-For` (nur hinter eigenem Proxy) |
 | `LOG_FORMAT`, `LOG_LEVEL` | `json`, `INFO` | Logs |

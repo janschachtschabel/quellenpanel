@@ -90,6 +90,11 @@ is available as CSV, JSON or table PDF.
 | Port 9090 (exports, metrics) | `networkPolicy.enabled` (on in `values-team.yaml`) | only Quellenpanel pods and monitoring reach it; never publish it |
 | Team login from another site | `QE_ALLOWED_ORIGINS` | only for embedded team views, HTTPS only |
 
+**Behind the b-api** (optional): the API endpoints can sit behind the b-api services proxy. The
+service detects this per request from the delegation token and offers no own login there (tier 0
+anonymous, tier 1 only with `X-Tier1-Password`, no team area). Direct access stays as above. Proxy
+entry: [`docs/betrieb.md`](docs/betrieb.md#betrieb-mit-und-ohne-b-api).
+
 Changing passwords: update the secret and restart the pods. A new `QE_SESSION_SECRET` logs out all
 team sessions. Failed password attempts (login and headers) are throttled per address.
 
@@ -197,6 +202,8 @@ view, `hintergrund` = background, `farbe` = colour; `aus` = off). The same works
 | `QE_THUMB_CACHE_MB` | `16` | preview image cache in MiB (`0` = off) |
 | `QE_REPO_URL`, `QE_SEARCH_URL` | from the profile | repository and search |
 | `QE_PROFILE`, `QE_PROFILES_DIR` | `wlo`, `profiles/` | repository profile |
+| `QE_VERSION` | empty (`main`) | server compose only: image version from GitHub |
+| `B_API_DELEGATION_HEADER` | empty | behind the b-api with its own `delegationHeader` |
 | `QE_DATA_DIR` | `backend/data` (image: `/data`) | data directory |
 | `TRUST_PROXY` | off | client address from `X-Forwarded-For` (only behind your own proxy) |
 | `LOG_FORMAT`, `LOG_LEVEL` | `json`, `INFO` | logs |

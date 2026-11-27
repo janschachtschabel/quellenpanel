@@ -7,16 +7,16 @@ Checkliste: [README.md](README.md).
 |---|---|
 | **Service** | Quellenpanel (Dienst-ID `quellenpanel`) |
 | **Funktionalität** | Zeigt die Quellen des Repositorys (WLO): öffentliche Quellenliste mit Widgets, Steckbrief für Partner, internes Audit mit Korrekturen fürs Team |
-| **Stabile Version** | `In Klärung` (1.0.0 fertig, Tag `v1.0.0` noch nicht gesetzt) |
+| **Stabile Version** | `1.0.0` (Tag `v1.0.0`, GitHub-Release; Änderungen danach unter „Unveröffentlicht“ im Changelog) |
 | **Technischer Owner** | Jan Schachtschabel |
 | **Jira** | `nicht vorhanden` |
-| **Deployment Status** | `In Klärung` (Vorgängerversion läuft produktiv; 1.0.0 läuft im Testbetrieb per Docker Compose, noch nicht im Cluster) |
+| **Deployment Status** | `In Klärung` (Vorgängerversion läuft produktiv; der aktuelle Stand läuft im Testbetrieb per Docker Compose mit dem GitHub-Image `:main`, noch nicht im Cluster) |
 | **Repository** | `vorhanden` ([GitHub](https://github.com/janschachtschabel/quellenpanel)) |
 | **OpenAPI Spec** | `vorhanden` (`GET /openapi.json`, je Instanz nur deren Pfade) |
-| **Pipeline und Git-Tags** | `vorhanden` (Tags `v<version>`, `.gitlab-ci.yml` und `.github/workflows/` im Repo) |
+| **Pipeline und Git-Tags** | `vorhanden` (Tags `v<version>`, Release-Workflow von Hand auf main; `.github/workflows/` und `.gitlab-ci.yml` im Repo; Images: `ghcr.io/janschachtschabel/quellenpanel` bei jedem Push auf main und jedem Release, Docker Hub und `docker.edu-sharing.com` bei Release-Tags) |
 | **Endpunkte** | `vorhanden` (öffentlich: `/api/sources`, `/api/sources/{id}`, `/api/kennzahl`, `/api/stats`, `/widgets/…`, `/embed/…`; Infrastruktur: `/health`, `/ready`, `/metrics`) |
 | **Endpunkte auf zwei Ports** | `vorhanden` (8080 API und Oberfläche, 9090 Infrastruktur und Exporte, nur im Cluster) |
-| **Header / Content-Types** | `geprüft` (`x-tier1-password`, `x-team-password`, B3; JSON, CSV, Markdown) |
+| **Header / Content-Types** | `geprüft` (`x-tier1-password`, `x-team-password`, B3; hinter der b-api wird `Authorization: Bearer bdt_…` nur erkannt, nie genutzt; JSON, CSV, Markdown) |
 | **Asynchrone Job-Endpunkte** | `geprüft` (`POST /jobs/refresh`, Status `GET /jobs/latest`) |
 | **Timeout für Requests** | `geprüft` (Live-Abruf 20 s, Vorschaubild 8 s; kein Endpunkt synchron über 30 s) |
 | **Readiness Status** | `bereit zur Übergabe` (offen: Vertretung, wer Updates anstößt) |
@@ -35,7 +35,7 @@ Checkliste: [README.md](README.md).
 | Deployment und Infrastruktur | |
 |---|---|
 | **HELM** | `vorhanden` (`deploy/helm/quellenpanel`, eine Release je Rolle) |
-| **Docker-Files** | `vorhanden` (`Dockerfile`, `deploy/docker-compose.yml`, `docker-compose.yml` für Server mit Traefik) |
+| **Docker-Files** | `vorhanden` (`Dockerfile`, `deploy/docker-compose.yml`, `docker-compose.yml` für Server mit Traefik, zieht bei jedem Bereitstellen das GitHub-Image; `QE_VERSION` legt eine Version fest) |
 | **Abschaltbare Komponenten** | `geprüft` (ja: partner und public einzeln, in Compose per `SEPARATE_INSTANCES`; NetworkPolicy, ServiceMonitor, Alarme per Value) |
 | **Datenbank** | `geprüft` (nein) |
 | **Große Daten** | `geprüft` (nein; Team-Volume 2 Gi, rund 25 MB belegt) |
