@@ -191,12 +191,45 @@ weiter, bis sie ablaufen (12 h). Ein neues `QE_SESSION_SECRET` beendet sofort al
 Sitzung. Logout sperrt die Nonce bis zum Ablauf, aber nur im Speicher dieses Pods (die Team-Instanz
 hat genau einen).
 
-## Betrieb ohne b-api
+## Betrieb mit und ohne b-api
 
-Quellenpanel ruft keine b-api-Funktion auf und braucht auch keine: Es zeigt öffentliche
-Webseiten-Daten der Quellen ohne Personenbezug, für einen anonymen Lesezugriff, den die b-api nicht
-anbietet. Die Zugangsstufen regelt der Dienst selbst über Rollen (getrennte Instanzen) und Passwörter;
-interne Daten liegen nie auf den öffentlichen Instanzen.
+Quellenpanel ruft keine b-api-Funktion auf (kein LLM, kein Rückruf) und läuft deshalb ohne b-api. Die
+Zugangsstufen regelt der Dienst selbst über Rollen und Passwörter; interne Daten liegen nie auf den
+öffentlichen Instanzen. Die API-Endpunkte lassen sich zusätzlich hinter den Dienste-Proxy der b-api
+legen. Das braucht keine Umstellung: Der Dienst erkennt je Anfrage, wie sie ankommt.
+
+| Ankunft | erkannt an | Verhalten |
+|---|---|---|
+| direkt | kein Delegations-Token | wie bisher: alle Stufen der Rolle, Team-Login, Cookies, Passwörter |
+| über die b-api | `Authorization: Bearer bdt_…` oder der Header aus `B_API_DELEGATION_HEADER` | keine eigene Anmeldung: Stufe 0 anonym, Stufe 1 nur mit `X-Tier1-Password`, nie Stufe 2 oder Team-Bereich (403); `/openapi.json` ohne Team-Pfade; `/api/capabilities` meldet `"gateway": "b-api"` |
+
+Das Token wird nie geprüft, gespeichert, geloggt oder weitergegeben (der Dienst ruft die b-api nicht
+zurück). Die Erkennung nimmt nur Rechte weg; wer den Header fälscht, gewinnt nichts.
+
+**Proxy-Eintrag (Administrator der b-api):**
+
+| Feld | Wert |
+|---|---|
+| Name | `quellenpanel` (Dienst-ID, ergibt `/api/v1/proxy/quellenpanel`) |
+| `baseUrl` | öffentlicher Port 8080 der Instanz `public` (oder `partner`, wenn Stufe 1 über die b-api gehen soll) |
+| `openApiPath` | `/openapi.json` |
+| `forwardDelegation` | `true`, damit der Dienst die b-api erkennt; `delegationScopes` so klein wie erlaubt (das Token bleibt ungenutzt). Alternativ `delegationHeader` setzen und denselben Namen als `B_API_DELEGATION_HEADER` in die Env |
+| `responseTimeout` | 30000 ms (längste Antwort: Live-Beispielinhalte, Abruf-Zeitlimit 20 s) |
+| `allowedRequestHeaders` | `X-Tier1-Password` nur, wenn Partner Stufe 1 über die b-api nutzen |
+| `allowedResponseHeaders` | `X-B3-TraceId`, `Retry-After` |
+| `allowedResponseContentTypes` | `application/json`, `text/csv` (Export ab Stufe 1), `image/*` (`/api/thumb`) |
+| `pathToIgnore` | `/embed/**`, `/widgets/**` (Oberfläche und Widgets bleiben direkt) |
+
+**Nie die Team-Instanz als `baseUrl` eintragen.** Die Einschränkung hängt am Delegations-Token, das
+nur mit `forwardDelegation` (oder `delegationHeader`) ankommt. Fehlt beides, sieht eine Anfrage über
+die b-api aus wie eine direkte; auf der Team-Instanz wären dann mit einem freigegebenen
+`X-Team-Password` Stufe 2 und Schreibzugriffe erreichbar.
+
+Offen mit dem b-api-Team: Ob der Proxy die Client-Adresse als `X-Forwarded-For` mitschickt. Sonst
+sieht der Dienst nur die Adresse der b-api, und alle Aufrufe über die b-api teilen sich die Drosseln
+je Client: die für Live-Abrufe (600 je Minute) und das Fehlversuchsbudget für Passwörter (8 in 5
+Minuten; danach ist Stufe 1 über die b-api für alle 5 Minuten gesperrt). Mit `TRUST_PROXY=1` und
+einer privaten Adresse der b-api zählt der mitgeschickte Header.
 
 ## Versionen und Freigabe
 

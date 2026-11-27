@@ -258,3 +258,17 @@ def test_github_veroeffentlicht_image_fuer_compose_mit_revision():
     assert "type=ref,event=branch" in text and "type=semver,pattern={{version}}" in text
     assert "QE_REVISION=${{ github.sha }}" in text
     assert "ARG QE_REVISION" in (ROOT / "Dockerfile").read_text(encoding="utf-8")
+
+
+def test_server_compose_repository_umstellbar_ueber_env():
+    # Another repository via .env alone: profile, repository and search URL reach every instance.
+    # Empty defaults, so the URLs of the chosen profile apply unless .env overrides them.
+    _, doc = _server()
+    for name, s in doc["services"].items():
+        env = s["environment"]
+        assert env["QE_PROFILE"] == "${QE_PROFILE:-}", name
+        assert env["QE_REPO_URL"] == "${QE_REPO_URL:-}", name
+        assert env["QE_SEARCH_URL"] == "${QE_SEARCH_URL:-}", name
+    example = (ROOT / ".env.example").read_text(encoding="utf-8").splitlines()
+    for var in ("QE_PROFILE=", "QE_REPO_URL=", "QE_SEARCH_URL="):
+        assert var in example, var

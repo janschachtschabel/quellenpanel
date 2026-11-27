@@ -31,6 +31,7 @@ import export_query
 import exports as exports_mod
 import export_store
 import filtering
+import gateway
 import openapi_doku
 import protokoll
 import ratelimit
@@ -210,7 +211,8 @@ def capabilities(request: Request, x_team_password: str | None = Header(None),
         "role": config.role(),
         "publicOnly": config.public_only(),
         "tier1Gated": True,   # tier 1 always needs its password (fail-closed)
-        "teamAvailable": bool(config.TEAM_PW) and config.role() == "team",
+        "teamAvailable": bool(config.TEAM_PW) and config.role() == "team" and not gateway.via_bapi(request),
+        "gateway": gateway.name(request),   # "b-api" behind the services proxy, else "direkt"
         "repoUrl": config.REPO_URL,   # which edu-sharing repo the data refers to (repo-neutral)
         "revision": config.REVISION,  # git commit of the running image (CI builds; "" otherwise)
         "built": config.BUILT,        # when the running image was built (UTC; "" outside an image)
@@ -396,6 +398,8 @@ def auth(request: Request, response: Response, x_team_password: str | None = Hea
     retry = ratelimit.pw_retry_after(request)
     if retry:
         raise errors.UpstreamError(429, "Zu viele Fehlversuche. Bitte später erneut versuchen.", retry)
+    if gateway.via_bapi(request):
+        raise HTTPException(403, "Team-Login nur direkt, nicht über die b-api.")
     if config.role() != "team" or not ratelimit.pw_check(
             request, lambda: config.check_pw(None, x_team_password)):
         raise HTTPException(403, "Falsches Passwort.")
@@ -429,7 +433,8 @@ def logout(request: Request, response: Response):
 
 @app.get("/api/auth/status")
 def auth_status(request: Request):
-    return {"team": session.valid(request.cookies.get(session.COOKIE))}
+    # Behind the b-api there is no team login, even with a session cookie from a direct visit.
+    return {"team": not gateway.via_bapi(request) and session.valid(request.cookies.get(session.COOKIE))}
 
 
 # ---------------------------------------------------------------------------
@@ -575,6 +580,28 @@ def admin_reload(team: bool = Depends(tiers.is_team)):
 app.include_router(team_routes.router)
 
 
+# Routes without a team guard that only make sense with an own login: left out of the b-api spec.
+_NUR_DIREKT = ("/api/auth/status", "/api/logout", "/jobs/latest")
+
+
+@app.middleware("http")
+async def _openapi_via_bapi(request: Request, call_next):
+    """Behind the b-api the spec shows no team or login paths (no own login there, Leitfaden 2.2):
+    a team instance describes itself like a partner instance. One URL, two answers: never cached."""
+    if request.url.path != app.openapi_url:
+        return await call_next(request)
+    if request.method in ("GET", "HEAD") and gateway.via_bapi(request):
+        role = config.role()
+        spec = dict(_openapi("partner" if role == "team" else role))
+        spec["paths"] = {p: v for p, v in spec["paths"].items() if p not in _NUR_DIREKT}
+        response = JSONResponse(spec)
+    else:
+        response = await call_next(request)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Vary"] = "Authorization"
+    return response
+
+
 # Registered LAST so it wraps every other middleware (add_middleware inserts outermost): trace
 # context, response headers and the request line also cover the 413 / CORS-preflight answers.
 app.add_middleware(obs.TraceMiddleware, on_error=errors.internal_error_parts)
@@ -598,8 +625,8 @@ def _is_team_only(route) -> bool:
                for d in getattr(route, "dependencies", []) or [])
 
 
-def _openapi() -> dict:
-    role = config.role()
+def _openapi(role: str | None = None) -> dict:
+    role = role or config.role()
     if role not in _openapi_cache:
         from fastapi.openapi.utils import get_openapi
         routes = [r for r in app.routes
@@ -615,6 +642,7 @@ def _openapi() -> dict:
 
 
 app.openapi = _openapi
+
 
 _WIDGETS = config.FRONTEND / "dist-widgets"
 if _WIDGETS.is_dir():

@@ -51,8 +51,10 @@ services:
       # Starting copies of korrekturen.csv and crawler.csv for an empty volume.
       QE_SEED_URL: ${QE_SEED_URL:-https://raw.githubusercontent.com/janschachtschabel/quellenpanel/main/profiles/wlo/daten}
       QE_AUTO_REFRESH_HOUR: ${QE_AUTO_REFRESH_HOUR:-3}
-      QE_REPO_URL: ${QE_REPO_URL:-https://redaktion.openeduhub.net}
-      QE_SEARCH_URL: ${QE_SEARCH_URL:-https://suche.wirlernenonline.de}
+      # Repository profile (profiles/<name>, default wlo) and its URLs; empty: those of the profile.
+      QE_PROFILE: ${QE_PROFILE:-}
+      QE_REPO_URL: ${QE_REPO_URL:-}
+      QE_SEARCH_URL: ${QE_SEARCH_URL:-}
       # Behind the proxy the client address is the rightmost X-Forwarded-For entry; on the direct
       # port (public peer address) the header is ignored.
       TRUST_PROXY: "1"
@@ -85,8 +87,10 @@ services:
       QE_TIER1_PASSWORD: ${QE_TIER1_PASSWORD:-}
       QE_EXPORT_SOURCE: http://team:9090/internal/exports/stufe{tier}.json
       QE_EXPORT_POLL_MINUTES: ${QE_EXPORT_POLL_MINUTES:-10}
-      QE_REPO_URL: ${QE_REPO_URL:-https://redaktion.openeduhub.net}
-      QE_SEARCH_URL: ${QE_SEARCH_URL:-https://suche.wirlernenonline.de}
+      # Repository profile (profiles/<name>, default wlo) and its URLs; empty: those of the profile.
+      QE_PROFILE: ${QE_PROFILE:-}
+      QE_REPO_URL: ${QE_REPO_URL:-}
+      QE_SEARCH_URL: ${QE_SEARCH_URL:-}
       TRUST_PROXY: "1"
     labels:
       - "traefik.enable=true"
@@ -119,8 +123,10 @@ services:
       QE_ROLE: public
       QE_EXPORT_SOURCE: http://team:9090/internal/exports/stufe{tier}.json
       QE_EXPORT_POLL_MINUTES: ${QE_EXPORT_POLL_MINUTES:-10}
-      QE_REPO_URL: ${QE_REPO_URL:-https://redaktion.openeduhub.net}
-      QE_SEARCH_URL: ${QE_SEARCH_URL:-https://suche.wirlernenonline.de}
+      # Repository profile (profiles/<name>, default wlo) and its URLs; empty: those of the profile.
+      QE_PROFILE: ${QE_PROFILE:-}
+      QE_REPO_URL: ${QE_REPO_URL:-}
+      QE_SEARCH_URL: ${QE_SEARCH_URL:-}
       TRUST_PROXY: "1"
     labels:
       - "traefik.enable=true"

@@ -14,6 +14,7 @@ an auth check were wrong. On a partner instance tier 1 always needs QE_TIER1_PAS
 from fastapi import Header, Query, Request
 
 import config
+import gateway
 import ratelimit
 import session
 
@@ -26,7 +27,10 @@ def max_tier(request: Request, team_pw: str | None, team_header: str | None,
     cap = config.ROLE_MAX_TIER[role]
     if cap == 0:
         return 0
-    if role == "team" and (session.valid(request.cookies.get(session.COOKIE))
+    if gateway.via_bapi(request):
+        # Behind the b-api there is no own login (Leitfaden 2.2): never tier 2, no team session.
+        cap = min(cap, 1)
+    if cap >= 2 and role == "team" and (session.valid(request.cookies.get(session.COOKIE))
                            or _team_pw_ok(request, team_pw or team_header)):
         return 2
     # Fail-closed: without a configured tier-1 password tier 1 stays shut, also on the team instance
@@ -57,6 +61,6 @@ def effective_tier(
 
 def is_team(request: Request, x_team_password: str | None = Header(None)) -> bool:
     """Team authorization for write/export/audit routes (session cookie or team password header)."""
-    if config.role() != "team":
+    if config.role() != "team" or gateway.via_bapi(request):
         return False
     return session.valid(request.cookies.get(session.COOKIE)) or _team_pw_ok(request, x_team_password)

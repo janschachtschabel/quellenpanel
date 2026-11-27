@@ -64,6 +64,9 @@ docker compose config -q && echo CONFIG-OK
 
 GitHub builds the image `ghcr.io/janschachtschabel/quellenpanel` on every push to main (tag `main`)
 and on every release (e.g. `1.0.1` and `1.0`). For a fixed version set `QE_VERSION=1.0.1`.
+Another repository: `QE_REPO_URL` and `QE_SEARCH_URL` for the same metadata layout, otherwise a
+profile under `profiles/<name>` ([`profiles/README.md`](../profiles/README.md)) chosen with
+`QE_PROFILE`, plus `QE_SEED_URL` pointing to its `daten` folder.
 `docker-compose.build.yml` is the local development variant (one team instance from the checkout).
 
 ## Docker Compose (HTTP)

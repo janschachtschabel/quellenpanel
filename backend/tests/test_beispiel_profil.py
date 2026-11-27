@@ -56,3 +56,14 @@ def test_empty_migration_quelle_matches_nothing(beispiel):
     assert hits == []
     stats = stats_team.compute_stats_team(records, {"withNode": 2})
     assert stats["spider"]["ausWloAltmigration_replicationsource"] == 0
+
+
+def test_neues_repository_startet_mit_leeren_startdaten(beispiel, tmp_path):
+    """Anleitung „Anderes Repository anbinden“: Kopfzeilen genügen als Startdaten für den Server."""
+    import refresh
+    (tmp_path / "crawler.csv").write_text("Titel;Url;Crawler (Spider);Quelldatensatz (Prod)\n", encoding="utf-8-sig")
+    (tmp_path / "korrekturen.csv").write_text(
+        "Typ;Schlüssel;Aktion;Wert;Kommentar;Geändert von;Geändert am\n", encoding="utf-8-sig")
+    assert refresh.fehlende_startdaten() == []
+    records = truth.build()
+    assert any(r["name"] == "Museum Digital" for r in records)

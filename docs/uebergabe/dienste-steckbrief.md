@@ -25,7 +25,7 @@ Checkliste: [README.md](README.md).
 |---|---|
 | **Überblick** | FastAPI-Backend und Angular-22-Oberfläche in einem Image. Server (Compose): eine Instanz auf einem Port für alle Stufen, Stufe 1 und 2 per Passwort; optional getrennte Instanzen. Cluster (Helm): drei Instanzen team (Stufe 2), partner (Stufe 1), public (Stufe 0) |
 | **Horizontale Skalierbarkeit** | `geprüft` (partner und public ja; team 1 Pod wegen RWO-Volume) |
-| **Integriert in B-API** | `geprüft` (nein, begründet: anonymer Lesezugriff auf öffentliche Daten) |
+| **Integriert in B-API** | `geprüft` (optional: Endpunkte hinter dem Dienste-Proxy `quellenpanel`, Erkennung je Anfrage; ohne b-api voll lauffähig) |
 | **Schreibt Suggestions** | `geprüft` (nein) |
 | **Nutzt Routing** | `geprüft` (nein, kein LLM) |
 | **Nutzt API Keys** | `geprüft` (nein, Passwörter je Zugangsstufe) |
