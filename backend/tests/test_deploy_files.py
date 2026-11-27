@@ -232,3 +232,15 @@ def test_server_env_example_starts_empty():
 def test_seed_copies_exist_where_the_compose_points():
     for name in ("korrekturen.csv", "crawler.csv"):
         assert (ROOT / "profiles" / "wlo" / "daten" / name).is_file()
+
+
+def test_release_workflow_nur_von_hand_und_prueft_version():
+    import yaml as _yaml
+    doc = _yaml.safe_load((ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8"))
+    on = doc.get(True, doc.get("on"))        # PyYAML reads the key `on` as True
+    assert set(on) == {"workflow_dispatch"}
+    assert doc["permissions"] == {"contents": "read"}
+    job = doc["jobs"]["release"]
+    assert job["permissions"]["contents"] == "write"
+    run = " ".join(s.get("run", "") for s in job["steps"])
+    assert "pyproject.toml" in run and "refs/heads/main" in run and "gh release create" in run

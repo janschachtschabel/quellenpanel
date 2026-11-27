@@ -68,5 +68,5 @@ Im Cluster: ein Image, drei Instanzen. Das Team baut die Daten und schreibt je S
   für pip, npm, GitHub Actions und die Basis-Images; jemand muss sie prüfen und mergen. `pip-audit`
   und `npm audit` laufen in der CI bei jedem Push.
 - **Release:** Version in `backend/pyproject.toml`, `frontend/package.json` und im Chart gleich
-  halten (Test), Changelog ergänzen, Tag `v<version>` setzen.
+  halten (Test), Changelog ergänzen, dann in GitHub unter Actions den Workflow „Release“ auf `main` starten: Er setzt den Tag `v<version>`, legt das Release mit dem Changelog-Abschnitt an und stößt den Image-Bau an.
 - **Andere Repositorys:** neues Profil unter `profiles/<name>/`, Auswahl mit `QE_PROFILE`.
