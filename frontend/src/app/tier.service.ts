@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 
 import { SourcesService } from './sources.service';
+import { Capabilities } from './models';
 
 /**
  * Access-tier state for the UI (mirrors the backend tier model):
@@ -22,6 +23,7 @@ export class TierService {
   readonly publicOnly = signal(false);
   readonly repoUrl = signal('');        // edu-sharing repo the data refers to (for detail + PDF)
   readonly role = signal<'team' | 'partner' | 'public'>('team');   // instance role (QE_ROLE)
+  readonly branding = signal<Capabilities['branding']>(undefined); // profile brand colours
 
   /** Fetch what the backend allows; drop the active tier if it is no longer permitted. */
   loadCapabilities(): void {
@@ -32,6 +34,7 @@ export class TierService {
       this.publicOnly.set(c.publicOnly);
       this.repoUrl.set(c.repoUrl || '');
       this.role.set(c.role ?? 'team');
+      this.branding.set(c.branding);
       if (this.tier() > c.maxTier) this.setTier(c.maxTier);
     });
   }

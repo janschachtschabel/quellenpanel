@@ -10,7 +10,7 @@
 html, body {
   height: 100%;
   margin: 0;
-  font-family: Roboto, system-ui, sans-serif;
+  font-family: var(--fontFamily);
   background: #fcfcfc;   // page background (surrounds the framed component)
   color: var(--wlo-text);
 }

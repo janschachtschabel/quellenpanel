@@ -26,10 +26,8 @@
               }
             ],
             "styles": [
-              "node_modules/@fontsource/roboto/latin-300.css",
-              "node_modules/@fontsource/roboto/latin-400.css",
-              "node_modules/@fontsource/roboto/latin-500.css",
-              "node_modules/@fontsource/roboto/latin-700.css",
+              "node_modules/@fontsource/open-sans/latin-400.css",
+              "node_modules/@fontsource/open-sans/latin-600.css",
               "node_modules/@fontsource/material-icons/latin-400.css",
               "src/styles.scss"
             ],
@@ -60,10 +58,8 @@
               "outputHashing": "none",
               "optimization": true,
               "styles": [
-                "node_modules/@fontsource/roboto/latin-300.css",
-                "node_modules/@fontsource/roboto/latin-400.css",
-                "node_modules/@fontsource/roboto/latin-500.css",
-                "node_modules/@fontsource/roboto/latin-700.css",
+                "node_modules/@fontsource/open-sans/latin-400.css",
+                "node_modules/@fontsource/open-sans/latin-600.css",
                 "node_modules/@fontsource/material-icons/latin-400.css",
                 "src/styles.element.scss"
               ]

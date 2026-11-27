@@ -13,6 +13,7 @@ serialize, refresh, wlo_content) and the access policy in tiers.py / config.py /
 import csv
 import io
 import logging
+import re
 import time
 import urllib.error
 from contextlib import asynccontextmanager
@@ -207,7 +208,17 @@ def capabilities(request: Request, x_team_password: str | None = Header(None),
         "tier1Gated": bool(config.TIER1_PW) or config.role() == "partner",
         "teamAvailable": bool(config.TEAM_PW) and config.role() == "team",
         "repoUrl": config.REPO_URL,   # which edu-sharing repo the data refers to (repo-neutral)
+        "branding": _branding(),
     }
+
+
+_HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
+
+
+def _branding() -> dict:
+    """Brand colours from the profile ([branding] in profil.toml); only valid #rrggbb values."""
+    b = repo_profile.get().branding
+    return {k: b[k] for k in ("primary", "accent") if isinstance(b.get(k), str) and _HEX.match(b[k])}
 
 
 @app.get("/api/meta/filters")

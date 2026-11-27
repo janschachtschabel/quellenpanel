@@ -200,6 +200,7 @@ export interface Capabilities {
   teamAvailable: boolean;// a team password is configured (tier 2 reachable via login)
   repoUrl: string;       // edu-sharing repo the data refers to (repo-neutral; shown in detail + PDF)
   role?: 'team' | 'partner' | 'public'; // instance role (QE_ROLE)
+  branding?: { primary?: string; accent?: string }; // profile brand colours (valid #rrggbb only)
 }
 
 // ---- Etappe 4: team correction management -------------------------------------------------------

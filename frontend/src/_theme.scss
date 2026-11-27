@@ -1,4 +1,5 @@
 @use '@angular/material' as mat;
+@use 'tokens';
 
 // Material 3 theme — azure primary (close to WLO blue) + orange tertiary (accent).
 $wlo-theme: mat.define-theme((
@@ -14,19 +15,39 @@ $wlo-theme: mat.define-theme((
 @mixin wlo-theme-vars {
   @include mat.all-component-themes($wlo-theme);
 
-  // WLO brand colours — aligned to the old Quellenliste palette so the framed
-  // component blends into the same host pages (lighter, blue-grey, not a heavy bar).
-  --wlo-primary: #003b7c;
-  --wlo-primary-light: #d0e2f4;
-  --wlo-secondary: #002d5f;
-  --wlo-accent: #f97316;
-  --wlo-bg: #f4f7fc;
-  --wlo-card: #ffffff;
-  --wlo-text: #12213a;
-  --wlo-text-muted: #5e7291;
-  --wlo-border: #dae2ee;
+  @include tokens.tokens;
+
+  // Material (M3) system colours follow the edu-sharing tokens, so the brand colour drives buttons,
+  // toggles, checkboxes and form fields.
+  --mat-sys-primary: var(--primary);
+  --mat-sys-on-primary: var(--light-primary-text);
+  --mat-sys-primary-container: var(--primaryBackground100);
+  --mat-sys-on-primary-container: var(--primaryForeground800);
+  --mat-sys-secondary-container: var(--primaryBackground100);
+  --mat-sys-on-secondary-container: var(--primaryForeground800);
+  --mat-sys-surface: var(--defaultBackground);
+  --mat-sys-on-surface: var(--textMain);
+  --mat-sys-on-surface-variant: var(--textLight);
+  --mat-sys-outline: var(--textMediumLight);
+  --mat-sys-outline-variant: var(--tableSeperatorLineColor);
+  --mat-sys-error: var(--warn);
+  --mat-sys-body-large-font: var(--fontFamily);
+  --mat-sys-body-medium-font: var(--fontFamily);
+  --mat-sys-label-large-font: var(--fontFamily);
+  --mat-sys-title-medium-font: var(--fontFamily);
+
+  // Older names used across the components: aliases onto the tokens (one source of truth).
+  --wlo-primary: var(--primary);
+  --wlo-primary-light: var(--primaryBackground100);
+  --wlo-secondary: var(--primaryForeground800);
+  --wlo-accent: var(--colorStatusWarning);
+  --wlo-bg: var(--backgroundColor);
+  --wlo-card: var(--roundedContainerBackground);
+  --wlo-text: var(--textMain);
+  --wlo-text-muted: var(--textLight);
+  --wlo-border: var(--tableSeperatorLineColor);
   // Quality traffic-light colours (shared by tile/list dots + detail cards).
-  --q-good-bg: #e6f4ea;    --q-good-fg: #1a8a4d;
+  --q-good-bg: #e6f4ea;    --q-good-fg: var(--colorStatusPositiveText);
   --q-neutral-bg: #fef3c7; --q-neutral-fg: #92400e;
   --q-bad-bg: #fde8e8;     --q-bad-fg: #b3261e;
   --q-unknown-bg: #eef1f6; --q-unknown-fg: #7c8aa3;

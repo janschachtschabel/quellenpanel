@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, inject, signal, computed, Signal } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, OnDestroy, effect, inject, signal, computed, Signal } from '@angular/core';
 import { Subscription, timer, of } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
@@ -28,6 +28,7 @@ import { AuditReportComponent } from './audit-report.component';
 import { TeamLoginComponent } from './team-login.component';
 import { KorrekturenComponent } from './korrekturen.component';
 import { TierService } from './tier.service';
+import { wendeBrandingAn } from './branding';
 import { SelectionService } from './selection.service';
 import { PdfService } from './pdf.service';
 import { PRUEF_GROUPS } from './data-problem-filters';
@@ -403,7 +404,17 @@ export class AppComponent implements OnInit {
   refreshMsg = '';           // sync progress step message
   private refreshSub?: Subscription;
 
+  private readonly host = inject(ElementRef<HTMLElement>);
+
   constructor() {
+    // Profile brand colours as tokens: on the element itself, and in the SPA also on <html> so
+    // overlays (dialogs, menus) attached to <body> get them too.
+    effect(() => {
+      const b = this.tiers.branding();
+      const el = this.host.nativeElement as HTMLElement;
+      wendeBrandingAn(el, b);
+      if (el.tagName === 'WLO-ROOT') wendeBrandingAn(document.documentElement, b);
+    });
     for (const bp of COL_BREAKPOINTS) {
       const mql = window.matchMedia(`(min-width: ${bp.min}px)`);
       // Re-evaluate the column count on ANY breakpoint change (up OR down). Reacting only to
