@@ -72,7 +72,8 @@ def build_export(records: list[dict], meta: dict, tier: int) -> dict:
         st = stats.compute_enduser_stats(visible, pub_meta)
     else:
         st = stats.compute_stats_full(records, pub_meta)
-    filters = {**stats.compute_filter_options(records), "erschliessung": []}  # exact codes are internal
+    filters = {**stats.compute_filter_options(
+        [r for r in records if "BLACKLIST" not in r.get("flags", [])]), "erschliessung": []}  # exact codes are internal
     return {
         "schema": SCHEMA, "tier": tier, "generatedAt": meta.get("generatedAt", ""),
         "meta": pub_meta,

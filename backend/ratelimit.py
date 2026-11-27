@@ -54,3 +54,40 @@ def fetch_rate_ok(request: Request) -> bool:
     FETCH_HITS[ip] = hits
     sweep(FETCH_HITS, FETCH_WINDOW, now)
     return len(hits) <= FETCH_MAX
+
+
+# --- Password failure budget --------------------------------------------------------------------
+# One budget per client for EVERY password check (team login, X-Team-Password, X-Tier1-Password), so a
+# header on an ordinary read route cannot be used to guess around the login throttle. Once used up,
+# a password is not even compared until the window rolls on: a right guess looks like a wrong one.
+PW_FAILS: dict[str, list[float]] = {}
+PW_WINDOW = 300.0
+PW_MAX_FAILS = 8
+
+
+def _pw_fails(request: Request, now: float) -> tuple[str, list[float]]:
+    ip = client_ip(request)
+    sweep(PW_FAILS, PW_WINDOW, now)
+    return ip, [t for t in PW_FAILS.get(ip, []) if now - t < PW_WINDOW]
+
+
+def pw_retry_after(request: Request) -> int:
+    """Seconds until this client may try a password again; 0 = budget left."""
+    now = time.time()
+    _, fails = _pw_fails(request, now)
+    if len(fails) < PW_MAX_FAILS:
+        return 0
+    return max(1, int(PW_WINDOW - (now - fails[0])) + 1)
+
+
+def pw_check(request: Request, check) -> bool:
+    """Run check() (a password comparison) within the client's failure budget."""
+    if pw_retry_after(request):
+        return False
+    ok = bool(check())
+    ip = client_ip(request)
+    if ok:
+        PW_FAILS.pop(ip, None)
+    else:
+        PW_FAILS.setdefault(ip, []).append(time.time())
+    return ok

@@ -30,7 +30,7 @@ QE_TEAM_PASSWORD=secret python serve.py      # http://localhost:8080 (role team)
 
 Without `QE_ROLE` the instance runs as `team`; that is meant for development only. On a first start
 without data it builds the data from the repository (a few minutes; until then the data routes
-answer 503) or loads starting data from `QE_SEED_URL`.
+answer 503) or loads starting data from `QE_SEED_URL`. In a container (Compose, Helm) the image carries no corrections or crawler table: set `QE_SEED_URL` or upload both files in the team area, otherwise the team builds no data.
 
 **Server with Docker Compose** (three instances, step by step in
 [`deploy/README.md`](deploy/README.md)):
@@ -80,7 +80,7 @@ is available as CSV, JSON or table PDF.
 | Team login from another site | `QE_ALLOWED_ORIGINS` | only for embedded team views, HTTPS only |
 
 Changing passwords: update the secret and restart the pods. A new `QE_SESSION_SECRET` logs out all
-team sessions. Failed logins are throttled per address.
+team sessions. Failed password attempts (login and headers) are throttled per address.
 
 ## Editing area (corrections)
 

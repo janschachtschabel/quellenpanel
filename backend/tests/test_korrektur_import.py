@@ -113,3 +113,18 @@ def test_missing_required_mapping_raises():
 def test_unknown_mode_raises():
     with pytest.raises(ki.ImportFehler):
         ki.vorschau([], MAP, [], "mischen", wer="JS")
+
+
+def test_vermerk_never_replaces_a_blacklist_entry():
+    # Abschluss-Audit: blacklist and vermerk on one node shared a key, so re-importing the current
+    # file turned the blacklist into a second vermerk and made the source public.
+    bestand = [Korrektur("node", A, "blacklist"), Korrektur("node", A, "vermerk", "", "geprüft")]
+    zeilen = [{"Typ": "node", "Schlüssel": A, "Aktion": "blacklist", "Wert": "", "Kommentar": ""},
+              {"Typ": "node", "Schlüssel": A, "Aktion": "vermerk", "Wert": "", "Kommentar": "geprüft"}]
+    v = ki.vorschau(zeilen, {**MAP, "kommentar": "Kommentar"}, bestand, "ergaenzen", wer="JS")
+    assert sorted(k.aktion for k in v["ergebnis"]) == ["blacklist", "vermerk"]
+    assert v["unveraendert"] == 2 and v["geaendert"] == []
+    # A new vermerk is added beside the blacklist, it does not replace it.
+    v = ki.vorschau(_rows(("node", A, "vermerk", "")), MAP, [Korrektur("node", A, "blacklist")],
+                    "ergaenzen", wer="JS")
+    assert sorted(k.aktion for k in v["ergebnis"]) == ["blacklist", "vermerk"]

@@ -33,6 +33,16 @@ describe('SourcesService.setBase', () => {
     httpMock.expectOne('https://backend.example/api/stats').flush({});
   });
 
+  it('calls the data refresh job at /jobs/… beside the API, not under /api (audit finding)', () => {
+    service.refreshStart().subscribe();
+    httpMock.expectOne({ method: 'POST', url: '/jobs/refresh' }).flush({ status: 'started' });
+    service.refreshStatus().subscribe();
+    httpMock.expectOne('/jobs/latest').flush({});
+    service.setBase('https://backend.example/api');
+    service.refreshStart().subscribe();
+    httpMock.expectOne('https://backend.example/jobs/refresh').flush({ status: 'started' });
+  });
+
   it('ignores empty / whitespace input and keeps the previous base', () => {
     service.setBase('   ');
     service.stats().subscribe();

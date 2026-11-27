@@ -56,11 +56,29 @@ def _run_refresh():
         obs.REBUILD_DURATION.observe(time.monotonic() - started)
 
 
+def fehlende_startdaten() -> list[str]:
+    """Curated files every build needs. The image carries neither; without them a build would
+    publish blacklisted sources and drop every correction."""
+    return [name for name, path in (("korrekturen.csv", config.korrekturen_csv_path()),
+                                    ("crawler.csv", config.crawler_csv_path())) if path is None]
+
+
 def start():
     # Concurrency guard: repeated clicks during a run are no-ops.
     with _JOB_LOCK:
         if _JOB["status"] == "running":
             return {"status": "running", "percent": _JOB["percent"], "message": _JOB["message"]}
+        fehlt = fehlende_startdaten()
+        if fehlt:
+            msg = (f"Startdaten fehlen: {', '.join(fehlt)}. QE_SEED_URL setzen oder die Dateien im "
+                   "Bereich Korrekturen hochladen, dann erneut aktualisieren.")
+            logging.getLogger("refresh").error("Datenaufbau abgelehnt: %s", msg)
+            _JOB.update(status="error", error="startdaten", message=msg,
+                        startedAt=time.strftime("%Y-%m-%d %H:%M:%S"),
+                        finishedAt=time.strftime("%Y-%m-%d %H:%M:%S"))
+            bootstrap.write_status(_JOB)
+            obs.REBUILD_TOTAL.labels("error").inc()
+            return {"status": "error", "message": msg}
         _JOB.update(status="running", percent=0, message="Start …", error=None,
                     startedAt=time.strftime("%Y-%m-%d %H:%M:%S"), finishedAt=None)
         bootstrap.write_status(_JOB)

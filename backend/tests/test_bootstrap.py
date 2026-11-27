@@ -220,3 +220,25 @@ def test_broken_local_truth_falls_back_to_building(empty_data, monkeypatch):
             assert list(empty_data.glob("truth.json.kaputt-*"))
     finally:
         gate.set()
+
+
+# --- Abschluss-Audit 1.0.0 -----------------------------------------------------------------------
+def test_rebuild_refuses_without_curated_files(tmp_path, monkeypatch, caplog):
+    # The image carries no korrekturen.csv / crawler.csv. Without them a build would publish
+    # blacklisted sources and drop every correction, silently. It must refuse and say why.
+    monkeypatch.setenv("QE_DATA_DIR", str(tmp_path))
+    monkeypatch.setattr(config, "korrekturen_csv_path", lambda: None)
+    called = []
+    monkeypatch.setattr(fetcher, "refresh_all", lambda cb: called.append(1))
+    with caplog.at_level("ERROR"):
+        r = refresh.start()
+    assert r["status"] == "error" and "korrekturen.csv" in r["message"]
+    assert called == []
+    assert refresh.status()["status"] == "error"
+    assert "korrekturen.csv" in caplog.text
+    assert (bootstrap.read_status() or {}).get("status") == "error"
+    # Files back: the build runs again.
+    monkeypatch.setattr(config, "korrekturen_csv_path", lambda: tmp_path / "korrekturen.csv")
+    monkeypatch.setattr(config, "crawler_csv_path", lambda: tmp_path / "crawler.csv")
+    monkeypatch.setattr(refresh, "_run_refresh", lambda: called.append(2))
+    assert refresh.start()["status"] == "started"

@@ -84,6 +84,23 @@ Wer von der Version vor dem Umbau kommt (ein Container, Daten im Image, Port 808
 - Paginator auf Deutsch und Englisch („1–25 von 3.721“).
 - `docker-compose.yml` im Wurzelverzeichnis startet eine Team-Instanz mit Volume (Entwicklung).
 
+### Behoben (Abschluss-Audit)
+
+- Ohne `korrekturen.csv` und `crawler.csv` startet kein Datenaufbau mehr: vorher erschien eine
+  Neuinstallation ohne `QE_SEED_URL` mit Blacklist-Quellen und ohne Korrekturen. Die Oberfläche
+  zeigt den Grund an.
+- Der Knopf „Daten aktualisieren“ ruft `/jobs/refresh` auf der richtigen Adresse auf.
+- Passwörter in den Kopfzeilen `x-team-password` und `x-tier1-password` sind gedrosselt wie der
+  Login (8 Fehlversuche je Adresse in 5 Minuten).
+- Ein Import mit Vermerk ersetzt keinen Blacklist-Eintrag derselben Quelle mehr.
+- `POST /jobs/refresh` und `POST /api/admin/reload` prüfen die Herkunft (`Origin`) wie die
+  übrigen Team-Schreibzugriffe; das Neuladen wartet auf einen laufenden Datenaufbau.
+- Live-Inhalte gesperrter Quellen gibt es auf der Team-Instanz nur mit Team-Login.
+- CSV-Downloads (`/api/export.csv`, `/api/protokoll.csv`) setzen vor Zellen mit `=`, `+`, `-`, `@`
+  ein `'`, damit Tabellenprogramme sie nicht als Formel ausführen.
+- Filterwerte im Export stammen nur aus Quellen, die der Export auch zeigt.
+- `QE_EXPORT_SOURCE` darf weitere geschweifte Klammern enthalten; ersetzt wird nur `{tier}`.
+
 ## [0.6.0] – 2026-11-27 · Look
 
 ### Geändert

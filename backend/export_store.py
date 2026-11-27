@@ -87,12 +87,17 @@ def _fetch(src: str, tier: int) -> bytes | None:
     return Path(src).read_bytes()
 
 
+def export_url(template: str, tier: int) -> str:
+    """QE_EXPORT_SOURCE with `{tier}` filled in; other braces (e.g. in a query) stay as they are."""
+    return template.replace("{tier}", str(tier))
+
+
 def load_remote(tier: int) -> bool:
     """Fetch, validate and swap in the tier export from QE_EXPORT_SOURCE. False on any error."""
     template = config.export_source()
     if not template:
         return False
-    src = template.format(tier=tier)
+    src = export_url(template, tier)
     try:
         raw = _fetch(src, tier)
         if raw is None:                       # 304: what we hold is current

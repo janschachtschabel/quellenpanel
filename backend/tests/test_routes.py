@@ -222,3 +222,85 @@ def test_login_cookie_is_cross_site_for_trusted_origin(client, team_pw, monkeypa
     # A same-origin login (no trusted Origin) stays locked down to SameSite=strict.
     same = client.post("/api/auth", headers={"X-Team-Password": team_pw})
     assert "samesite=strict" in same.headers.get("set-cookie", "").lower()
+
+
+# --- Abschluss-Audit 1.0.0: password headers share the login failure budget -------------------
+def test_team_password_header_cannot_be_brute_forced_via_capabilities(client, team_pw):
+    import app
+    app._LOGIN_FAILS.clear()
+    try:
+        for i in range(8):
+            r = client.get("/api/capabilities", headers={"X-Team-Password": f"falsch-{i}"})
+            assert r.json()["maxTier"] < 2
+        # budget used up: even the right password is no longer recognised from this client
+        r = client.get("/api/capabilities", headers={"X-Team-Password": team_pw})
+        assert r.status_code == 200 and r.json()["maxTier"] < 2
+        # and the login route says so explicitly
+        assert client.post("/api/auth", headers={"X-Team-Password": team_pw}).status_code == 429
+    finally:
+        app._LOGIN_FAILS.clear()
+
+
+def test_tier1_password_header_is_throttled_on_partner(client, monkeypatch):
+    import app
+    import config
+    monkeypatch.setenv("QE_ROLE", "partner")
+    monkeypatch.setattr(config, "TIER1_PW", "richtig")
+    app._LOGIN_FAILS.clear()
+    try:
+        import tiers
+        from starlette.requests import Request
+
+        def req():
+            return Request({"type": "http", "headers": [], "client": ("1.2.3.4", 1), "query_string": b""})
+
+        assert tiers.max_tier(req(), None, None, "richtig") == 1
+        for i in range(8):
+            assert tiers.max_tier(req(), None, None, f"falsch-{i}") == 0
+        assert tiers.max_tier(req(), None, None, "richtig") == 0      # blocked for the window
+        assert tiers.max_tier(req(), None, None, None) == 0           # tier 0 still served
+    finally:
+        app._LOGIN_FAILS.clear()
+
+
+def test_team_posts_outside_api_team_check_origin(client, team_pw):
+    # Abschluss-Audit: with QE_ALLOWED_ORIGINS the cookie is SameSite=None, so a foreign site could
+    # otherwise start a rebuild or a reload with a simple cross-site POST.
+    client.post("/api/auth", headers={"X-Team-Password": team_pw})
+    try:
+        for path in ("/jobs/refresh", "/api/admin/reload"):
+            r = client.post(path, headers={"Origin": "https://evil.example"})
+            assert r.status_code == 403, path
+    finally:
+        client.cookies.clear()
+
+
+def test_reload_waits_for_running_rebuild(client, team_pw, monkeypatch):
+    import refresh
+    monkeypatch.setattr(refresh, "status", lambda: {"status": "running"})
+    r = client.post("/api/admin/reload", headers={"X-Team-Password": team_pw})
+    assert r.status_code == 409
+
+
+# --- Abschluss-Audit M3: live contents of a hidden source need the team login -----------------
+def test_contents_of_blacklisted_source_need_team_login(client, team_pw, monkeypatch):
+    import wlo_content
+    from store import _DATA
+    monkeypatch.setattr(wlo_content, "fetch_contents", lambda prop, value, n, s: {"total": 1, "nodes": [{"title": value}]})
+    rid = next(r["id"] for r in _DATA["byId"].values() if "BLACKLIST" in r.get("flags", []))
+    assert client.get(f"/api/sources/{rid}/contents").status_code == 404
+    ok = client.get(f"/api/sources/{rid}/contents", headers={"x-team-password": team_pw})
+    assert ok.status_code == 200 and ok.json()["total"] == 1
+
+
+# --- Abschluss-Audit M6: downloaded CSV cells never start a spreadsheet formula ----------------
+def test_csv_downloads_neutralise_formulas(client, team_pw, monkeypatch):
+    from store import _DATA
+    rec = next(r for r in _DATA["records"] if "BLACKLIST" not in r.get("flags", []))
+    monkeypatch.setitem(rec, "name", '=HYPERLINK("http://evil.example","x")')
+    h = {"x-team-password": team_pw}
+    body = client.get("/api/export.csv", params={"tier": 2, "min_count": 0, "show_blacklist": True}, headers=h).text
+    assert "'=HYPERLINK" in body and ';=HYPERLINK' not in body and '\n=HYPERLINK' not in body
+    import views
+    assert views.csv_zelle("-1+2") == "'-1+2" and views.csv_zelle("@x") == "'@x"
+    assert views.csv_zelle("Mathe") == "Mathe" and views.csv_zelle(12) == 12

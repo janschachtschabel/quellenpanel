@@ -186,12 +186,17 @@ export class SourcesService {
   }
 
   /** Trigger the live data rebuild (team only) — the same job the nightly scheduler runs. */
-  refreshStart(): Observable<{ status: string }> {
-    return this.http.post<{ status: string }>(`${this.base}/jobs/refresh`, null);
+  refreshStart(): Observable<{ status: string; message?: string }> {
+    return this.http.post<{ status: string; message?: string }>(`${this.jobsBase()}/jobs/refresh`, null);
   }
 
   /** Current progress of the live rebuild job (public status), polled while a refresh runs. */
   refreshStatus(): Observable<RefreshStatus> {
-    return this.http.get<RefreshStatus>(`${this.base}/jobs/latest`);
+    return this.http.get<RefreshStatus>(`${this.jobsBase()}/jobs/latest`);
+  }
+
+  /** The job routes sit beside the API (/jobs/…), not under /api. */
+  private jobsBase(): string {
+    return this.base.replace(/\/api$/, '');
   }
 }

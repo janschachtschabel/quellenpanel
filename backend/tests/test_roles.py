@@ -9,7 +9,8 @@ import tiers
 
 
 def _req(cookie=None):
-    return types.SimpleNamespace(cookies=({session.COOKIE: cookie} if cookie else {}))
+    return types.SimpleNamespace(cookies=({session.COOKIE: cookie} if cookie else {}), headers={},
+                                 client=types.SimpleNamespace(host="127.0.0.9"))
 
 
 @pytest.fixture(autouse=True)

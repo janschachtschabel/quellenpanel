@@ -324,20 +324,20 @@ def sources(
 
 @app.get("/api/sources/{source_id:path}/contents")
 def source_contents(request: Request, source_id: str, max_items: int = Query(12, ge=1, le=50),
-                    skip: int = Query(0, ge=0)):
+                    skip: int = Query(0, ge=0), team: bool = Depends(tiers.is_team)):
     """Live example content of a source (NGSearch) — public, all tiers. Crawlers are matched by
     the replication-source property (the spider), other sources by the publisher property."""
     if not ratelimit.fetch_rate_ok(request):
         raise errors.UpstreamError(429, "Zu viele Anfragen. Bitte kurz warten.", int(ratelimit.FETCH_WINDOW))
     f = repo_profile.get().felder
-    r = _DATA["byId"].get(source_id)
-    if r:                                   # team instance: full record (incl. hidden ones)
+    r = _DATA["byId"].get(source_id) if team else None
+    if r:                                   # team login: full record (incl. hidden ones)
         idn = r.get("identity") or {}
         if r.get("kind") == "crawler" and idn.get("spider"):
             prop, value = f["replication_source"], idn["spider"]
         else:
             prop, value = f["publisher"], idn.get("bezugsquelle") or r.get("name") or ""
-    else:                                   # partner/public: only the export knows the source
+    else:                                   # everyone else: only what the public export shows
         doc = _export(0)
         if source_id not in export_query.index(doc):
             raise HTTPException(404, "Quelle nicht gefunden")
@@ -380,30 +380,23 @@ def source_detail(source_id: str, tier: int = Depends(tiers.effective_tier)):
 # Per-client failure budget (in-memory; single-process internal tool). A correct login clears it;
 # too many wrong tries within the rolling window get a 429 until they roll off — turning the team
 # password from "online-bruteforceable" into "not" without an external dependency.
-_LOGIN_FAILS: dict[str, list[float]] = {}
-_LOGIN_WINDOW = 300.0     # rolling window (seconds)
-_LOGIN_MAX_FAILS = 8      # wrong attempts allowed per window per client
+_LOGIN_FAILS = ratelimit.PW_FAILS     # one budget for every password check (see ratelimit)
+_LOGIN_WINDOW = ratelimit.PW_WINDOW
+_LOGIN_MAX_FAILS = ratelimit.PW_MAX_FAILS
 
 
 @app.post("/api/auth", dependencies=_TEAM_ONLY)
 def auth(request: Request, response: Response, x_team_password: str | None = Header(None)):
     """Team login → httpOnly session cookie (so the password is never stored client-side).
     The password is accepted ONLY via the X-Team-Password header, never as a URL query
-    parameter, so it cannot leak into proxy/access logs or browser history. Repeated wrong
-    attempts from one client are rate-limited (429) to thwart online brute force."""
-    ip = ratelimit.client_ip(request)
-    now = time.time()
-    ratelimit.sweep(_LOGIN_FAILS, _LOGIN_WINDOW, now)
-    fails = [t for t in _LOGIN_FAILS.get(ip, []) if now - t < _LOGIN_WINDOW]
-    if len(fails) >= _LOGIN_MAX_FAILS:
-        _LOGIN_FAILS[ip] = fails
-        retry = max(1, int(_LOGIN_WINDOW - (now - fails[0])) + 1)
+    parameter, so it cannot leak into proxy/access logs or browser history. Wrong attempts from one
+    client share one failure budget with every other password check (429 when it is used up)."""
+    retry = ratelimit.pw_retry_after(request)
+    if retry:
         raise errors.UpstreamError(429, "Zu viele Fehlversuche. Bitte später erneut versuchen.", retry)
-    if config.role() != "team" or not config.check_pw(None, x_team_password):
-        fails.append(now)
-        _LOGIN_FAILS[ip] = fails
+    if config.role() != "team" or not ratelimit.pw_check(
+            request, lambda: config.check_pw(None, x_team_password)):
         raise HTTPException(403, "Falsches Passwort.")
-    _LOGIN_FAILS.pop(ip, None)   # success clears the failure budget
     token = session.issue()
     origin = request.headers.get("origin")
     if origin and origin in config.ALLOWED_ORIGINS:
@@ -497,7 +490,7 @@ def export_csv(tier: int = Depends(tiers.effective_tier), f: dict = Depends(_fil
     w = csv.DictWriter(buf, fieldnames=views.EXPORT_COLS, delimiter=";", extrasaction="ignore")
     w.writeheader()
     for row in _export_rows(tier, f):
-        w.writerow(row)
+        w.writerow(views.csv_zeile(row))
     return StreamingResponse(iter(["﻿" + buf.getvalue()]), media_type="text/csv; charset=utf-8",
                              headers={"Content-Disposition": "attachment; filename=quellen_export.csv"})
 
@@ -535,9 +528,9 @@ def protokoll_csv(team: bool = Depends(tiers.is_team)):
     w.writeheader()
     for cat in data["categories"]:
         for c in cat["cases"]:
-            w.writerow({"kennung": cat["key"], "rubrik": cat["title"], "quelle": c["name"],
-                        "nodeId": c["nodeId"], "bezugsquelle": c["bezugsquelle"],
-                        "inhalte": c["contentCount"], "fixHinweis": c["detail"] or ""})
+            w.writerow(views.csv_zeile({"kennung": cat["key"], "rubrik": cat["title"], "quelle": c["name"],
+                                        "nodeId": c["nodeId"], "bezugsquelle": c["bezugsquelle"],
+                                        "inhalte": c["contentCount"], "fixHinweis": c["detail"] or ""}))
     return StreamingResponse(iter(["﻿" + buf.getvalue()]), media_type="text/csv; charset=utf-8",
                              headers={"Content-Disposition": "attachment; filename=fehler-protokoll.csv"})
 
@@ -555,7 +548,7 @@ def sources_batch(ids: list[str] = Body(..., embed=True), tier: int = Depends(ti
     return {"items": out}
 
 
-@app.post("/jobs/refresh", dependencies=_TEAM_ONLY)
+@app.post("/jobs/refresh", dependencies=[*_TEAM_ONLY, Depends(team_routes.herkunft_pruefen)])
 def jobs_refresh(team: bool = Depends(tiers.is_team)):
     if not team:
         raise HTTPException(403, "Team-Login erforderlich.")
@@ -567,7 +560,7 @@ def jobs_latest():
     return refresh.status()
 
 
-@app.post("/api/admin/reload", dependencies=_TEAM_ONLY)
+@app.post("/api/admin/reload", dependencies=[*_TEAM_ONLY, *team_routes.SCHREIBEN])
 def admin_reload(team: bool = Depends(tiers.is_team)):
     if not team:
         raise HTTPException(403, "Nur intern.")

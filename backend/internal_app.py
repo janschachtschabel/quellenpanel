@@ -92,7 +92,7 @@ def _check_source() -> bool:
     if config.role() == "team":
         target, url = "repository", config.REPO_URL
     else:
-        target, url = "export_source", (config.export_source() or "").format(tier=0)
+        target, url = "export_source", export_store.export_url(config.export_source() or "", 0)
     try:
         if url.startswith(("http://", "https://")):
             r = requests.head(url, timeout=_SOURCE_TIMEOUT, allow_redirects=False,
