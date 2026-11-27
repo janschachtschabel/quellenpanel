@@ -60,7 +60,7 @@ export class StatBarsComponent {
   @Input() hint = '';
   @Input() rows: BarRow[] = [];
   @Input() percent = false;       // value is already 0–100 → bar width = value, label = "value%"
-  @Input() color = '#16a34a';
+  @Input() color = 'var(--colorStatusPositiveText)';
 
   /** When set, the card spans two grid columns in the parent statistics grid. */
   @Input() @HostBinding('class.wide') wide = false;

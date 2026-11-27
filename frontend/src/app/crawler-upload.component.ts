@@ -35,7 +35,7 @@ import { fehlertext } from './korrekturen-fehler';
   }
   @if (meldung()) { <p class="info" role="status">{{ meldung() }}</p> }
   `,
-  styles: [`.err { color: #b00020; } .hint { color: #555; } .info { background: #e8f1fb; padding: 8px 12px; border-radius: 6px; }
+  styles: [`.err { color: var(--warn); } .hint { color: var(--textLight); } .info { background: var(--primaryBackground50); padding: 8px 12px; border-radius: 6px; }
     ul { max-height: 220px; overflow: auto; font-size: 13px; }`],
 })
 export class CrawlerUploadComponent {

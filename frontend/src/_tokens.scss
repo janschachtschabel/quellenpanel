@@ -31,6 +31,16 @@
   --borderLight: #eee;
   --tableSeperatorLineColor: #e0e0e0;
 
+  // Quellenpanel additions (status surfaces, shadows as tokens: inline component styles cannot use mixins).
+  --colorStatusPositiveBackground: #e6f4ea;
+  --colorStatusWarningText: #8a4b00;
+  --colorStatusWarningBackground: #fff3e6;
+  --colorStatusNegativeBackground: #fde8e8;
+  --shadowSmall: 0 1px 3px rgba(0, 0, 0, .12);
+  --shadowBottom: 0 3px 6px rgba(0, 0, 0, .14);
+  --shadowMedium: 0 6px 18px rgba(0, 0, 0, .16);
+  --overlayDark: rgba(20, 24, 30, .78);
+
   --borderRadiusBadges: 10px;
   --borderRadiusButtons: 18px;
   --borderRadiusCards: 20px;

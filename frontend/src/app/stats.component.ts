@@ -105,7 +105,7 @@ import { I18n } from './i18n.service';
           <div class="donut-wrap">
             <svg class="donut" viewBox="0 0 120 120">
               <circle cx="60" cy="60" r="46" fill="none" stroke="var(--wlo-border)" stroke-width="14"/>
-              <circle cx="60" cy="60" r="46" fill="none" stroke="#16a34a" stroke-width="14"
+              <circle cx="60" cy="60" r="46" fill="none" stroke="var(--colorStatusPositiveText)" stroke-width="14"
                 [attr.stroke-dasharray]="oerDash(stats.oer.percent)" transform="rotate(-90 60 60)"/>
             </svg>
             <div class="donut-lbl">
@@ -138,7 +138,7 @@ import { I18n } from './i18n.service';
     .b-lbl { width: 120px; font-size: 11px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--wlo-text); }
     .b-lbl.mono { width: 64px; font-family: ui-monospace, monospace; font-size: 10px; }
     .b-track { flex: 1; height: 8px; background: var(--wlo-bg); border-radius: 4px; overflow: hidden; }
-    .b-fill { height: 100%; border-radius: 4px; background: #16a34a; transition: width .4s; }
+    .b-fill { height: 100%; border-radius: 4px; background: var(--colorStatusPositiveText); transition: width .4s; }
     .b-val { width: 48px; font-size: 10px; text-align: right; color: var(--wlo-text-muted); flex-shrink: 0; }
     .donut-wrap { position: relative; display: flex; align-items: center; justify-content: center; padding: 16px; }
     .donut { width: 120px; height: 120px; }

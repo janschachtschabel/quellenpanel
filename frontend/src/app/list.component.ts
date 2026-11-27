@@ -103,34 +103,34 @@ import { I18n } from './i18n.service';
     .ltable { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--wlo-card); }
     .ltable thead tr { background: var(--wlo-bg); border-bottom: 2px solid var(--wlo-border); }
     .ltable th { padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 600; color: var(--wlo-text-muted); text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
-    .ltable td { padding: 9px 12px; border-bottom: 1px solid #eef2f8; vertical-align: middle; }
-    .ltable th, .ltable td { border-right: 1px solid #edf1f7; }
+    .ltable td { padding: 9px 12px; border-bottom: 1px solid var(--tableSeperatorLineColor); vertical-align: middle; }
+    .ltable th, .ltable td { border-right: 1px solid var(--tableSeperatorLineColor); }
     .ltable th:last-child, .ltable td:last-child { border-right: none; }
     .ltable tbody tr { cursor: pointer; transition: background .12s; }
-    .ltable tbody tr:hover td { background: #f4f7ff; }
+    .ltable tbody tr:hover td { background: var(--primaryBackground50); }
     .ltable tbody tr.selected td { background: var(--wlo-primary-light); }
     .c-sel { width: 44px; text-align: center; }
     .ltable th.c-count, .ltable td.c-count { text-align: right; }
     .c-thumb { width: 80px; } .c-count { width: 84px; } .c-subj { width: 150px; }
     .c-edu { width: 130px; } .c-type { width: 130px; } .c-oer { width: 50px; } .c-status { width: 56px; text-align: center; } .c-qual { width: 152px; } .c-go { width: 40px; text-align: center; }
     .status-badge { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--wlo-primary-light); color: var(--wlo-primary); font-weight: 700; font-size: 12px; cursor: help; }
-    .status-badge.done { background: #e6f4ea; color: #1a8a4d; }
+    .status-badge.done { background: var(--colorStatusPositiveBackground); color: var(--colorStatusPositiveText); }
     .lavatar { width: 66px; height: 44px; border-radius: 6px; object-fit: cover; display: block; }
-    .lavatar.init { display: flex; align-items: center; justify-content: center; background: #eef2f9; color: var(--wlo-primary); font-weight: 700; font-size: 18px; }
+    .lavatar.init { display: flex; align-items: center; justify-content: center; background: var(--primaryBackground50); color: var(--wlo-primary); font-weight: 700; font-size: 18px; }
     .lname-row { display: flex; align-items: center; gap: 6px; }
     .lname { font-weight: 600; line-height: 1.3; color: var(--wlo-text); }
     /* Bezugsquelle-family badge (publisher + sub-channels) — count of related sources. */
-    .lfamily { flex-shrink: 0; display: inline-flex; align-items: center; gap: 2px; background: #e7eefb; color: #2e5aa8; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; cursor: help; }
+    .lfamily { flex-shrink: 0; display: inline-flex; align-items: center; gap: 2px; background: var(--primaryBackground50); color: var(--primaryForeground800); font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; cursor: help; }
     .lfamily mat-icon { font-size: 12px; width: 12px; height: 12px; }
-    .lsub { font-size: 11px; color: #8295b0; }
+    .lsub { font-size: 11px; color: var(--textMediumLight); }
     .c-count .cn { font-weight: 700; color: var(--wlo-primary); display: block; }
-    .c-count .cl { font-size: 9px; color: #8295b0; text-transform: uppercase; letter-spacing: .04em; }
+    .c-count .cl { font-size: 9px; color: var(--textMediumLight); text-transform: uppercase; letter-spacing: .04em; }
     .tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 20px; margin: 1px; white-space: nowrap; }
-    .tag.subj { background: #eaf0f9; color: #003b7c; }
-    .tag.edu  { background: #e6f3f1; color: #0b7870; }
-    .tag.type { background: #eef2f8; color: #41506b; }
-    .tag.oer  { background: #e6f4ea; color: #1a8a4d; font-weight: 700; }
-    .go { display: inline-flex; color: #9aabc4; }
+    .tag.subj { background: var(--primaryBackground50); color: var(--primaryForeground800); }
+    .tag.edu  { background: var(--primaryBackground100); color: var(--primaryForeground900); }
+    .tag.type { background: var(--primaryBackground50); color: var(--textLight); }
+    .tag.oer  { background: var(--colorStatusPositiveBackground); color: var(--colorStatusPositiveText); font-weight: 700; }
+    .go { display: inline-flex; color: var(--textMediumLight); }
     .go:hover { color: var(--wlo-primary); }
     .go mat-icon { font-size: 20px; width: 20px; height: 20px; }
   `],

@@ -31,7 +31,7 @@ import { TierService } from './tier.service';
       </button>
     </mat-dialog-actions>
   `,
-  styles: [`.err { color: #b00020; font-size: 13px; margin: 4px 0 0; }`],
+  styles: [`.err { color: var(--warn); font-size: 13px; margin: 4px 0 0; }`],
 })
 export class TeamLoginComponent {
   private readonly tiers = inject(TierService);

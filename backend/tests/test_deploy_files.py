@@ -74,3 +74,9 @@ def test_element_bundle_resets_inherited_host_typography():
     text = (ROOT / "frontend/src/styles.element.scss").read_text(encoding="utf-8")
     for regel in ("font-style: normal", "font-weight: 400", "line-height: normal"):
         assert regel in text
+
+
+def test_ci_runs_design_lint():
+    """Etappe 6: CI prüft die edu-sharing-Designregeln."""
+    ci = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+    assert "lint:design" in ci

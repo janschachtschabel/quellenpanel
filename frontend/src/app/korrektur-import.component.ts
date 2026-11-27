@@ -65,7 +65,7 @@ const ZIELFELDER = ['typ', 'schluessel', 'aktion', 'wert', 'kommentar'] as const
   styles: [`
     .step { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 12px 0; }
     .map { display: flex; flex-wrap: wrap; gap: 8px; }
-    .err { color: #b00020; }
+    .err { color: var(--warn); }
     .sum { margin: 8px 0; }
     ul { max-height: 220px; overflow: auto; font-size: 13px; }
   `],

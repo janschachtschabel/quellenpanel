@@ -314,12 +314,12 @@ import { KorrekturFelder } from './models';
   styles: [`
     :host { display: block; }
     .dh { display: flex; gap: 16px; padding: 16px 16px 8px; align-items: flex-start; }
-    .dh-preview { width: 132px; height: 88px; border-radius: 10px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--wlo-border); background: #e8eef7; }
+    .dh-preview { width: 132px; height: 88px; border-radius: 10px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--wlo-border); background: var(--primaryBackground50); }
     .dh-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .dh-init { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: var(--wlo-primary); background: var(--wlo-primary-light); }
     .dh-info { flex: 1; min-width: 0; }
     .dh-name { margin: 0 0 8px !important; font-size: 19px; font-weight: 700; color: var(--wlo-text); line-height: 1.25; }
-    .c-oer { --mdc-chip-elevated-container-color: #e6f4ea; --mdc-chip-label-text-color: #1a8a4d; font-weight: 700; }
+    .c-oer { --mdc-chip-elevated-container-color: var(--colorStatusPositiveBackground); --mdc-chip-label-text-color: var(--colorStatusPositiveText); font-weight: 700; }
     .db { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 14px; background: var(--wlo-bg); }
     .count-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--wlo-primary-light); border-radius: 10px; flex-wrap: wrap; }
     .c-big { font-size: 24px; font-weight: 700; color: var(--wlo-primary); }
@@ -334,19 +334,19 @@ import { KorrekturFelder } from './models';
     .sb-hint { font-size: 12px; color: var(--wlo-text-muted); margin: -4px 0 10px; line-height: 1.45; }
     /* Related sources (Bezugsquelle family — publisher + its sub-channels) */
     /* Data-problem note: multiple datasets per Bezugsquelle are tracked in the audit protocol. */
-    .rel-warn { display: flex; align-items: flex-start; gap: 5px; color: #aa6600; }
+    .rel-warn { display: flex; align-items: flex-start; gap: 5px; color: var(--colorStatusWarningText); }
     .rel-warn mat-icon { font-size: 14px; width: 14px; height: 14px; margin-top: 1px; flex-shrink: 0; }
     .rel-list { display: flex; flex-direction: column; gap: 1px; }
     .rel-item { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 13px; }
-    .rel-ic { font-size: 16px; width: 16px; height: 16px; color: #8aa0c0; flex-shrink: 0; }
-    .rel-ic.node { color: #1a8a4d; }
+    .rel-ic { font-size: 16px; width: 16px; height: 16px; color: var(--textMediumLight); flex-shrink: 0; }
+    .rel-ic.node { color: var(--colorStatusPositiveText); }
     .rel-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--wlo-text); }
-    .korr-msg { background: #e8f1fb; padding: 8px 12px; border-radius: 6px; margin: 8px 0; }
+    .korr-msg { background: var(--primaryBackground50); padding: 8px 12px; border-radius: 6px; margin: 8px 0; }
     /* Node-ID (Audit tier): the edu-sharing Quelldatensatz id, monospace + copy-selectable. */
     .rel-node { flex-shrink: 0; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: ui-monospace, Consolas, monospace; font-size: 10px; color: var(--wlo-text-muted); user-select: all; }
     .rel-cc { font-size: 11px; color: var(--wlo-text-muted); flex-shrink: 0; }
     .rel-more { font-size: 12px; color: var(--wlo-text-muted); font-style: italic; padding-top: 4px; }
-    .sb.internal > h3 { color: #b3261e; }
+    .sb.internal > h3 { color: var(--warn); }
 
     /* Key/value grid (label | value). */
     .kv { display: grid; grid-template-columns: 168px 1fr; gap: 6px 14px; font-size: 13px; align-items: start; }
@@ -359,11 +359,11 @@ import { KorrekturFelder } from './models';
     .from-content { font-weight: 400; opacity: .8; }
 
     /* Provenance pill (team, tier 2) — palette mirrors the Quellensteckbriefe app. */
-    .prov { display: inline-block; margin-left: 6px; font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 6px; background: #eef3fb; color: #4466aa; white-space: nowrap; vertical-align: middle; }
-    .prov.api { color: #1a8a4d; background: #e7f7ee; }
-    .prov.csv { color: #aa6600; background: #fff3e6; }
-    .prov.facet { color: #2e6ca8; background: #eaf1fb; }
-    .prov.other { color: #5b6b86; background: #eef2f8; }
+    .prov { display: inline-block; margin-left: 6px; font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 6px; background: var(--primaryBackground50); color: var(--primaryForeground800); white-space: nowrap; vertical-align: middle; }
+    .prov.api { color: var(--colorStatusPositiveText); background: var(--colorStatusPositiveBackground); }
+    .prov.csv { color: var(--colorStatusWarningText); background: var(--colorStatusWarningBackground); }
+    .prov.facet { color: var(--primaryForeground800); background: var(--primaryBackground50); }
+    .prov.other { color: var(--textLight); background: var(--primaryBackground50); }
 
     /* Quality groups. */
     .q-block { margin-bottom: 10px; }
@@ -382,25 +382,25 @@ import { KorrekturFelder } from './models';
     /* Crawler field-generation table. */
     .sb-sub2 { font-size: 12px; font-weight: 600; color: var(--wlo-text-muted); margin: 12px 0 6px; padding-top: 8px; border-top: 1px dashed var(--wlo-border); }
     .fgtable { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .fgtable th, .fgtable td { text-align: left; padding: 4px 8px; border-bottom: 1px solid #eef2f8; vertical-align: top; }
+    .fgtable th, .fgtable td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--tableSeperatorLineColor); vertical-align: top; }
     .fgtable th { color: var(--wlo-text-muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; }
-    .fgtable .fg-how { color: #6b7a90; }
-    .fgtable .fg-active { color: #1a8a4d; font-weight: 600; }
+    .fgtable .fg-how { color: var(--textMediumLight); }
+    .fgtable .fg-active { color: var(--colorStatusPositiveText); font-weight: 600; }
 
     /* Example content. */
     .ct-state { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--wlo-text-muted); padding: 6px 0; }
     .ct-state.muted { font-style: italic; }
     .ct-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
     .ct-card { display: flex; flex-direction: column; text-decoration: none; color: inherit; background: var(--wlo-card); border: 1px solid var(--wlo-border); border-radius: 12px; overflow: hidden; transition: border-color .15s, box-shadow .15s, transform .15s; }
-    .ct-card:hover { border-color: var(--wlo-primary); box-shadow: 0 6px 18px rgba(0,59,124,.12); transform: translateY(-2px); }
-    .ct-thumb { aspect-ratio: 16 / 9; background: #e8eef7; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .ct-card:hover { border-color: var(--wlo-primary); box-shadow: var(--shadowMedium); transform: translateY(-2px); }
+    .ct-thumb { aspect-ratio: 16 / 9; background: var(--primaryBackground50); display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .ct-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .ct-thumb mat-icon { font-size: 32px; width: 32px; height: 32px; color: #9fb2cd; }
+    .ct-thumb mat-icon { font-size: 32px; width: 32px; height: 32px; color: var(--textMediumLight); }
     .ct-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 5px; }
     .ct-title { font-size: 13px; font-weight: 600; line-height: 1.35; color: var(--wlo-text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .ct-desc { font-size: 12px; line-height: 1.45; color: var(--wlo-text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .ct-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
-    .ct-chip { font-size: 10px; padding: 2px 8px; border-radius: 20px; background: #eaf0f9; color: #003b7c; white-space: nowrap; }
+    .ct-chip { font-size: 10px; padding: 2px 8px; border-radius: 20px; background: var(--primaryBackground50); color: var(--primaryForeground800); white-space: nowrap; }
   `],
 })
 export class DetailDialogComponent implements OnInit {

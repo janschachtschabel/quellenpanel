@@ -98,9 +98,9 @@ const PROBLEM_KEY: Record<string, string> = {
   styles: [`
     :host { display: block; padding: 0 16px 16px; }
     .tier-head { font-size: 13px; font-weight: 700; margin: 22px 0 4px; padding-top: 14px; border-top: 2px solid var(--wlo-border); }
-    .tier-head.team { color: #b3261e; }
+    .tier-head.team { color: var(--warn); }
     .sec { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--wlo-text-muted); margin: 20px 0 8px; }
-    .sec.team { color: #b3261e; display: flex; align-items: center; gap: 6px; }
+    .sec.team { color: var(--warn); display: flex; align-items: center; gap: 6px; }
     .sec.team::before { content: '🔒'; font-size: 12px; }
     /* Flex lanes whose cards grow to fill the row. min-width 340 caps a row at ~3 cards on the full
        width, so the 6 example cards form a balanced 3+3 (instead of 5 + one full-width straggler)

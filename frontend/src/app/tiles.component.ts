@@ -20,59 +20,57 @@ import { I18n } from './i18n.service';
   template: `
     <div class="grid">
       @for (s of items; track s.id) {
-        <article class="tile" [class.selected]="selectable && sel.has(s.id)"
-          (click)="open.emit(s.id)" (keydown.enter)="open.emit(s.id)" tabindex="0" role="button">
-          @if (selectable) {
-            <mat-checkbox class="sel" [checked]="sel.has(s.id)" (change)="sel.toggle(s.id)"
-              (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()"
-              [attr.aria-label]="i18n.t('select.one')"></mat-checkbox>
-          }
-          <div class="thumb" [class.placeholder]="!(s.previewUrl || resolvedPreview.get(s.id))">
-            @if (s.previewUrl || resolvedPreview.get(s.id); as preview) {
-              <img [src]="preview" [alt]="s.name" loading="lazy">
-            } @else {
-              <mat-icon>public</mat-icon>
+        <article class="tile" [class.selected]="selectable && sel.has(s.id)">
+          <!-- 1 header bar (edu-sharing card anatomy): type badge, OER / family, checkbox far right -->
+          <div class="top">
+            <span class="type-badge" [matTooltip]="i18n.t('tile.type')"><mat-icon aria-hidden="true">public</mat-icon></span>
+            @if (s.oer) {
+              <span class="pill oer" [matTooltip]="i18n.t('tile.oer')"><mat-icon aria-hidden="true">workspace_premium</mat-icon>OER</span>
             }
-            <span class="thumb-count">{{ s.contentCount | number }} {{ i18n.t('unit.content') }}</span>
+            @if (s.familyCount) {
+              <span class="pill family" [matTooltip]="s.familyCount + ' ' + i18n.t('tile.family')"><mat-icon aria-hidden="true">hub</mat-icon>{{ s.familyCount }}</span>
+            }
+            @if (selectable) {
+              <mat-checkbox class="sel" [checked]="sel.has(s.id)" (change)="sel.toggle(s.id)"
+                [attr.aria-label]="i18n.t('select.one') + ': ' + s.name"></mat-checkbox>
+            }
           </div>
-          <div class="body">
-            <div class="head">
-              <h3 class="name">{{ s.name }}</h3>
-              @if (s.oer) {
-                <span class="oer-badge" [matTooltip]="i18n.t('tile.oer')"><mat-icon>workspace_premium</mat-icon>OER</span>
+          <!-- 2–4 one click target: preview, title, metadata -->
+          <button type="button" class="open" (click)="open.emit(s.id)"
+            [attr.aria-labelledby]="'tn-' + s.id" [attr.aria-describedby]="'td-' + s.id">
+            <span class="thumb" [class.placeholder]="!(s.previewUrl || resolvedPreview.get(s.id))">
+              @if (s.previewUrl || resolvedPreview.get(s.id); as preview) {
+                <img class="blur" [src]="preview" alt="" aria-hidden="true" loading="lazy">
+                <img class="pic" [src]="preview" alt="" loading="lazy">
+              } @else {
+                <mat-icon aria-hidden="true">public</mat-icon>
               }
-              @if (s.familyCount) {
-                <span class="family-badge" [matTooltip]="s.familyCount + ' ' + i18n.t('tile.family')"><mat-icon>hub</mat-icon>{{ s.familyCount }}</span>
+              <span class="count">{{ s.contentCount | number }} {{ i18n.t('unit.content') }}</span>
+            </span>
+            <span class="meta-area">
+              <span class="name" [id]="'tn-' + s.id">{{ s.name }}</span>
+              @if (s.description) { <span class="desc">{{ s.description }}</span> }
+              <span class="rows" [id]="'td-' + s.id">
+                <span class="row"><span class="label">{{ i18n.t('filter.lrt') }}</span><span class="value">{{ s.contentTypes.slice(0, 3).join(', ') || '–' }}</span></span>
+                <span class="row"><span class="label">{{ i18n.t('filter.subject') }}</span><span class="value">{{ s.subjects.slice(0, 4).join(', ') || '–' }}</span></span>
+                <span class="row"><span class="label">{{ i18n.t('filter.level') }}</span><span class="value">{{ s.educationalContext.slice(0, 4).join(', ') || '–' }}</span></span>
+              </span>
+            </span>
+          </button>
+          <!-- 5 option bar: quality (left), field profile and source bindings (right) -->
+          <div class="foot">
+            <wlo-quality-row [quality]="s.quality"></wlo-quality-row>
+            <div class="badges">
+              @if (s.fieldActiveCount) {
+                <span class="pill ok" [matTooltip]="s.fieldActiveCount + ' ' + i18n.t('tile.fieldProfile')">{{ s.fieldActiveCount }} F</span>
               }
-            </div>
-            @if (s.description) { <p class="desc">{{ s.description }}</p> }
-            <!-- Reserve space for the 3 meta lines (Inhaltstyp / Fach / Bildungsstufe) so the foot
-                 row sits at the same height on every tile, even when some lines are empty. -->
-            <div class="metas">
-              @if (s.contentTypes.length) {
-                <div class="meta"><mat-icon>description</mat-icon><span>{{ s.contentTypes.slice(0, 3).join(', ') }}</span></div>
+              @if (s.bind) {
+                <div class="bind">
+                  <span class="bdot" [class.on]="s.bind.node" [matTooltip]="i18n.t('bind.node') + ': ' + (s.bind.node || i18n.t('bind.none'))"><mat-icon aria-hidden="true">description</mat-icon></span>
+                  <span class="bdot" [class.on]="s.bind.bezugsquelle" [matTooltip]="i18n.t('bind.bezugsquelle') + ': ' + (s.bind.bezugsquelle || i18n.t('bind.none'))"><mat-icon aria-hidden="true">search</mat-icon></span>
+                  <span class="bdot" [class.on]="s.bind.spider" [matTooltip]="i18n.t('bind.spider') + ': ' + (s.bind.spider || i18n.t('bind.none'))"><mat-icon aria-hidden="true">settings</mat-icon></span>
+                </div>
               }
-              @if (s.subjects.length) {
-                <div class="meta"><mat-icon>menu_book</mat-icon><span>{{ s.subjects.slice(0, 4).join(', ') }}</span></div>
-              }
-              @if (s.educationalContext.length) {
-                <div class="meta"><mat-icon>school</mat-icon><span>{{ s.educationalContext.slice(0, 4).join(', ') }}</span></div>
-              }
-            </div>
-            <div class="tile-foot">
-              <wlo-quality-row [quality]="s.quality"></wlo-quality-row>
-              <div class="badges">
-                @if (s.fieldActiveCount) {
-                  <span class="fp-badge" [matTooltip]="s.fieldActiveCount + ' ' + i18n.t('tile.fieldProfile')">{{ s.fieldActiveCount }} F</span>
-                }
-                @if (s.bind) {
-                  <div class="bind">
-                    <span class="bdot" [class.on]="s.bind.node" [matTooltip]="i18n.t('bind.node') + ': ' + (s.bind.node || i18n.t('bind.none'))"><mat-icon>description</mat-icon></span>
-                    <span class="bdot" [class.on]="s.bind.bezugsquelle" [matTooltip]="i18n.t('bind.bezugsquelle') + ': ' + (s.bind.bezugsquelle || i18n.t('bind.none'))"><mat-icon>search</mat-icon></span>
-                    <span class="bdot" [class.on]="s.bind.spider" [matTooltip]="i18n.t('bind.spider') + ': ' + (s.bind.spider || i18n.t('bind.none'))"><mat-icon>settings</mat-icon></span>
-                  </div>
-                }
-              </div>
             </div>
           </div>
         </article>
@@ -80,63 +78,85 @@ import { I18n } from './i18n.service';
     </div>
   `,
   styles: [`
-    /* Mobile-first column counts (2 → 3 → 4 → 5). CSS grid keeps every tile the same width and leaves
-       empty slots on the last, incomplete row instead of stretching the remaining tiles. */
-    .grid { display: grid; gap: 14px; grid-template-columns: repeat(2, 1fr); }
-    @media (min-width: 621px)  { .grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (min-width: 921px)  { .grid { grid-template-columns: repeat(4, 1fr); } }
-    @media (min-width: 1240px) { .grid { grid-template-columns: repeat(5, 1fr); } }
+    /* Column counts stay tied to the page size (grid-columns.ts: 2 → 3 → 4 → 5); gap 20px as in
+       the edu-sharing card grid. Tiles stretch to equal height per row. */
+    .grid { display: grid; gap: 20px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    @media (min-width: 621px)  { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (min-width: 921px)  { .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    @media (min-width: 1240px) { .grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+    @media (max-width: 480px)  { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+    /* edu-sharing Grid card: no radius, bottom shadow, elevated background (node-entries-anatomy §1). */
     .tile {
-      position: relative;
-      display: flex; flex-direction: column; cursor: pointer; text-align: left;
-      background: var(--wlo-card); border: 1px solid var(--wlo-border); border-radius: 14px; overflow: hidden;
-      transition: transform .16s, box-shadow .16s, border-color .16s;
+      display: flex; flex-direction: column; min-width: 0;
+      background: var(--backgroundElevatedColor); box-shadow: var(--shadowBottom);
+      transition: box-shadow var(--transitionNormal), background var(--transitionNormal);
     }
-    .tile:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(0,59,124,.13); border-color: var(--wlo-primary); }
-    .tile:focus-visible { outline: 2px solid var(--wlo-primary); outline-offset: 2px; }
-    /* Selection ring as an OUTSET box-shadow: it sits outside the border box, so it is neither
-       clipped by the tile's overflow:hidden nor covered by the full-bleed thumbnail — a uniform
-       ring on all four sides (an inset shadow / inner outline was hidden/clipped up top). */
-    .tile.selected { border-color: var(--wlo-primary); box-shadow: 0 0 0 2px var(--wlo-primary); }
-    .tile.selected:hover { box-shadow: 0 0 0 2px var(--wlo-primary), 0 10px 26px rgba(0,59,124,.13); }
-    /* Multi-select checkbox (tier 1+): overlaid on the preview, on a chip for legibility. */
-    .sel { position: absolute; top: 6px; left: 6px; z-index: 2; background: rgba(255,255,255,.92); border-radius: 8px; }
+    .tile:hover { box-shadow: var(--shadowMedium); background: var(--primaryBackground50); }
+    .tile.selected { background: var(--primaryBackground50); }
 
-    /* Preview keeps the modal 3:2 ratio of the WLO thumbnails → no awkward cropping */
-    .thumb { position: relative; aspect-ratio: 3 / 2; background: #e8eef7; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-    .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .thumb.placeholder mat-icon { font-size: 44px; width: 44px; height: 44px; color: #9fb2cd; }
-    .thumb-count { position: absolute; bottom: 8px; right: 8px; background: rgba(15,33,58,.82); color: #fff; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; backdrop-filter: blur(3px); }
+    .top {
+      height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 15px;
+      background: color-mix(in srgb, var(--primary) 20%, var(--textWhite));
+    }
+    .type-badge {
+      display: inline-flex; padding: 5px; border-radius: 50%; background: var(--backgroundColor);
+      box-shadow: var(--shadowSmall); color: var(--primaryForeground800); margin-right: auto;
+    }
+    .type-badge mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px 2px 5px; font-size: 12px; font-weight: 600;
+      border-radius: var(--borderRadiusBadges); white-space: nowrap; background: var(--defaultBackground); color: var(--primaryForeground800);
+    }
+    .pill mat-icon { font-size: 14px; width: 14px; height: 14px; }
+    .pill.oer, .pill.ok { background: var(--colorStatusPositiveBackground); color: var(--colorStatusPositiveText); }
+    .pill.ok { padding: 2px 10px; }
+    .pill.family { cursor: help; }
+    .sel { margin-right: -10px; }
 
-    /* flex:1 lets the body fill the tile's stretched height (grid stretches all tiles in a row to
-       equal height), so the foot can be pinned to the very bottom on every tile. */
-    .body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
-    .head { display: flex; align-items: flex-start; gap: 8px; }
-    /* Reserve exactly two lines for the title so the description always starts at the same height
-       across tiles (uniform cards), regardless of a 1- or 2-line name. */
-    .name { flex: 1; font-size: 14px; font-weight: 600; line-height: 1.3; margin: 0; color: var(--wlo-text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6em; }
-    .oer-badge { flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px; background: #e6f4ea; color: #1a8a4d; font-size: 11px; font-weight: 700; padding: 3px 9px 3px 6px; border-radius: 20px; white-space: nowrap; }
-    .oer-badge mat-icon { font-size: 14px; width: 14px; height: 14px; }
-    /* Bezugsquelle-family badge (publisher + sub-channels, e.g. YouTube) — count of related sources. */
-    .family-badge { flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px; background: #e7eefb; color: #2e5aa8; font-size: 11px; font-weight: 700; padding: 3px 8px 3px 6px; border-radius: 20px; white-space: nowrap; cursor: help; }
-    .family-badge mat-icon { font-size: 13px; width: 13px; height: 13px; }
-    .desc { font-size: 12.5px; color: var(--wlo-text-muted); margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    /* Reserve the height of the three meta lines (Inhaltstyp / Fach / Bildungsstufe) so the foot
-       sits at the same height across tiles even when some lines are empty — 3 × 18px + 2 × 6px gap. */
-    .metas { display: flex; flex-direction: column; gap: 6px; min-height: 66px; }
-    .meta { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #3f5170; min-width: 0; }
-    .meta mat-icon { font-size: 17px; width: 17px; height: 17px; color: #8aa0c0; flex-shrink: 0; }
-    .meta span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    /* Bottom row: quality pills (left) + Audit source-binding badges (right).
-       margin-top:auto pins it to the bottom of the (flex:1) body — uniform across all tiles. */
-    .tile-foot { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 2px; }
-    .badges { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-    .bind { display: flex; gap: 4px; }
-    /* Field-profile badge: active metadata fields from the crawler profile. */
-    .fp-badge { display: inline-flex; align-items: center; gap: 3px; background: #e6f4ea; color: #1a8a4d; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; cursor: help; }
-    /* Binding badge — same optic as the quality dots: green when present, grey when absent. */
-    .bdot { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; cursor: help; background: var(--q-unknown-bg); color: var(--q-unknown-fg); }
-    .bdot mat-icon { font-size: 13px; width: 13px; height: 13px; }
+    .open {
+      all: unset; box-sizing: border-box; display: flex; flex-direction: column; flex: 1; cursor: pointer; min-width: 0;
+      font: inherit; color: var(--textMain); text-align: left;
+    }
+    .open:focus-visible .name { outline: 2px solid var(--focusColor); outline-offset: 2px; }
+    .open:focus-visible { outline: 2px solid var(--focusColor); outline-offset: -2px; }
+
+    .thumb {
+      position: relative; height: 150px; display: flex; align-items: center; justify-content: center; overflow: hidden;
+      background: var(--primaryBackground50);
+    }
+    .thumb .blur { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(15px); transform: scale(1.15); opacity: .7; }
+    .thumb .pic { position: relative; max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+    .thumb.placeholder mat-icon { font-size: 40px; width: 40px; height: 40px; color: var(--textMediumLight); }
+    .count {
+      position: absolute; bottom: 10px; right: 10px; background: var(--overlayDark); color: var(--textWhite);
+      font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: var(--borderRadiusBadges);
+    }
+
+    .meta-area { display: flex; flex-direction: column; gap: 5px; padding: 10px 15px 10px; flex: 1; min-width: 0; }
+    /* Title: left-aligned, at most two lines (limitLineCount(2, 1.4)), space for two lines reserved. */
+    .name {
+      font-size: 16px; font-weight: 600; line-height: 1.4; min-height: 2.8em; color: var(--textMain);
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere;
+    }
+    .desc {
+      font-size: 13px; line-height: 1.4; color: var(--textLight);
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    /* Metadata rows: label left (85 %, --textLight), value right (max one line here). */
+    .rows { display: flex; flex-direction: column; margin-top: auto; padding-top: 5px; }
+    .row { display: flex; align-items: baseline; gap: 10px; min-height: 2em; font-size: 14px; min-width: 0; }
+    .label { flex-shrink: 0; font-size: 85%; color: var(--textLight); }
+    .value { margin-left: auto; text-align: right; color: var(--textMain); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+
+    .foot {
+      display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 15px;
+      border-top: 1px solid var(--tableSeperatorLineColor);
+    }
+    .badges { margin-left: auto; display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+    .bind { display: flex; gap: 5px; }
+    .bdot { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; cursor: help; background: var(--q-unknown-bg); color: var(--q-unknown-fg); }
+    .bdot mat-icon { font-size: 14px; width: 14px; height: 14px; }
     .bdot.on { background: var(--q-good-bg); color: var(--q-good-fg); }
   `],
 })

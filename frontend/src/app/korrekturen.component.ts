@@ -124,14 +124,14 @@ import { Anwenden, Korrektur, KorrekturFelder, KorrekturStand, VerlaufEintrag } 
     .spacer { flex: 1; }
     .tablewrap { overflow-x: auto; }
     table.korr { width: 100%; border-collapse: collapse; font-size: 13px; }
-    table.korr th, table.korr td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #e3e6ec; vertical-align: top; }
-    table.korr th { font-weight: 600; background: #f5f7fa; position: sticky; top: 0; }
+    table.korr th, table.korr td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--tableSeperatorLineColor); vertical-align: top; }
+    table.korr th { font-weight: 600; background: var(--primaryBackground50); position: sticky; top: 0; }
     .mono { font-family: ui-monospace, monospace; font-size: 12px; word-break: break-all; }
     .clip { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .act { white-space: nowrap; }
-    .count { color: #555; margin: 4px 0; }
-    .info { background: #e8f1fb; padding: 8px 12px; border-radius: 6px; }
-    .err { color: #b00020; }
+    .count { color: var(--textLight); margin: 4px 0; }
+    .info { background: var(--primaryBackground50); padding: 8px 12px; border-radius: 6px; }
+    .err { color: var(--warn); }
     .probleme { margin: 8px 0; }
   `],
 })

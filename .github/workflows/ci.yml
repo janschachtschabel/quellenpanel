@@ -42,6 +42,7 @@ jobs:
       - run: npm --prefix frontend test -- --watch=false
       - run: npm --prefix frontend run build:element
       - run: npm --prefix frontend run build:widgets
+      - run: npm --prefix frontend run lint:design   # edu-sharing design rules (0 FEHLER)
       - name: Audit (shipped dependencies)
         run: npm --prefix frontend audit --omit=dev --audit-level=high
 

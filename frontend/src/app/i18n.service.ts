@@ -136,6 +136,7 @@ const DICT: Record<string, { de: string; en: string }> = {
   'unit.content':         { de: 'Inhalte', en: 'content' },
 
   // tile / list
+  'tile.type':            { de: 'Quelle', en: 'Source' },
   'tile.oer':             { de: 'Offene Bildungsressource', en: 'Open Educational Resource' },
   'tile.family':          { de: 'verwandte Quellen (gleiche Bezugsquelle)', en: 'related sources (same publisher)' },
   'tile.fieldProfile':    { de: 'aktive Metadatenfelder (Crawler-Provenienz)', en: 'active metadata fields (crawler provenance)' },
