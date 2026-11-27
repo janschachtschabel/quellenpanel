@@ -3,7 +3,7 @@
 The routes keep their signatures short; this module adds, after FastAPI built the spec,
   - a description for every query, path and header parameter (by name; the filters are shared by several routes),
   - a 200 example for the public read endpoints and the one error shape for 4xx/5xx answers.
-The examples are shortened real answers (WLO, tier 0); a test checks their keys against live answers.
+The examples are shortened real answers (tier 0, hosts replaced by example.org); a test checks their keys against live answers.
 """
 from __future__ import annotations
 
@@ -47,12 +47,12 @@ PARAMETER = {
 _ITEM = {
     "id": "crawler:bpb_spider", "name": "Bundeszentrale für politische Bildung", "contentCount": 62867,
     "url": "https://www.bpb.de/",
-    "searchUrl": "https://suche.wirlernenonline.de/search/de/search?filters=…",
+    "searchUrl": "https://suche.example.org/search/de/search?filters=…",
     "bezugsquelle": "Bundeszentrale für politische Bildung",
     "description": "Die Webseite der Bundeszentrale für politische Bildung bietet vielseitige Materialien …",
     "subjects": ["Geschichte", "Politik"], "educationalContext": ["Sekundarstufe I", "Sekundarstufe II"],
     "contentTypes": ["Quelle"], "license": "COPYRIGHT_FREE", "oer": True, "language": "Deutsch (Deutschland)",
-    "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=…",
+    "previewUrl": "https://repository.example.org/edu-sharing/preview?nodeId=…",
     "erschliessungsstatus": "im Bestand verfuegbar",
     "quality": {"Login": "ohne Anmeldung", "Kosten": "nein", "DSGVO": "Datensparsam"},
 }
@@ -62,7 +62,7 @@ BEISPIELE = {
     "/api/sources/{source_id}": {**_ITEM, "keywords": ["Politik", "Demokratie"], "targetGroup": ["Lehrer/in"],
                                  "ageRange": "10-99", "author": "", "curriculum": []},
     "/api/sources/{source_id}/contents": {"total": 62867, "nodes": [{
-        "title": "Was ist Demokratie?", "previewUrl": "https://redaktion.openeduhub.net/edu-sharing/preview?nodeId=…",
+        "title": "Was ist Demokratie?", "previewUrl": "https://repository.example.org/edu-sharing/preview?nodeId=…",
         "url": "https://www.bpb.de/…", "description": "Erklärfilm …", "subjects": ["Politik"],
         "keywords": ["Demokratie"]}]},
     "/api/kennzahl": {"quellen": 3558, "inhalte": 311219},
@@ -77,7 +77,7 @@ BEISPIELE = {
                    "topLevels": [{"value": "Sekundarstufe II", "count": 594}]},
     "/api/health": {"status": "ok", "records": 3558, "role": "public"},
     "/api/capabilities": {"maxTier": 0, "role": "public", "publicOnly": True, "tier1Gated": False,
-                          "teamAvailable": False, "repoUrl": "https://redaktion.openeduhub.net",
+                          "teamAvailable": False, "repoUrl": "https://repository.example.org",
                           "branding": {"primary": "#003b7c", "accent": "#e4f700"}},
 }
 
