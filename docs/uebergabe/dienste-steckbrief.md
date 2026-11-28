@@ -11,7 +11,7 @@ Checkliste: [README.md](README.md).
 | **Technischer Owner** | Jan Schachtschabel |
 | **Jira** | `nicht vorhanden` |
 | **Deployment Status** | `In Klärung` (Vorgängerversion läuft produktiv; der aktuelle Stand läuft im Testbetrieb per Docker Compose mit dem GitHub-Image `:main`, noch nicht im Cluster) |
-| **Repository** | `vorhanden` ([GitHub](https://github.com/janschachtschabel/quellenpanel)) |
+| **Repository** | `vorhanden` ([GitLab, Branch `newrelease`](https://scm.edu-sharing.com/edu-sharing/projects/wlo/wlo-quellenliste/-/tree/newrelease); Kopie des Entwicklungs-Repos [GitHub](https://github.com/janschachtschabel/quellenpanel), Herkunft in `GITHUB_STAND.md`) |
 | **OpenAPI Spec** | `vorhanden` (`GET /openapi.json`, je Instanz nur deren Pfade) |
 | **Pipeline und Git-Tags** | `vorhanden` (Tags `v<version>`, Release-Workflow von Hand auf main; `.github/workflows/` und `.gitlab-ci.yml` im Repo; Images: `ghcr.io/janschachtschabel/quellenpanel` bei jedem Push auf main und jedem Release, Docker Hub und `docker.edu-sharing.com` bei Release-Tags) |
 | **Endpunkte** | `vorhanden` (öffentlich: `/api/sources`, `/api/sources/{id}`, `/api/kennzahl`, `/api/stats`, `/widgets/…`, `/embed/…`; Infrastruktur: `/health`, `/ready`, `/metrics`) |
